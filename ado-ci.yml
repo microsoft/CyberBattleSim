@@ -28,7 +28,7 @@ steps:
 
   - task: NodeTool@0
     inputs:
-      versionSpec: '12.x'
+      versionSpec: "12.x"
       #checkLatest: false # Optional
     displayName: "Use node tools"
 
@@ -50,7 +50,7 @@ steps:
       path: $(pythonver.pythonLocation)/lib/python3.8/site-packages
 
   - script: |
-      ./install-pythonpackages.sh --nocoax
+      ./install-pythonpackages.sh
     displayName: "Pull pip dependencies"
 
   - script: |

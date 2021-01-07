@@ -53,8 +53,8 @@ Read the [Quick introduction](/docs/quickintro.md) to the project.
 
 | Type | Branch | Status |
 | ---  | ------ | ------ |
-| CI   | master | [![Build Status](https://mscodehub.visualstudio.com/Asterope/_apis/build/status/CyberBattle-ContinuousIntegration?branchName=master)](https://mscodehub.visualstudio.com/Asterope/_build/latest?definitionId=1359&branchName=master) |
-| Docker image | master | [![Build Status](https://mscodehub.visualstudio.com/Asterope/_apis/build/status/CyberBattle-Docker?branchName=master)](https://mscodehub.visualstudio.com/Asterope/_build/latest?definitionId=1454&branchName=master) |
+| CI   | master | ![.github/workflows/ci.yml](https://github.com/microsoft/CyberBattleSim/workflows/.github/workflows/ci.yml/badge.svg) |
+| Docker image | master | ![.github/workflows/build-container.yml](https://github.com/microsoft/CyberBattleSim/workflows/.github/workflows/build-container.yml/badge.svg) |
 
 
 
@@ -116,23 +116,27 @@ To run your environment within a docker container, we recommend running `docker`
 
 ### Windows (unsupported)
 
-This method is not supported anymore, please prefer instead running under
+This method is not maintained anymore, please prefer instead running under
 a WSL subsystem Linux environment.
 But if you insist you want to start by installing [Python 3.8](https://www.python.org/downloads/windows/) then in a Powershell prompt run the `./init.ps1` script.
 
 
+## Getting started quickly using Docker
 
-## Getting started quickly using Docker (internal only at this stage)
 
-> NOTE: We do not currently redistribute build artifacts or Docker containers externally for this project. We provide the Dockerfile and CI yaml files if you need to recreate those artifacts.
+The quickest method to get up and running is via the Docker container.
 
-The quickest way to get up and running is to use the Docker container.
-Note: you first need to request access to the Docker registry `spinshot.azurecr.io`. (Not publicly available.)
+> NOTE: For licensing reasons, we do not publicly redistribute any
+> build artifact. In particular the docker registry `spinshot.azurecr.io` referred to
+> in the commands below is kept private to the
+> project maintainers only.
+>
+> As a workaround, you can recreate the docker image yourself using the provided `Dockerfile`, publish the resulting image to your own docker registry and replace the registry name in the commands below.
 
 ```bash
 docker login spinshot.azurecr.io
-docker pull spinshot.azurecr.io/cyberbattle:157884
-docker run -it spinshot.azurecr.io/cyberbattle:157884 cyberbattle/agents/baseline/run.py
+docker pull spinshot.azurecr.io/cyberbattle:239bdf22e47aa1c8c88915f356cede002865fa1c
+docker run -it spinshot.azurecr.io/cyberbattle:239bdf22e47aa1c8c88915f356cede002865fa1c cyberbattle/agents/baseline/run.py
 ```
 
 ## Check your environment
