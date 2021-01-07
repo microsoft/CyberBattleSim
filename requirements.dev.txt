@@ -1,0 +1,35 @@
+# resolve incompatibility with pytest
+attrs==19.1.0
+
+# for vscode intellisense
+jedi
+pandas
+jupyter>=1.0.0
+
+torch===1.5.1
+
+# linter and formatter
+flake8
+pep8-naming
+autopep8
+pre-commit
+
+pytest~=5.4.2
+
+jupytext~=1.6.0
+
+psutil==5.7.2
+
+### type stubs
+numpy_stubs @ git+https://github.com/numpy/numpy-stubs/@master#egg=numpy_stubs
+
+# Unfortunately, the official `data-science-types` package overwrites
+# the numpy stubs above, and their stubs are not as reliable.
+# So we use instead one of the project fork that disables the numpy stubs
+# See https://github.com/predictive-analytics-lab/data-science-types/issues/132
+# and https://github.com/microsoft/pyright/issues/861
+#data-science-types~=0.2.20
+data-science-types @ git+https://github.com/blumu/data-science-types/@blumu-patch-1
+
+asciichart
+asciichartpy

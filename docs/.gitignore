@@ -1,0 +1,12 @@
+.packages
+PackageRoot/*
+**/TestResults/*
+**/.vs/*
+**/bin/*
+**/obj/*
+msbuild.log
+*.user
+*.trace
+**/.nupkg/*
+**/.pkg/*
+**/packages/*

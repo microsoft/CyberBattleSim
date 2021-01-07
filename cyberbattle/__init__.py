@@ -1,0 +1,76 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Initialize CyberBattleSim module"""
+from gym.envs.registration import registry, EnvSpec
+from gym.error import Error
+
+from . import simulation
+from . import agents
+from ._env.cyberbattle_env import AttackerGoal, DefenderGoal
+from .samples.chainpattern import chainpattern
+from .samples.toyctf import toy_ctf
+from .simulation import generate_network, model
+
+__all__ = (
+    'simulation',
+    'agents',
+)
+
+
+def register(id: str, cyberbattle_env_identifiers: model.Identifiers, **kwargs):
+    """ same as gym.envs.registry.register, but adds CyberBattle specs to env.spec  """
+    if id in registry.env_specs:
+        raise Error('Cannot re-register id: {}'.format(id))
+    spec = EnvSpec(id, **kwargs)
+    # Map from port number to port names : List[model.PortName]
+    spec.ports = cyberbattle_env_identifiers.ports
+    # Array of all possible node properties (not necessarily all used in the network) : List[model.PropertyName]
+    spec.properties = cyberbattle_env_identifiers.properties
+    # Array defining an index for every possible local vulnerability name : List[model.VulnerabilityID]
+    spec.local_vulnerabilities = cyberbattle_env_identifiers.local_vulnerabilities
+    # Array defining an index for every possible remote  vulnerability name : List[model.VulnerabilityID]
+    spec.remote_vulnerabilities = cyberbattle_env_identifiers.remote_vulnerabilities
+
+    registry.env_specs[id] = spec
+
+
+if 'CyberBattleToyCtf-v0' in registry.env_specs:
+    del registry.env_specs['CyberBattleToyCtf-v0']
+
+register(
+    id='CyberBattleToyCtf-v0',
+    cyberbattle_env_identifiers=toy_ctf.ENV_IDENTIFIERS,
+    entry_point='cyberbattle._env.cyberbattle_toyctf:CyberBattleToyCtf',
+    kwargs={'defender_agent': None,
+            'attacker_goal': AttackerGoal(reward=889),
+            'defender_goal': DefenderGoal(eviction=True)
+            },
+    # max_episode_steps=2600,
+)
+
+if 'CyberBattleRandom-v0' in registry.env_specs:
+    del registry.env_specs['CyberBattleRandom-v0']
+
+register(
+    id='CyberBattleRandom-v0',
+    cyberbattle_env_identifiers=generate_network.ENV_IDENTIFIERS,
+    entry_point='cyberbattle._env.cyberbattle_random:CyberBattleRandom',
+)
+
+if 'CyberBattleChain-v0' in registry.env_specs:
+    del registry.env_specs['CyberBattleChain-v0']
+
+register(
+    id='CyberBattleChain-v0',
+    cyberbattle_env_identifiers=chainpattern.ENV_IDENTIFIERS,
+    entry_point='cyberbattle._env.cyberbattle_chain:CyberBattleChain',
+    kwargs={'size': 4,
+            'defender_agent': None,
+            'attacker_goal': AttackerGoal(reward=2200),
+            'defender_goal': DefenderGoal(eviction=True),
+            'winning_reward': 5000.0,
+            'losing_reward': 0.0
+            },
+    reward_threshold=2200,
+)

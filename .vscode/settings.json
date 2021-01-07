@@ -1,0 +1,43 @@
+{
+    "python.pythonPath": "/usr/bin/python",
+    "python.venvPath": "venv",
+    "python.linting.pylintEnabled": false,
+    "python.linting.mypyEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.linting.mypyPath": "venv\\Scripts\\mypy.exe",
+    "python.linting.mypyArgs": [
+        "--config-file",
+        "setup.cfg"
+    ],
+    "python.testing.pytestArgs": [
+        "cyberbattle"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.linting.lintOnSave": true,
+    "python.formatting.provider": "autopep8",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "extensions.ignoreRecommendations": true,
+    "files.autoSave": "off",
+    "debug.allowBreakpointsEverywhere": true,
+    "cSpell.enableFiletypes": [
+        "!yaml",
+        "!python",
+        "!json"
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "search.useGlobalIgnoreFiles": true,
+    "files.watcherExclude": {
+        "typings/**": true,
+        "venv/**": true
+    },
+    "files.exclude": {
+        "venv/": true
+    },
+    "jupyter.jupyterServerType": "local",
+    "files.trimFinalNewlines": true
+}

@@ -1,0 +1,60 @@
+# python
+build/
+dist/
+__pycache__*
+*.pyc
+*.pyo
+*.egg-info
+
+# mypy type checking
+/.mypy_cache/
+/.pytest_cache/
+**/*.pyc
+
+# jupyter / ipython
+.ipynb_checkpoints/
+.init
+Untitled*.ipynb
+data/
+
+# tests
+.coverage
+.hypothesis
+
+# doc
+doc/build/
+
+# sublime
+*.sublime-workspace
+sftp*-config.json
+
+# line profiler
+*.lprof
+
+# visual studio
+.vs
+*.pyproj
+*.pyperf
+*.sln
+
+# vscode
+.ropeproject
+
+# pycharm
+.idea
+
+# data
+*.zip
+/venv/**
+/.cache/**
+
+/.dmypy.json
+src/.dmypy.json
+
+notebooks/untracked/**
+cyberbattle.code-workspace
+typings/**
+
+cyberbattle/agents/baseline/notebooks/images/*.png
+cyberbattle/agents/baseline/notebooks/images/*.gif
+log.txt

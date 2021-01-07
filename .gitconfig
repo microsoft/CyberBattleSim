@@ -1,0 +1,8 @@
+[branch "master"]
+    rebase = true
+[branch]
+    autosetuprebase = always
+[push]
+    default = simple
+[core]
+    whitespace = cr-at-eol,-trailing-space

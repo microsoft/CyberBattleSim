@@ -1,0 +1,22 @@
+{
+    "exclude": [
+        "**/.ipynb_checpoints",
+        "**/__pycache__",
+        "typings",
+        "venv"
+    ],
+    "ignore": [
+        "cyberbattle/__init__.py",
+        "cyberbattle/agents/__init__.py"
+    ],
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": true,
+    "enableTypeIgnoreComments": true,
+    "reportUnusedFunction": "warning",
+    "reportUnusedImport": "warning",
+    "reportDuplicateImport": "warning",
+    "reportUnnecessaryCast": "warning",
+    "reportUndefinedVariable": "error",
+    "strictParameterNoneValue": true,
+    "strict": []
+}
