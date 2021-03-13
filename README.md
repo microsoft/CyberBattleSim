@@ -5,45 +5,46 @@ CyberBattleSim is an experimentation research platform to investigate the intera
 of automated agents operating in a simulated abstract enterprise network environment.
 The simulation provides a high-level abstraction of computer networks
 and cyber security concepts.
-Its Python-based OpenAI Gym interface allows for training of
+Its Python-based Open AI Gym interface allows for training of
 automated agents using reinforcement learning algorithms.
 
 The simulation environment is parameterized by a fixed network topology
-with an associated set of vulnerabilities that attacker agents can utilize
+and a set of vulnerabilities that agents can utilize
 to move laterally in the network.
 The goal of the attacker is to take ownership of a portion of the network by exploiting
 vulnerabilities that are planted in the computer nodes.
 While the attacker attempts to spread throughout the network,
-a defender agent watches the network activity and tries to contain the attack.
-
-We provide a basic stochastic defender that detects
-and mitigate ongoing attacks based on pre-defined probabilities of success.
-Mitigation consists in re-imaging the infected nodes, a process
+a defender agent watches the network activity and tries to detect
+any attack taking place and mitigate the impact on the system
+by evicting the attacker. We provide a basic stochastic defender that detects
+and mitigates ongoing attacks based on pre-defined probabilities of success.
+We implement mitigation by re-imaging the infected nodes, a process
 abstractly modeled as an operation spanning over multiple simulation steps.
 
-To compare performance of the agents we look at two metrics: the number of simulation steps taken to
+To compare the performance of the agents we look at two metrics: the number of simulation steps taken to
 attain their goal and the cumulative rewards over simulation steps across training epochs.
 
 ## Project goals
 
-We view this project as an experimentation platform to conduct research on the interaction of automated agents in abstract simulated network environments. By open sourcing it we hope to encourage the research community investigate how cyber-agents interact and evolve in such network environments.
+We view this project as an experimentation platform to conduct research on the interaction of automated agents in abstract simulated network environments. By open sourcing it we hope to encourage the research community to investigate how cyber-agents interact and evolve in such network environments.
 
 The simulation we provide is admittedly simplistic, but this has advantages. Its highly abstract nature prohibits direct application to real-world systems thus providing a safeguard against potential nefarious use of automated agents trained with it.
 At the same time, its simplicity allows us to focus on specific security aspects we aim to study and quickly experiment with recent machine learning and AI algorithms.
 
 For instance, the current implementation focuses on
-the lateral movement cyber-attacks techniques, with the hope to understand how the network topology and configuration affects them. With this goal in mind, we felt that modeling actual network traffic was not necessary. This is just one example of a significant limitation in our system that future contributions might want to address.
+the lateral movement cyber-attacks techniques, with the hope of understanding how network topology and configuration affects them. With this goal in mind, we felt that modeling actual network traffic was not necessary. This is just one example of a significant limitation in our system that future contributions might want to address.
 
-On the algorithmic side, we provide some basic agents as starting points but we
+On the algorithmic side, we provide some basic agents as starting points, but we
 would be curious to find out how state-of-the art reinforcement learning algorithms compare to them. We found that the large action space
 intrinsic to any computer system is a particular challenge for
-Reinforcement Learning, in contrasts to other applications such as video games or robot control. Training agents that can store and retrieve credentials is another challenge we faced when applying RL techniques
-where agents typically do not feature internal memory. These are other areas of research where the provided simulation can perhaps be used for benchmarking purpose.
+Reinforcement Learning, in contrast to other applications such as video games or robot control. Training agents that can store and retrieve credentials is another challenge faced when applying RL techniques
+where agents typically do not feature internal memory.
+These are other areas of research where the simulation could be used for benchmarking purposes.
 
-Other areas of interests include the responsible and ethical use of autonomous cyber-security systems:
-How to design an enterprise network that gives an intrinsic advantage to defender agents?
-How to conduct safe research aimed at defending enterprises against autonomous cyber-attacks
-while preventing nefarious use of such technology?
+Other areas of interest include the responsible and ethical use of autonomous
+cyber-security systems: How to design an enterprise network that gives an intrinsic
+advantage to defender agents? How to conduct safe research aimed at defending enterprises against autonomous cyber-attacks while preventing nefarious use of such technology?
+
 
 ## Documentation
 
@@ -55,9 +56,6 @@ Read the [Quick introduction](/docs/quickintro.md) to the project.
 | ---  | ------ | ------ |
 | CI   | master | ![.github/workflows/ci.yml](https://github.com/microsoft/CyberBattleSim/workflows/.github/workflows/ci.yml/badge.svg) |
 | Docker image | master | ![.github/workflows/build-container.yml](https://github.com/microsoft/CyberBattleSim/workflows/.github/workflows/build-container.yml/badge.svg) |
-
-
-
 
 ## Benchmark
 
@@ -90,7 +88,6 @@ The script will create a [virtual Python environment](https://docs.python.org/3/
 run Python with `venv/bin/python`.
 
 > Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual envrionment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.8.
-
 #### Windows Subsystem for Linux
 
 The supported dev environment on Windows is via WSL.
@@ -132,7 +129,6 @@ The quickest method to get up and running is via the Docker container.
 > project maintainers only.
 >
 > As a workaround, you can recreate the docker image yourself using the provided `Dockerfile`, publish the resulting image to your own docker registry and replace the registry name in the commands below.
-
 ```bash
 docker login spinshot.azurecr.io
 docker pull spinshot.azurecr.io/cyberbattle:239bdf22e47aa1c8c88915f356cede002865fa1c
@@ -185,7 +181,7 @@ the provided Juptyer notebooks to play interactively with
 the gym environments. Just start jupyter with `jupyter notebook`, or
 `venv/bin/jupyter notebook` if you are using a virtual environment setup.
 
-- Capture The Flag Toy environment notebooks:
+- 'Capture The Flag' toy environment notebooks:
   - [Random agent](notebooks/toyctf-random.ipynb)
   - [Interactive session for a human player](notebooks/toyctf-blank.ipynb)
   - [Interactive session - fully solved](notebooks/toyctf-solved.ipynb)
@@ -197,8 +193,45 @@ the gym environments. Just start jupyter with `jupyter notebook`, or
   - [Interactive session with a randomly generated environment](notebooks/randomnetwork.ipynb)
   - [Random agent playing on randomly generated networks](notebooks/c2_interactive_interface.ipynb)
 
+The following `.py` notebooks are best viewed in VSCode or in Jupyter with the [Jupytext extension](https://jupytext.readthedocs.io/en/latest/install.html)
+and can easily be converted to `.ipynb` format if needed:
 
+  - Chain environments benchmarks:
 
+      - [Benchmark of all baseline agents](cyberbattle/agents/baseline/notebooks/notebook_all_agents_benchmark.py)
+      - [All baseline agents against a basic defender](cyberbattle/agents/baseline/notebooks/notebook_withdefender.py)
+      - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_dql.py)
+      - [Epsilon greedy](cyberbattle/agents/baseline/notebooks/notebook_randlookups.py)
+      - [Tabular Q Learning](cyberbattle/agents/baseline/notebooks/notebook_tabularq.py)
+
+  - Capture the Flag benchmark:
+    - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_ctf_dql.py)
+
+## How to instantiate the Gym environments?
+
+The following code shows how to create an instance of the the OpenAI Gym environment `CyberBattleChain-v0`, an environment based on a [chain-like network structure](cyberbattle/samples/chainpattern/chainpattern.py), with 10 nodes (`size=10`) where the agent's goal is to either gain full ownership of the network (`own_atleast_percent=1.0`) or
+break the 80% network availability SLA (`maintain_sla=0.80`), while the netowrk is being monitored and protected by basic probalistically-modelled defender (`defender_agent=ScanAndReimageCompromisedMachines`):
+
+```python
+import cyberbattle._env.cyberbattle_env
+
+cyberbattlechain_defender =
+  gym.make('CyberBattleChain-v0',
+      size=10,
+      attacker_goal=AttackerGoal(
+          own_atleast=0,
+          own_atleast_percent=1.0
+      ),
+      defender_constraint=DefenderConstraint(
+          maintain_sla=0.80
+      ),
+      defender_agent=ScanAndReimageCompromisedMachines(
+          probability=0.6,
+          scan_capacity=2,
+          scan_frequency=5))
+```
+
+To try other network topologies, take example on [chainpattern.py](cyberbattle/samples/chainpattern/chainpattern.py) to define your own set of machines and vulnerabilities, then add an entry in [the module initializer](cyberbattle/__init__.py) to declare and register the Gym environment.
 
 ## Contributing
 
@@ -226,7 +259,8 @@ See also the [wiki for more ideas](https://github.com/microsoft/CyberBattleGym/w
 
 ```bibtex
 @misc{msft:cyberbattlesim,
-  Author = {Brandon Marken and Christian Seifert and Emily Goren and Haoran Wei and James Bono and Joshua Neil and Jugal Parikh and Justin Grana and Kate Farris and Kristian Holsheimer and Michael Betser and Nicole Nichols and William Blum},
+  Author = {Microsoft Defender Research Team.}
+  Note = {Created by Christian Seifert, Michael Betser, William Blum, James Bono, Kate Farris, Emily Goren, Justin Grana, Kristian Holsheimer, Brandon Marken, Joshua Neil, Nicole Nichols, Jugal Parikh, Haoran Wei.},
   Publisher = {GitHub},
   Howpublished = {\url{https://github.com/microsoft/cyberbattlesim}},
   Title = {CyberBattleSim},
