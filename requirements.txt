@@ -9,3 +9,4 @@ plotly~=4.11.0
 tabulate~=0.8.7
 ordered_set==4.0.2
 progressbar2==3.51.4
+decorator==4.3
