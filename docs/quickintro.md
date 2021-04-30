@@ -109,7 +109,7 @@ Consider as a toy example, the 'Capture the flag' game played on the computer sy
 Each graph node is a computing resource with implanted security flaws and vulnerabilities such as reused password, insucure passwords, leaked access tokens, misconfigured Access control, browsable direcotries, and so on.  The goal of the attacker is to take ownership of critical nodes in the graph (e.g., Azure and Sharepoint resources). For simplicity we assume that no defender is present and that the game is fully static (no external events between two action of the attacker).
 
 We formally defined this network in Python code at [toy_ctf.py](../cyberbattle/samples/toyctf/toy_ctf.py).
-Here is a snippet of the code showing how we define the noe `Website` with its properties, firewall configuration and implanted vulnerabilities:
+Here is a snippet of the code showing how we define the node `Website` with its properties, firewall configuration and implanted vulnerabilities:
 
 ```python
 nodes = {
