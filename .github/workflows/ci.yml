@@ -1,7 +1,8 @@
 on:
   push:
     branches:
-      - master
+      - main
+      - wiblum/*
 jobs:
   build:
     runs-on: ubuntu-latest
