@@ -80,7 +80,7 @@ class MultiDiGraph(BaseGraph):
 
 if __name__ == '__main__':
     from gym.spaces import Box, Discrete
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt  # type:ignore
 
     space = DiGraph(
         max_num_nodes=10,

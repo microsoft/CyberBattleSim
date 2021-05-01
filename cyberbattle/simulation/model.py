@@ -350,7 +350,7 @@ def iterate_network_nodes(network: nx.graph.Graph) -> Iterator[Tuple[NodeID, Nod
 
 class Environment(NamedTuple):
     """ The static graph defining the network of computers """
-    network: nx.graph.Graph
+    network: nx.DiGraph
     vulnerability_library: VulnerabilityLibrary
     identifiers: Identifiers
     creationTime: datetime = datetime.utcnow()
@@ -480,9 +480,9 @@ SAMPLE_IDENTIFIERS = Identifiers(
 
 
 def assign_random_labels(
-        graph: nx.Graph,
+        graph: nx.DiGraph,
         vulnerabilities: VulnerabilityLibrary = dict([]),
-        identifiers: Identifiers = SAMPLE_IDENTIFIERS) -> nx.Graph:
+        identifiers: Identifiers = SAMPLE_IDENTIFIERS) -> nx.DiGraph:
     """Create an envrionment network by randomly assigning node information
     (properties, firewall configuration, vulnerabilities)
     to the nodes of a given graph structure"""

@@ -91,7 +91,7 @@ def cyberbattle_model_from_traffic_graph(
     cached_password_has_changed_probability=0.1,
     traceroute_discovery_probability=0.5,
     probability_two_nodes_use_same_password_to_access_given_resource=0.8
-) -> nx.graph.Graph:
+) -> nx.DiGraph:
     """Generate a random CyberBattle network model from a specified traffic (directed multi) graph.
 
     The input graph can for instance be generated with `generate_random_traffic_network`.

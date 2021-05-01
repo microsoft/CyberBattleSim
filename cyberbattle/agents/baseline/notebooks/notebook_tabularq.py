@@ -16,7 +16,7 @@ import logging
 from typing import cast
 import gym
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type:ignore
 from cyberbattle.agents.baseline.learner import TrainedLearner
 import cyberbattle.agents.baseline.plotting as p
 import cyberbattle.agents.baseline.agent_wrapper as w
