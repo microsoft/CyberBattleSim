@@ -11,6 +11,6 @@ if (( $EUID != 0 )); then
 fi
 
 
-xargs -a apt-requirements-orca.txt $SUDO apt-get install
+xargs -a apt-requirements-orca.txt $SUDO apt-get install -y
 
 $SUDO npm install -g --unsafe-perm=true --allow-root electron@6.1.4 orca
