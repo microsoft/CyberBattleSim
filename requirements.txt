@@ -2,7 +2,7 @@ gym~=0.17.3
 numpy==1.19.4
 boolean.py~=3.7
 networkx==2.4
-pyyaml~=5.3.1
+pyyaml~=5.4.1
 setuptools~=49.2.1
 matplotlib~=3.2.1
 plotly~=4.11.0
