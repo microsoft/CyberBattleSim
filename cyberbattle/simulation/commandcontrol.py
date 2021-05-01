@@ -175,6 +175,7 @@ class EnvironmentDebugging:
         known_nodes = [node_id for node_id, _ in self.__actuator.discovered_nodes()]
 
         subgraph = self.__environment.network.subgraph(known_nodes)
+
         # pos = nx.fruchterman_reingold_layout(subgraph)
         pos = nx.shell_layout(subgraph, [[known_nodes[0]], known_nodes[1:]])
 
@@ -212,7 +213,7 @@ class EnvironmentDebugging:
                                 standoff=10,
                                 align='center',
                                 opacity=1
-                            ) for (source, target) in subgraph.edges]
+                            ) for (source, target) in list(subgraph.edges)]
                             )
 
         owned_nodes_coordinates = [(i, c) for i, c in pos.items()

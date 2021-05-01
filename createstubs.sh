@@ -17,7 +17,6 @@ createstub() {
     fi
 }
 
-createstub networkx
 createstub pandas
 createstub plotly
 createstub progressbar

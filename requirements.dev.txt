@@ -20,8 +20,13 @@ jupytext~=1.6.0
 
 psutil==5.7.2
 
+asciichart
+asciichartpy
+
 ### type stubs
 numpy_stubs @ git+https://github.com/numpy/numpy-stubs/@master#egg=numpy_stubs
+
+networkx-stubs @ git+https://github.com/fmagin/networkx-stubs/@master
 
 # Unfortunately, the official `data-science-types` package overwrites
 # the numpy stubs above, and their stubs are not as reliable.
@@ -30,6 +35,3 @@ numpy_stubs @ git+https://github.com/numpy/numpy-stubs/@master#egg=numpy_stubs
 # and https://github.com/microsoft/pyright/issues/861
 #data-science-types~=0.2.20
 data-science-types @ git+https://github.com/blumu/data-science-types/@blumu-patch-1
-
-asciichart
-asciichartpy

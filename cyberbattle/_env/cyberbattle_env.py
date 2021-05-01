@@ -660,16 +660,16 @@ class CyberBattleEnv(gym.Env):
         # Assert that the specified action is consistent (i.e., defining a single action type)
         assert 1 == len(action.keys())
 
-        kind = DiscriminatedUnion.kind(action)
+        assert DiscriminatedUnion.kind(action) != ''
 
-        if kind == "local_vulnerability":
+        if "local_vulnerability" in action:
             source_node_index, vulnerability_index = action['local_vulnerability']
 
             return self._actuator.exploit_local_vulnerability(
                 self.__internal_node_id_from_external_node_index(source_node_index),
                 self.__index_to_local_vulnerabilityid(vulnerability_index))
 
-        elif kind == "remote_vulnerability":
+        elif "remote_vulnerability" in action:
             source_node, target_node, vulnerability_index = action["remote_vulnerability"]
             source_node_id = self.__internal_node_id_from_external_node_index(source_node)
             target_node_id = self.__internal_node_id_from_external_node_index(target_node)
@@ -681,7 +681,7 @@ class CyberBattleEnv(gym.Env):
 
             return result
 
-        elif kind == "connect":
+        elif "connect" in action:
             source_node, target_node, port_index, credential_cache_index = action["connect"]
             assert credential_cache_index >= 0
             assert credential_cache_index < len(self.__credential_cache)

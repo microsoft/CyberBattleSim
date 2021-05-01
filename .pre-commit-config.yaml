@@ -1,38 +1,37 @@
 ﻿# See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 
-exclude: 'typings/.*'
+exclude: "typings/.*"
 
 repos:
+    - repo: local
+      hooks:
+          - id: pyright
+            name: pyright
+            entry: pyright
+            language: node
+            pass_filenames: false
+            types: [python]
+            additional_dependencies: ["pyright@1.1.136"]
 
--   repo: local
-    hooks:
-    -   id: pyright
-        name: pyright
-        entry: pyright
-        language: node
-        pass_filenames: false
-        types: [python]
-        additional_dependencies: ['pyright@1.1.64']
+          - id: flake8
+            name: flake8
+            description: "`flake8` is a command-line utility for enforcing style consistency across Python projects."
+            entry: flake8
+            language: python
+            types: [python]
+            require_serial: true
 
-    -   id: flake8
-        name: flake8
-        description: '`flake8` is a command-line utility for enforcing style consistency across Python projects.'
-        entry: flake8
-        language: python
-        types: [python]
-        require_serial: true
+    - repo: https://github.com/pre-commit/mirrors-autopep8
+      rev: v1.5.2 # Use the sha / tag you want to point at
+      hooks:
+          - id: autopep8
 
--   repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v1.5.2  # Use the sha / tag you want to point at
-    hooks:
-    -   id: autopep8
-
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-        exclude: '.*\.ipynb$'
-    -   id: check-yaml
-    -   id: check-added-large-files
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.4.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+            exclude: '.*\.ipynb$'
+          - id: check-yaml
+          - id: check-added-large-files

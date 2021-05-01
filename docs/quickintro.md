@@ -72,7 +72,7 @@ by exploiting a vulnerability in SMB,
 ## What kind of vulnerabilities and attacks are supported by the simulation?
 
 The simulation gym environment is parameterized by the network definition which consists of  the underlying network graph itself together with description of supported vulnerabilities and the nodes where they are present.
-Since the simulation does not run any code, there is no way to actually implement vulnerabilities and exploits. Instead, we model each vulnerability abstractly by defining: a pre-condition determining if 
+Since the simulation does not run any code, there is no way to actually implement vulnerabilities and exploits. Instead, we model each vulnerability abstractly by defining: a pre-condition determining if
 vulnerability is active on a given node; the probability that it can be successfully exploited by an attacker; and the side-effects of a successfful exploit. Each node has a set of assigned named-properties. The pre-condition is then expressed as a boolean expression over the set of possible node properties (or flags).
 
 ### Vulnerability outcomes
