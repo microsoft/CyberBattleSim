@@ -31,7 +31,7 @@ fi
 while getopts "nr" opt; do
   case $opt in
     n)
-      echo "skipping venv creation. Parameter: $OPTARG" >&2
+      echo "Skipping venv creation. Parameters: [$OPTARG]"
       CREATE_VENV=0
       ;;
     r)
@@ -66,8 +66,10 @@ else
 
     $SUDO apt update
 
+    $SUDO apt-get install curl -y
+
     # install nodejs 12.0 (required by pyright typechecker)
-    curl -sL https://deb.nodesource.com/setup_12.x | $SUDO bash -
+    curl -sL https://deb.nodesource.com/setup_16.x | $SUDO bash -
 
     # install all apt-get dependencies
     if [ $OLDER_UBUNTU == 1 ]; then
