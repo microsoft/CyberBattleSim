@@ -6,7 +6,7 @@ CyberBattleSim is an experimentation research platform to investigate the intera
 of automated agents operating in a simulated abstract enterprise network environment.
 The simulation provides a high-level abstraction of computer networks
 and cyber security concepts.
-Its Python-based Open AI Gym interface allows for training of
+Its Python-based Open AI Gym interface allows for the training of
 automated agents using reinforcement learning algorithms.
 
 The simulation environment is parameterized by a fixed network topology
@@ -27,7 +27,7 @@ attain their goal and the cumulative rewards over simulation steps across traini
 
 ## Project goals
 
-We view this project as an experimentation platform to conduct research on the interaction of automated agents in abstract simulated network environments. By open sourcing it we hope to encourage the research community to investigate how cyber-agents interact and evolve in such network environments.
+We view this project as an experimentation platform to conduct research on the interaction of automated agents in abstract simulated network environments. By open-sourcing it, we hope to encourage the research community to investigate how cyber-agents interact and evolve in such network environments.
 
 The simulation we provide is admittedly simplistic, but this has advantages. Its highly abstract nature prohibits direct application to real-world systems thus providing a safeguard against potential nefarious use of automated agents trained with it.
 At the same time, its simplicity allows us to focus on specific security aspects we aim to study and quickly experiment with recent machine learning and AI algorithms.
@@ -36,7 +36,7 @@ For instance, the current implementation focuses on
 the lateral movement cyber-attacks techniques, with the hope of understanding how network topology and configuration affects them. With this goal in mind, we felt that modeling actual network traffic was not necessary. This is just one example of a significant limitation in our system that future contributions might want to address.
 
 On the algorithmic side, we provide some basic agents as starting points, but we
-would be curious to find out how state-of-the art reinforcement learning algorithms compare to them. We found that the large action space
+would be curious to find out how state-of-the-art reinforcement learning algorithms compare to them. We found that the large action space
 intrinsic to any computer system is a particular challenge for
 Reinforcement Learning, in contrast to other applications such as video games or robot control. Training agents that can store and retrieve credentials is another challenge faced when applying RL techniques
 where agents typically do not feature internal memory.
@@ -83,12 +83,12 @@ The instructions were tested on a Linux Ubuntu distribution (both native and via
 ./init.sh
 ```
 
-The script installs python3.8 if not present. If you are running a version of Ubuntu older than 20 it will automatically add an additional apt repository to install python3.8.
+The script installs python3.8 if not present. If you are running a version of Ubuntu older than 20, it will automatically add an additional apt repository to install python3.8.
 
 The script will create a [virtual Python environment](https://docs.python.org/3/library/venv.html) under a `venv` subdirectory, you can then
 run Python with `venv/bin/python`.
 
-> Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual envrionment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.8.
+> Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual environment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.8.
 #### Windows Subsystem for Linux
 
 The supported dev environment on Windows is via WSL.
@@ -97,9 +97,9 @@ and then proceed with the Linux instructions (next section).
 
 #### Git authentication from WSL
 
-To authenticate with Git you can either use SSH-based authentication, or
+To authenticate with Git, you can either use SSH-based authentication or
 alternatively use the credential-helper trick to automatically generate a
-PAT token. The latter can be done by running the following commmand under WSL
+PAT token. The latter can be done by running the following command under WSL
 ([more info here](https://docs.microsoft.com/en-us/windows/wsl/tutorials/wsl-git)):
 
 ```ps
@@ -125,7 +125,7 @@ But if you insist you want to start by installing [Python 3.8](https://www.pytho
 The quickest method to get up and running is via the Docker container.
 
 > NOTE: For licensing reasons, we do not publicly redistribute any
-> build artifact. In particular the docker registry `spinshot.azurecr.io` referred to
+> build artifact. In particular, the docker registry `spinshot.azurecr.io` referred to
 > in the commands below is kept private to the
 > project maintainers only.
 >
@@ -178,8 +178,7 @@ Cumulative rewards -- DQN=Red, Random=Green
 
 ## Jupyter notebooks
 
-To quickly get familiar with the project you can open one the
-the provided Juptyer notebooks to play interactively with
+To quickly get familiar with the project, you can open one of the provided Jupyter notebooks to play interactively with
 the gym environments. Just start jupyter with `jupyter notebook`, or
 `venv/bin/jupyter notebook` if you are using a virtual environment setup.
 
@@ -211,8 +210,8 @@ and can easily be converted to `.ipynb` format if needed:
 
 ## How to instantiate the Gym environments?
 
-The following code shows how to create an instance of the the OpenAI Gym environment `CyberBattleChain-v0`, an environment based on a [chain-like network structure](cyberbattle/samples/chainpattern/chainpattern.py), with 10 nodes (`size=10`) where the agent's goal is to either gain full ownership of the network (`own_atleast_percent=1.0`) or
-break the 80% network availability SLA (`maintain_sla=0.80`), while the netowrk is being monitored and protected by basic probalistically-modelled defender (`defender_agent=ScanAndReimageCompromisedMachines`):
+The following code shows how to create an instance of the OpenAI Gym environment `CyberBattleChain-v0`, an environment based on a [chain-like network structure](cyberbattle/samples/chainpattern/chainpattern.py), with 10 nodes (`size=10`) where the agent's goal is to either gain full ownership of the network (`own_atleast_percent=1.0`) or
+break the 80% network availability SLA (`maintain_sla=0.80`), while the network is being monitored and protected by the basic probalistically-modelled defender (`defender_agent=ScanAndReimageCompromisedMachines`):
 
 ```python
 import cyberbattle._env.cyberbattle_env
