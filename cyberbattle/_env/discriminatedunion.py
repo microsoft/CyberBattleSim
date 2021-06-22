@@ -31,7 +31,7 @@ class DiscriminatedUnion(spaces.Dict):  # type: ignore
             super().__init__(spaces=spaces)
 
     def seed(self, seed: Union[None, int] = None) -> None:
-        self._np_random, seed = seeding.np_random(seed)
+        self.np_random, seed = seeding.np_random(seed)
         super().seed(seed)
 
     def sample(self) -> object:
