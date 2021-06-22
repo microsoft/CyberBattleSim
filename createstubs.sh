@@ -7,6 +7,8 @@ set -e
 
 . ./getpythonpath.sh
 
+pushd "$(dirname "$0")"
+
 echo "$(tput setaf 2)Creating type stubs$(tput sgr0)"
 createstub() {
     local name=$1
@@ -42,12 +44,16 @@ fi
 
 if [ ! -d "boolean" ]; then
     pyright --createstub boolean
-    sed -i '/class BooleanAlgebra(object):/a\    TRUE = ...\n    FALSE = ...' typings/boolean/boolean.pyi
+    sed -i '/class BooleanAlgebra:/a\    TRUE = ...\n    FALSE = ...' typings/boolean/boolean.pyi
 else
     echo stub 'boolean' already created
 fi
+
+echo 'Typing stub generation completed'
 
 # Stubs that needed manual patching and that
 # were instead checked-in in git
 #   pyright --createstub boolean
 #   pyright --createstub gym
+
+popd

@@ -18,7 +18,7 @@ class StateAugmentation:
     """Default agent state augmentation, consisting of the gym environment
     observation itself and nothing more."""
 
-    def __init__(self, observation: Optional[cyberbattle_env.Observation] = None):
+    def __init__(self, observation: cyberbattle_env.Observation):
         self.observation = observation
 
     def on_step(self, action: cyberbattle_env.Action, reward: float, done: bool, observation: cyberbattle_env.Observation):
@@ -424,7 +424,7 @@ class ActionTrackingStateAugmentation(StateAugmentation):
        - failed_action_count: count of action taken and failed at the current node
      """
 
-    def __init__(self, p: EnvironmentBounds, observation: Optional[cyberbattle_env.Observation] = None):
+    def __init__(self, p: EnvironmentBounds, observation: cyberbattle_env.Observation):
         self.aa = AbstractAction(p)
         self.success_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
         self.failed_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
