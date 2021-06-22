@@ -142,7 +142,7 @@ class CyberBattleGraph(gym.Wrapper):
     def __init__(self, env, maximum_total_credentials=22, maximum_node_count=22):
         super().__init__(env)
         self._bounds = self.env._bounds
-        self.__graph = None
+        self.__graph = nx.DiGraph()
         self.observation_space = DiGraph(self._bounds.maximum_node_count)
 
     def reset(self):

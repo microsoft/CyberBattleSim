@@ -318,7 +318,8 @@ class DeepQLearnerPolicy(Learner):
             torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 1.0)
         else:
             for param in self.policy_net.parameters():
-                param.grad.data.clamp_(-1, 1)
+                if param.grad is not None:
+                    param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
     def get_actor_state_vector(self, global_state: ndarray, actor_features: ndarray) -> ndarray:

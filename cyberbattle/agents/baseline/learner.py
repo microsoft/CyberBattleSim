@@ -198,7 +198,7 @@ def epsilon_greedy_search(
     all_episodes_availability = []
 
     wrapped_env = AgentWrapper(cyberbattle_gym_env,
-                               ActionTrackingStateAugmentation(environment_properties))
+                               ActionTrackingStateAugmentation(environment_properties, cyberbattle_gym_env.reset()))
     steps_done = 0
     plot_title = f"{title} (epochs={episode_count}, ϵ={initial_epsilon}, ϵ_min={epsilon_minimum}," \
         + (f"ϵ_multdecay={epsilon_multdecay}," if epsilon_multdecay else '') \
