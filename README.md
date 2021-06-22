@@ -130,11 +130,21 @@ The quickest method to get up and running is via the Docker container.
 > project maintainers only.
 >
 > As a workaround, you can recreate the docker image yourself using the provided `Dockerfile`, publish the resulting image to your own docker registry and replace the registry name in the commands below.
+
+### Running from Docker registry
+
 ```bash
 commit=7c1f8c80bc53353937e3c69b0f5f799ebb2b03ee
 docker login spinshot.azurecr.io
 docker pull spinshot.azurecr.io/cyberbattle:$commit
 docker run -it spinshot.azurecr.io/cyberbattle:$commit cyberbattle/agents/baseline/run.py
+```
+
+### Recreating the Docker image
+
+```bash
+docker build -t cyberbattle:1.1 .
+docker run -it -v "$(pwd)":/source --rm cyberbattle:1.1 cyberbattle/agents/baseline/run.py
 ```
 
 ## Check your environment
