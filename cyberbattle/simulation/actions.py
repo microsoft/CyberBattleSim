@@ -177,7 +177,7 @@ class AgentActions:
             if 'kind' in edge_annotation:
                 new_annotation = EdgeAnnotation(max(edge_annotation['kind'].value, new_annotation.value))
             else:
-                new_annotation = new_annotation.value
+                new_annotation = EdgeAnnotation(new_annotation.value)
         self._environment.network.add_edge(source_node_id, target_node_id, kind=new_annotation, kind_as_float=float(new_annotation.value))
 
     def get_discovered_properties(self, node_id: model.NodeID) -> Set[int]:
