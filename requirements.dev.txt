@@ -35,3 +35,5 @@ networkx-stubs @ git+https://github.com/fmagin/networkx-stubs/@master
 # and https://github.com/microsoft/pyright/issues/861
 #data-science-types~=0.2.20
 data-science-types @ git+https://github.com/blumu/data-science-types/@blumu-patch-1
+
+papermill==2.3.3
