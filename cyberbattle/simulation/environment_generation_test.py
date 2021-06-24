@@ -5,6 +5,7 @@
     The unit tests for the environment_generation functions
 """
 from collections import Counter
+from cyberbattle.simulation import commandcontrol
 from typing import List, Dict
 import pytest
 from . import environment_generation
@@ -33,6 +34,15 @@ def test_create_random_environment() -> None:
     result: model.Environment = environment_generation.\
         create_random_environment("Test_environment 2", 4)
     assert isinstance(result, model.Environment)
+
+
+def test_random_environment_list_attacks() -> None:
+    """
+        Unit tests for #23 caused by bug https://github.com/bastikr/boolean.py/issues/82 in boolean.py
+    """
+    env = environment_generation.create_random_environment('test', 10)
+    c2 = commandcontrol.CommandControl(env)
+    c2.print_all_attacks()
 
 
 def test_create_random_node() -> None:

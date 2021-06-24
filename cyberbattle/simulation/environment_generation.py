@@ -185,6 +185,8 @@ def create_random_environment(name: str, size: int) -> model.Environment:
         rand_os: str = os_types[random.randint(0, 1)]
         nodes[str(i)] = create_random_node(rand_os, potential_ports)
 
+    nodes['0'].agent_installed = True
+
     graph.add_nodes_from([(k, {'data': v}) for (k, v) in list(nodes.items())])
 
     return model.Environment(network=graph, vulnerability_library=local_vuln_lib, identifiers=ENV_IDENTIFIERS)
