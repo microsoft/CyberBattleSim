@@ -58,3 +58,5 @@ typings/**
 cyberbattle/agents/baseline/notebooks/images/*.png
 cyberbattle/agents/baseline/notebooks/images/*.gif
 log.txt
+
+notebooks/output/**
