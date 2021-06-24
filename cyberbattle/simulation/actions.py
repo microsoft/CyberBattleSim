@@ -78,8 +78,6 @@ class ActionResult(NamedTuple):
 
 
 ALGEBRA = boolean.BooleanAlgebra()
-ALGEBRA.TRUE.dual = type(ALGEBRA.FALSE)
-ALGEBRA.FALSE.dual = type(ALGEBRA.TRUE)
 
 
 @dataclass
@@ -128,12 +126,11 @@ class AgentActions:
         node_flags = node.properties
         expr = vulnerability.precondition.expression
 
-        # this line seems redundant but it is necessary to declare the symbols used in the mapping
-        # pylint: disable=unused-variable
-
-        mapping = {i: ALGEBRA.TRUE if str(i) in node_flags else ALGEBRA.FALSE
+        true_value = ALGEBRA.parse('true')
+        false_value = ALGEBRA.parse('false')
+        mapping = {i: true_value if str(i) in node_flags else false_value
                    for i in expr.get_symbols()}
-        is_true: bool = cast(boolean.Expression, expr.subs(mapping)).simplify() == ALGEBRA.TRUE
+        is_true: bool = cast(boolean.Expression, expr.subs(mapping)).simplify() == true_value
         return is_true
 
     def list_vulnerabilities_in_target(

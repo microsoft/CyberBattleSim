@@ -38,11 +38,6 @@ import random
 VERSION_TAG = "0.1.0"
 
 ALGEBRA = boolean.BooleanAlgebra()
-# These two lines define True as the dual of False and vice versa
-# it's necessary in order to make sure the simplify function in boolean.py
-# works correctly. See https://github.com/bastikr/boolean.py/issues/82
-ALGEBRA.TRUE.dual = type(ALGEBRA.FALSE)
-ALGEBRA.FALSE.dual = type(ALGEBRA.TRUE)
 
 # Type alias for identifiers
 NodeID = str

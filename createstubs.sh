@@ -44,7 +44,7 @@ fi
 
 if [ ! -d "boolean" ]; then
     pyright --createstub boolean
-    sed -i '/class BooleanAlgebra:/a\    TRUE = ...\n    FALSE = ...' typings/boolean/boolean.pyi
+    sed -i '/class BooleanAlgebra(object):/a\    TRUE = ...\n    FALSE = ...' typings/boolean/boolean.pyi
 else
     echo stub 'boolean' already created
 fi
