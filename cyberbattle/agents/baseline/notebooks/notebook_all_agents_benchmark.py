@@ -42,7 +42,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 cyberbattlechain_10 = gym.make(
     'CyberBattleChain-v0',
     size=10,
-    attacker_goal=cyberbattle_env.AttackerGoal(reward=4000, own_atleast_percent=1.0)
+    attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0)
 )
 
 cyberbattlechain_10.environment
