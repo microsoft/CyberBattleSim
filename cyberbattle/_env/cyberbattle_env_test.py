@@ -90,14 +90,13 @@ def test_step_after_done() -> None:
         {'connect': np.array([8, 10, 3, 9])},              # done=False, r=100.0
         {'local_vulnerability': np.array([10, 4])},        # done=False, r=49.0
         {'local_vulnerability': np.array([8, 1])},         # done=False, r=49.0
-        {'connect': np.array([7, 11, 2, 10])},             # done=False, r=1000.0
-        {'connect': np.array([5, 10, 3, 9])},              # done=True, r=5000.0
+        {'connect': np.array([7, 11, 2, 10])},             # done=True, r=1000.0
 
         # this is one too many (after done)
         {'connect': np.array([10, 5, 2, 4])},              # done=True, r=5000.0
     ]
 
-    env = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(reward=4000))
+    env = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(own_atleast_percent=1.0))
 
     for a in actions[:-1]:
         env.step(a)
