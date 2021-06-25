@@ -43,9 +43,9 @@ torch.cuda.is_available()
 # pio.orca.config.use_xvfb = True
 # pio.orca.config.save()
 # %%
-cyberbattlechain_4 = gym.make('CyberBattleChain-v0', size=4, attacker_goal=cyberbattle_env.AttackerGoal(reward=2180))
-cyberbattlechain_10 = gym.make('CyberBattleChain-v0', size=10, attacker_goal=cyberbattle_env.AttackerGoal(reward=4000))
-cyberbattlechain_20 = gym.make('CyberBattleChain-v0', size=20, attacker_goal=cyberbattle_env.AttackerGoal(reward=7000))
+cyberbattlechain_4 = gym.make('CyberBattleChain-v0', size=4, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
+cyberbattlechain_10 = gym.make('CyberBattleChain-v0', size=10, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
+cyberbattlechain_20 = gym.make('CyberBattleChain-v0', size=20, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
 
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_total_credentials=22,

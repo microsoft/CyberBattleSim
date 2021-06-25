@@ -32,7 +32,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 cyberbattlechain_defender = gym.make('CyberBattleChain-v0',
                                      size=10,
                                      attacker_goal=AttackerGoal(
-                                         # reward=2180,
                                          own_atleast=0,
                                          own_atleast_percent=1.0
                                      ),

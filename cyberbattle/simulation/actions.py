@@ -59,8 +59,19 @@ class Penalty:
     BLOCKED_BY_REMOTE_FIREWALL = -10
 
 
-# Fixed reward for discovering one new credential
-CREDENTIAL_DISCOVERED_REWARD = 2
+# Reward for the first time a local or remote attack
+# gets successfully executed since the last time the target node was imaged.
+# NOTE: the attack cost gets substracted from this reward.
+NEW_SUCCESSFULL_ATTACK_REWARD = 7
+
+# Fixed reward for discovering a new node
+NODE_DISCOVERED_REWARD = 5
+
+# Fixed reward for discovering a new credential
+CREDENTIAL_DISCOVERED_REWARD = 3
+
+# Fixed reward for discovering a new node property
+PROPERTY_DISCOVERED_REWARD = 2
 
 
 class EdgeAnnotation(Enum):
@@ -192,13 +203,18 @@ class AgentActions:
                               if p not in self.privilege_tags]
 
         if node_id in self._discovered_nodes:
+            before_count = len(self._discovered_nodes[node_id].discovered_properties)
             self._discovered_nodes[node_id].discovered_properties = self._discovered_nodes[node_id].discovered_properties.union(properties_indices)
         else:
+            before_count = 0
             self._discovered_nodes[node_id] = NodeTrackingInformation(discovered_properties=set(properties_indices))
+
+        newly_discovered_properties = len(self._discovered_nodes[node_id].discovered_properties) - before_count
+        return newly_discovered_properties
 
     def __mark_allnodeproperties_as_discovered(self, node_id: model.NodeID):
         node_info: model.NodeInfo = self._environment.network.nodes[node_id]['data']
-        self.__mark_nodeproperties_as_discovered(node_id, node_info.properties)
+        return self.__mark_nodeproperties_as_discovered(node_id, node_info.properties)
 
     def __mark_node_as_owned(self,
                              node_id: model.NodeID,
@@ -295,6 +311,8 @@ class AgentActions:
         if not self._check_prerequisites(node_id, vulnerability):
             return False, ActionResult(reward=failed_penalty, outcome=model.ExploitFailed())
 
+        reward = 0
+
         # if the vulnerability type is a privilege escalation
         # and if the escalation level is not already reached on that node,
         # then add the escalation tag to the node properties
@@ -311,19 +329,35 @@ class AgentActions:
                 assert p in node_info.properties, \
                     f'Discovered property {p} must belong to the set of properties associated with the node.'
 
-            self.__mark_nodeproperties_as_discovered(node_id, outcome.discovered_properties)
+            newly_discovered_properties = self.__mark_nodeproperties_as_discovered(node_id, outcome.discovered_properties)
+            reward += newly_discovered_properties * PROPERTY_DISCOVERED_REWARD
 
         if node_id not in self._discovered_nodes:
             self._discovered_nodes[node_id] = NodeTrackingInformation()
 
         lookup_key = (vulnerability_id, local_or_remote)
+
+        already_executed = lookup_key in self._discovered_nodes[node_id].last_attack
+
+        if already_executed:
+            last_time = self._discovered_nodes[node_id].last_attack[lookup_key]
+            if node_info.last_reimaging is None or last_time >= node_info.last_reimaging:
+                reward += Penalty.REPEAT
+        else:
+            reward += NEW_SUCCESSFULL_ATTACK_REWARD
+
         self._discovered_nodes[node_id].last_attack[lookup_key] = time()
 
         newly_discovered_nodes, discovered_nodes_value, newly_discovered_credentials = self.__mark_discovered_entities(node_id, outcome)
-        reward = discovered_nodes_value + newly_discovered_credentials * CREDENTIAL_DISCOVERED_REWARD - vulnerability.cost
+
+        reward += discovered_nodes_value
+        reward += newly_discovered_nodes * NODE_DISCOVERED_REWARD
+        reward += newly_discovered_credentials * CREDENTIAL_DISCOVERED_REWARD
+
+        reward -= vulnerability.cost
 
         logger.info("GOT REWARD: " + vulnerability.reward_string)
-        return True, ActionResult(reward=reward, outcome=vulnerability.outcome)
+        return True, ActionResult(reward=reward, outcome=outcome)
 
     def exploit_remote_vulnerability(self,
                                      node_id: model.NodeID,
