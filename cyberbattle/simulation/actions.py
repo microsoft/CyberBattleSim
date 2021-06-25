@@ -59,9 +59,8 @@ class Penalty:
     BLOCKED_BY_REMOTE_FIREWALL = -10
 
 
-# Reward for any successfully executed local or remote attack
-# (the attack cost gets substracted from this reward)
-SUCCEEDED_ATTACK_REWARD = 50
+# Fixed reward for discovering one new credential
+CREDENTIAL_DISCOVERED_REWARD = 2
 
 
 class EdgeAnnotation(Enum):
@@ -182,8 +181,10 @@ class AgentActions:
 
     def __mark_node_as_discovered(self, node_id: model.NodeID) -> None:
         logger.info('discovered node: ' + node_id)
-        if node_id not in self._discovered_nodes:
+        newly_discovered = node_id not in self._discovered_nodes
+        if newly_discovered:
             self._discovered_nodes[node_id] = NodeTrackingInformation()
+        newly_discovered
 
     def __mark_nodeproperties_as_discovered(self, node_id: model.NodeID, properties: List[PropertyName]):
         properties_indices = [self._environment.identifiers.properties.index(p)
@@ -211,18 +212,35 @@ class AgentActions:
 
         self.__mark_allnodeproperties_as_discovered(node_id)
 
-    def __mark_discovered_entities(self, reference_node: model.NodeID, outcome: model.VulnerabilityOutcome) -> None:
+    def __mark_discovered_entities(self, reference_node: model.NodeID, outcome: model.VulnerabilityOutcome) -> Tuple[int, float, int]:
+        """Mark discovered entities as such and return
+        the number of newly discovered nodes, their total value and the number of newly discovered credentials"""
+        newly_discovered_nodes = 0
+        newly_discovered_nodes_value = 0
+        newly_discovered_credentials = 0
+
         if isinstance(outcome, model.LeakedCredentials):
             for credential in outcome.credentials:
-                self.__mark_node_as_discovered(credential.node)
-                self._gathered_credentials.add(credential.credential)
+                if self.__mark_node_as_discovered(credential.node):
+                    newly_discovered_nodes += 1
+                    newly_discovered_nodes_value += self._environment.get_node(credential.node).value
+
+                if credential.credential not in self._gathered_credentials:
+                    newly_discovered_credentials += 1
+                    self._gathered_credentials.add(credential.credential)
+
                 logger.info('discovered credential: ' + str(credential))
                 self.__annotate_edge(reference_node, credential.node, EdgeAnnotation.KNOWS)
 
         elif isinstance(outcome, model.LeakedNodesId):
             for node_id in outcome.nodes:
-                self.__mark_node_as_discovered(node_id)
+                if self.__mark_node_as_discovered(node_id):
+                    newly_discovered_nodes += 1
+                    newly_discovered_nodes_value += self._environment.get_node(node_id).value
+
                 self.__annotate_edge(reference_node, node_id, EdgeAnnotation.KNOWS)
+
+        return newly_discovered_nodes, newly_discovered_nodes_value, newly_discovered_credentials
 
     def get_node_privilegelevel(self, node_id: model.NodeID) -> model.PrivilegeLevel:
         """Return the last recorded privilege level of the specified node"""
@@ -299,20 +317,13 @@ class AgentActions:
             self._discovered_nodes[node_id] = NodeTrackingInformation()
 
         lookup_key = (vulnerability_id, local_or_remote)
-
-        already_executed = lookup_key in self._discovered_nodes[node_id].last_attack
-
-        if already_executed:
-            last_time = self._discovered_nodes[node_id].last_attack[lookup_key]
-            if node_info.last_reimaging is None or last_time >= node_info.last_reimaging:
-                return False, ActionResult(reward=Penalty.REPEAT, outcome=outcome)
-
         self._discovered_nodes[node_id].last_attack[lookup_key] = time()
 
-        self.__mark_discovered_entities(node_id, outcome)
+        newly_discovered_nodes, discovered_nodes_value, newly_discovered_credentials = self.__mark_discovered_entities(node_id, outcome)
+        reward = discovered_nodes_value + newly_discovered_credentials * CREDENTIAL_DISCOVERED_REWARD - vulnerability.cost
+
         logger.info("GOT REWARD: " + vulnerability.reward_string)
-        return True, ActionResult(reward=0.0 if already_executed else SUCCEEDED_ATTACK_REWARD - vulnerability.cost,
-                                  outcome=vulnerability.outcome)
+        return True, ActionResult(reward=reward, outcome=vulnerability.outcome)
 
     def exploit_remote_vulnerability(self,
                                      node_id: model.NodeID,
