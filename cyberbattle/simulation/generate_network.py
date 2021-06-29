@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """ Generating random graphs"""
-from cyberbattle.simulation.model import Identifiers, NodeID, CredentialID, PortName
+from cyberbattle.simulation.model import Identifiers, NodeID, CredentialID, PortName, FirewallConfiguration, FirewallRule, RulePermission
 import numpy as np
 import networkx as nx
 from cyberbattle.simulation import model as m
@@ -228,6 +228,10 @@ def cyberbattle_model_from_traffic_graph(
     def create_vulnerabilities_from_traffic_data(node_id: m.NodeID):
         return add_leak_neighbors_vulnerability(node_id=node_id)
 
+    firewall_conf = FirewallConfiguration(
+        [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)],
+        [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)])
+
     # Pick a random node as the agent entry node
     entry_node_index = random.randrange(len(graph.nodes))
     entry_node_id, entry_node_data = list(graph.nodes(data=True))[entry_node_index]
@@ -238,6 +242,7 @@ def cyberbattle_model_from_traffic_graph(
                             properties=["breach_node"],
                             vulnerabilities=create_vulnerabilities_from_traffic_data(entry_node_id),
                             agent_installed=True,
+                            firewall=firewall_conf,
                             reimagable=False)})
 
     def create_node_data(node_id: m.NodeID):
@@ -248,7 +253,9 @@ def cyberbattle_model_from_traffic_graph(
                       ],
             value=random.randint(0, 100),
             vulnerabilities=create_vulnerabilities_from_traffic_data(node_id),
-            agent_installed=False)
+            agent_installed=False,
+            firewall=firewall_conf
+            )
 
     for node in list(graph.nodes):
         if node != entry_node_id:
@@ -266,7 +273,7 @@ def new_environment():
     here for the statistical generative model
     were arbirarily picked. We recommend exploring different values for those parameters.
     """
-    traffic = generate_random_traffic_network(seed=1,
+    traffic = generate_random_traffic_network(seed=None,
                                               n_clients=50,
                                               n_servers={
                                                   "SMB": 15,
@@ -275,6 +282,7 @@ def new_environment():
                                               },
                                               alpha=[(1, 1), (0.2, 0.5)],
                                               beta=[(1000, 10), (10, 100)])
+
     network = cyberbattle_model_from_traffic_graph(
         traffic,
         cached_rdp_password_probability=0.8,
