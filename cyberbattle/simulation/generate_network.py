@@ -7,7 +7,7 @@ import numpy as np
 import networkx as nx
 from cyberbattle.simulation import model as m
 import random
-from typing import List, Tuple, DefaultDict
+from typing import List, Optional, Tuple, DefaultDict
 
 from collections import defaultdict
 
@@ -34,7 +34,7 @@ def generate_random_traffic_network(
         "HTTP": 1,
         "RDP": 1,
     },
-    seed: int = 0,
+    seed: Optional[int] = 0,
     tolerance: np.float32 = np.float32(1e-3),
     alpha=np.array([(0.1, 0.3), (0.18, 0.09)], dtype=float),
     beta=np.array([(100, 10), (10, 100)], dtype=float),
@@ -255,7 +255,7 @@ def cyberbattle_model_from_traffic_graph(
             vulnerabilities=create_vulnerabilities_from_traffic_data(node_id),
             agent_installed=False,
             firewall=firewall_conf
-            )
+        )
 
     for node in list(graph.nodes):
         if node != entry_node_id:
@@ -265,7 +265,7 @@ def cyberbattle_model_from_traffic_graph(
     return graph
 
 
-def new_environment():
+def new_environment(n_servers_per_protocol: int):
     """Create a new simulation environment based on
     a randomly generated network topology.
 
@@ -276,9 +276,9 @@ def new_environment():
     traffic = generate_random_traffic_network(seed=None,
                                               n_clients=50,
                                               n_servers={
-                                                  "SMB": 15,
-                                                  "HTTP": 15,
-                                                  "RDP": 15,
+                                                  "SMB": n_servers_per_protocol,
+                                                  "HTTP": n_servers_per_protocol,
+                                                  "RDP": n_servers_per_protocol,
                                               },
                                               alpha=[(1, 1), (0.2, 0.5)],
                                               beta=[(1000, 10), (10, 100)])
