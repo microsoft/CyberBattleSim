@@ -491,13 +491,13 @@ def assign_random_labels(
                 FirewallRule(port=p, permission=RulePermission.ALLOW)
                 for p in
                 random.sample(
-                    identifiers.properties,
-                    k=random.randint(0, len(identifiers.properties)))],
+                    identifiers.ports,
+                    k=random.randint(0, len(identifiers.ports)))],
             incoming=[
                 FirewallRule(port=p, permission=RulePermission.ALLOW)
                 for p in random.sample(
-                    identifiers.properties,
-                    k=random.randint(0, len(identifiers.properties)))])
+                    identifiers.ports,
+                    k=random.randint(0, len(identifiers.ports)))])
 
     def create_random_properties() -> List[PropertyName]:
         return list(random.sample(
