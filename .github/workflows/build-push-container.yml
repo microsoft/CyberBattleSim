@@ -1,11 +1,7 @@
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
-      - wiblum/*
 env:
   containerRegistry: spinshot.azurecr.io
   imageRepository: cyberbattle
@@ -16,5 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Login to ACR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.containerRegistry }}
+          username: ${{ secrets.ACR_TOKEN_NAME }}
+          password: ${{ secrets.ACR_TOKEN_PASSWORD }}
+
       - run: |
           docker build . -t  ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
+          docker push ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
