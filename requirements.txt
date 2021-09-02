@@ -1,6 +1,6 @@
 gym~=0.17.3
 numpy==1.19.4
-boolean.py@git+https://github.com/bastikr/boolean.py/@74063a8588875c058e6dbbb85b69ed052e1f2099#egg=numpy_stubs
+boolean.py@git+https://github.com/bastikr/boolean.py/@74063a8588875c058e6dbbb85b69ed052e1f2099#egg=boolpy_stubs
 networkx==2.4
 pyyaml~=5.4.1
 setuptools~=49.2.1
