@@ -4,7 +4,6 @@ on:
       - main
   push:
     branches:
-      - main
       - wiblum/*
 env:
   containerRegistry: spinshot.azurecr.io
