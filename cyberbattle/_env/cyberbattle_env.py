@@ -728,10 +728,20 @@ class CyberBattleEnv(gym.Env):
 
     def __property_vector(self, node_id: model.NodeID, node_info: model.NodeInfo) -> numpy.ndarray:
         """Property vector for specified node
-        each cell is either 1 if the property is set, 0 if unset, and 3 if unknown (node is not owned by the agent yet)
+        each cell is either 1 if the property is set, -1 if unset, and 0 if unknown (node is not owned by the agent yet)
         """
         properties_indices = list(self._actuator.get_discovered_properties(node_id))
-        vector = numpy.zeros((self.__bounds.property_count), dtype=numpy.int32)
+
+        is_owned = self._actuator.get_node_privilegelevel(node_id) >= PrivilegeLevel.LocalUser
+
+        if is_owned:
+            # if the node is owned then we know all its properties
+            # => -1 should be the default value
+            vector = numpy.full((self.__bounds.property_count), -1, dtype=numpy.int32)
+        else:
+            # otherwise we don't know anything about not discovered properties => 0 should be the default value
+            vector = numpy.zeros((self.__bounds.property_count), dtype=numpy.int32)
+
         vector[properties_indices] = 1
         return vector
 

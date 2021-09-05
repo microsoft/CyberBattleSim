@@ -192,9 +192,10 @@ class Feature_discovered_notowned_node_count(Feature):
     def get(self, a: StateAugmentation, node):
         node_props = a.observation['discovered_nodes_properties']
         discovered = len(node_props)
-        owned = len(np.all(node_props != 0, axis=1))
+        # here we assume that a node is owned just if all its properties are known
+        owned = np.count_nonzero(np.all(node_props != 0, axis=1))
         diff = discovered - owned
-        return [max(diff, self.clip)]
+        return [min(diff, self.clip)]
 
 
 class Feature_owned_node_count(Feature):
@@ -364,11 +365,17 @@ class AbstractAction(Feature):
         if abstract_action_index_int < self.n_remote_actions:
             vuln = abstract_action_index_int
 
+            discovered_nodes_count = len(node_prop)
+
+            if discovered_nodes_count <= 1:
+                return None
+
             # NOTE: We can do better here than random pick: ultimately this
             # should be learnt from target node properties
 
             # pick any node from the discovered ones
-            target = np.random.choice(len(node_prop))
+            # excluding the source node itself
+            target = (source_node + 1 + np.random.choice(discovered_nodes_count - 1)) % discovered_nodes_count
 
             return {'remote_vulnerability': np.array([source_node, target, vuln])}
 
@@ -381,25 +388,32 @@ class AbstractAction(Feature):
             # no credential available in the cache: cannot poduce a valid connect action
             return None
 
+        nodes_not_owned = discovered_nodes_notowned(observation)
+
         # Pick a matching cred from the discovered_cred matrix
         # (at random if more than one exist for this target port)
         match_port = discovered_credentials[:, 1] == port
         match_port_indices = np.where(match_port)[0]
 
-        nodes_not_owned = discovered_nodes_notowned(observation)
+        credential_indices_choices = [c for c in match_port_indices
+                                      if discovered_credentials[c, 0] in nodes_not_owned]
 
-        match_port__target_notowned = [c for c in match_port_indices
-                                       if discovered_credentials[c, 0] in nodes_not_owned]
-
-        if match_port__target_notowned:
+        if credential_indices_choices:
             logging.debug('found matching cred in the credential cache')
-            cred = np.int32(np.random.choice(match_port__target_notowned))
-            target = np.int32(discovered_credentials[cred, 0])
-
-            return {'connect': np.array([source_node, target, port, cred], dtype=np.int32)}
         else:
-            logging.debug('no cred match')
-            return None
+            logging.debug('no cred matching requested port, trying instead creds used to access other ports')
+            credential_indices_choices = [i for (i, n) in enumerate(discovered_credentials[:, 0])
+                                          if n in nodes_not_owned]
+
+            if credential_indices_choices:
+                logging.debug('found cred in the credential cache without matching port name')
+            else:
+                logging.debug('no cred to use from the credential cache')
+                return None
+
+        cred = np.int32(np.random.choice(credential_indices_choices))
+        target = np.int32(discovered_credentials[cred, 0])
+        return {'connect': np.array([source_node, target, port, cred], dtype=np.int32)}
 
     def abstract_from_gymaction(self, gym_action: cyberbattle_env.Action) -> np.int32:
         """Abstract a gym action into an action to be index in the Q-matrix"""
