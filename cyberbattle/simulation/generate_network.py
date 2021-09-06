@@ -61,14 +61,15 @@ def generate_random_traffic_network(
         # sample edge probabilities from a beta distribution
         np.random.seed(seed)
         probs: np.ndarray = np.random.beta(a=alpha, b=beta, size=(2, 2))
-        # don't allow probs too close to zero or one
-        probs = np.clip(probs, a_min=tolerance, a_max=np.float32(1.0 - tolerance))
 
         # scale by edge type
         if protocol == "SMB":
             probs = 3 * probs
         if protocol == "RDP":
             probs = 4 * probs
+
+        # don't allow probs too close to zero or one
+        probs = np.clip(probs, a_min=tolerance, a_max=np.float32(1.0 - tolerance))
 
         # sample edges using block models given edge probabilities
         di_graph_for_protocol = nx.stochastic_block_model(
