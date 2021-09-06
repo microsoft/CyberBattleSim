@@ -1,17 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Random agent with credential lookup (notebook)
+"""Evaluate and compare several agents on
+the chain CyberBattleSim gym environment (notebook)
 
-This notebooks can be run directly from VSCode, to generate a
-traditional Jupyter Notebook to open in your browser
- you can run the VSCode command `Export Currenty Python File As Jupyter Notebook`.
+NOTE: You can run this `.py`-notebook directly from VSCode.
+You can also generate a traditional Jupyter Notebook
+using the VSCode command `Export Currenty Python File As Jupyter Notebook`.
 """
 
 # pylint: disable=invalid-name
 
 # %% [markdown]
-# # Chain network CyberBattle Gym played by a random agent with credential cache lookup
+# # Chain network CyberBattleSim Gym environment played by a random agent with credential cache lookup
 
 # %%
 from cyberbattle._env import cyberbattle_env
@@ -39,6 +40,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 # %% [markdown]
 # # Gym environment: chain-like network
 # See Jupyer notebook `chainenetwork-random` for an introduction to this network environment.
+
+# %%
 cyberbattlechain_10 = gym.make(
     'CyberBattleChain-v0',
     size=10,
@@ -78,6 +81,7 @@ eval_episode_count = 5
 
 
 # %%
+# Evaluate the random agent
 random_run = learner.epsilon_greedy_search(
     cyberbattlechain_10,
     ep,
@@ -92,6 +96,8 @@ random_run = learner.epsilon_greedy_search(
 
 
 # %%
+# Evaluate a random agent that opportunistically exploits
+# credentials gathere in its local cache
 credlookup_run = learner.epsilon_greedy_search(
     cyberbattlechain_10,
     ep,
@@ -107,7 +113,7 @@ credlookup_run = learner.epsilon_greedy_search(
 )
 
 # %%
-
+# Evaluate a Tabular Q-learning agent
 tabularq_run = learner.epsilon_greedy_search(
     cyberbattlechain_10,
     ep,
@@ -125,6 +131,7 @@ tabularq_run = learner.epsilon_greedy_search(
 )
 
 # %%
+# Evaluate an agent that exploits the Q-table learnt above
 tabularq_exploit_run = learner.epsilon_greedy_search(
     cyberbattlechain_10,
     ep,
@@ -143,6 +150,7 @@ tabularq_exploit_run = learner.epsilon_greedy_search(
 )
 
 # %%
+# Evaluate a Deep-QLearning agent
 dql_run = learner.epsilon_greedy_search(
     cyberbattle_gym_env=cyberbattlechain_10,
     environment_properties=ep,
@@ -165,6 +173,7 @@ dql_run = learner.epsilon_greedy_search(
 )
 
 # %%
+# Evaluate an agent that exploits the Q-function learnt above
 dql_exploit_run = learner.epsilon_greedy_search(
     cyberbattlechain_10,
     ep,
@@ -179,6 +188,7 @@ dql_exploit_run = learner.epsilon_greedy_search(
 )
 
 # %%
+# Compare all the runs
 all_runs = [
     random_run,
     credlookup_run,
