@@ -3,11 +3,13 @@
 
 # -*- coding: utf-8 -*-
 # %%
-"""Deep Q-learning agent (notebook)
+"""Notebook demonstrating transfer learning capability of the
+the Deep Q-learning agent trained and evaluated on the chain
+ environment of various sizes.
 
-This notebooks can be run directly from VSCode, to generate a
-traditional Jupyter Notebook to open in your browser
- you can run the VSCode command `Export Currenty Python File As Jupyter Notebook`.
+NOTE: You can run this `.py`-notebook directly from VSCode.
+You can also generate a traditional Jupyter Notebook
+using the VSCode command `Export Currenty Python File As Jupyter Notebook`.
 """
 
 # %%

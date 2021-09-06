@@ -207,16 +207,16 @@ the gym environments. Just start jupyter with `jupyter notebook`, or
 The following `.py` notebooks are best viewed in VSCode or in Jupyter with the [Jupytext extension](https://jupytext.readthedocs.io/en/latest/install.html)
 and can easily be converted to `.ipynb` format if needed:
 
-  - Chain environments benchmarks:
+- Chain environments benchmarks:
 
-      - [Benchmark of all baseline agents](cyberbattle/agents/baseline/notebooks/notebook_all_agents_benchmark.py)
-      - [All baseline agents against a basic defender](cyberbattle/agents/baseline/notebooks/notebook_withdefender.py)
-      - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_dql.py)
-      - [Epsilon greedy](cyberbattle/agents/baseline/notebooks/notebook_randlookups.py)
-      - [Tabular Q Learning](cyberbattle/agents/baseline/notebooks/notebook_tabularq.py)
+  - [Benchmark of all baseline agents](cyberbattle/agents/baseline/notebooks/notebook_all_agents_benchmark.py)
+  - [All baseline agents against a basic defender](cyberbattle/agents/baseline/notebooks/notebook_withdefender.py)
+  - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_ctf_dql.py)
+  - [Epsilon greedy](cyberbattle/agents/baseline/notebooks/notebook_randlookups.py)
+  - [Tabular Q Learning](cyberbattle/agents/baseline/notebooks/notebook_tabularq.py)
 
-  - Capture the Flag benchmark:
-    - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_ctf_dql.py)
+- Capture the Flag benchmark:
+  - [DeepQL](cyberbattle/agents/baseline/notebooks/notebook_ctf_dql.py)
 
 ## How to instantiate the Gym environments?
 
