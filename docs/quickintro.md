@@ -179,11 +179,10 @@ The plot function displays the subset of the network explorsed so far. After a f
    ![image.png](.attachments/image-4fd79f98-36b2-45ae-82e4-2631aacda090.png)
 
 ### Solution
-The fully solved game is provided in the notebook [toyctf-solved.ipynb](notebooks/toyctf-solved.ipynb).
+The fully solved game is provided in the notebook [toyctf-solved.ipynb](../notebooks/toyctf-solved.ipynb).
 
 ### A random agent playing ToyCTF
-
-The notebook [toyctf-random.ipynb](notebooks/toyctf-random.ipynb)
+The notebook [toyctf-random.ipynb](../notebooks/toyctf-random.ipynb)
 runs a random agent on the ToyCTF enviornment: at each step, the agent
 picks an action at random from the action space.
 
