@@ -5,6 +5,7 @@
 # Licensed under the MIT License.
 
 PATH_TO_PYRIGHT=`which pyright`
+PYRIGHT_VERSION=@1.1.151
 
 ARGS=$@
 
@@ -63,16 +64,22 @@ fi
 echo "Checking pyright exists..."
 if [ -z "$PATH_TO_PYRIGHT" ]; then
     echo "...installing pyright"
-    ${SUDO} npm install -g pyright
+    ${SUDO} npm install -g pyright${PYRIGHT_VERSION}
 else
-    # already installed, upgrade to make sure it's current
-    # this avoids a sudo on launch if we're already current
-    echo "Checking pyright version..."
-    CURRENT=`pyright --version | cut -d' ' -f2`
-    REMOTE=`npm info pyright version`
-    if [ "$CURRENT" != "$REMOTE" ]; then
-        echo "...new version of pyright found, upgrading."
-        ${SUDO} npm upgrade -g pyright
+    if [ -z "$PYRIGHT_VERSION" ]; then
+
+        # already installed, upgrade to make sure it's current
+        # this avoids a sudo on launch if we're already current
+        echo "Checking pyright version..."
+        CURRENT=`pyright --version | cut -d' ' -f2`
+        REMOTE=`npm info pyright version`
+        if [ "$CURRENT" != "$REMOTE" ]; then
+            echo "...new version of pyright found, upgrading."
+            ${SUDO} npm upgrade -g pyright
+        fi
+    else
+        echo "...restoring pyright version ${PYRIGHT_VERSION}"
+        ${SUDO} npm install -g pyright${PYRIGHT_VERSION}
     fi
 fi
 

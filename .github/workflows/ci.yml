@@ -41,7 +41,7 @@ jobs:
       - name: Pull pip dependencies
         run: ./install-pythonpackages.sh
       - name: Install pyright
-        run: npm install -g pyright@1.1.151
+        run: ./pyright.sh --version
       - name: Pull typing stubs from cache
         uses: actions/cache@v2
         with:

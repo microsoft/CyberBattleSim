@@ -54,7 +54,7 @@ steps:
     displayName: "Pull pip dependencies"
 
   - script: |
-      npm install -g pyright
+      ./pyright.sh --version
     displayName: "Install pyright"
 
   - task: Cache@2
