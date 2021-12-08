@@ -43,7 +43,7 @@ parser.add_argument('--reward_goal', default=2180, type=int,
 parser.add_argument('--ownership_goal', default=1.0, type=float,
                     help='percentage of network nodes to own for the attacker to reach its goal')
 
-parser.add_argument('--rewardplot_with', default=80, type=int,
+parser.add_argument('--rewardplot_width', default=80, type=int,
                     help='width of the reward plot (values are averaged across iterations to fit in the desired width)')
 
 parser.add_argument('--chain_size', default=4, type=int,
@@ -87,7 +87,7 @@ dqn_learning_run = learner.epsilon_greedy_search(
     episode_count=args.training_episode_count,
     iteration_count=args.iteration_count,
     epsilon=0.90,
-    render=False,
+    render=True,
     # epsilon_multdecay=0.75,  # 0.999,
     epsilon_exponential_decay=5000,  # 10000
     epsilon_minimum=0.10,

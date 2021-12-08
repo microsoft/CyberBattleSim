@@ -33,6 +33,7 @@ using RL terminology.
 Our network __environment__ is given by a directed annotated graph where
 nodes represent computers and edges represent knowledge of other nodes or communication taking place between nodes.
 ![image.png](.attachments/image-377114ff-cdb7-4bee-88da-cac09640f661.png)
+
 Here you can see a toy example of network
 with machines running different OSes, software.
 Each machine has properties, a value, and suffers from pre-assigned vulnerabilities.
@@ -106,7 +107,7 @@ Consider as a toy example, the 'Capture the flag' game played on the computer sy
 
 ![image.png](.attachments/image-8cfbbc68-6db1-42f2-867d-5502ff56c4b3.png)
 
-Each graph node is a computing resource with implanted security flaws and vulnerabilities such as reused password, insucure passwords, leaked access tokens, misconfigured Access control, browsable direcotries, and so on.  The goal of the attacker is to take ownership of critical nodes in the graph (e.g., Azure and Sharepoint resources). For simplicity we assume that no defender is present and that the game is fully static (no external events between two action of the attacker).
+Each graph node is a computing resource with implanted security flaws and vulnerabilities such as reused password, insecure passwords, leaked access tokens, misconfigured Access control, browsable directories, and so on.  The goal of the attacker is to take ownership of critical nodes in the graph (e.g., Azure and Sharepoint resources). For simplicity we assume that no defender is present and that the game is fully static (no external events between two action of the attacker).
 
 We formally defined this network in Python code at [toy_ctf.py](../cyberbattle/samples/toyctf/toy_ctf.py).
 Here is a snippet of the code showing how we define the node `Website` with its properties, firewall configuration and implanted vulnerabilities:
@@ -152,7 +153,7 @@ nodes = {
 
 ### Interactive play with ToyCTF
 
-You can play the simulation interactively using the Jupyter notebook located at [toyctf-blank.ipynb](notebooks/toyctf-blank.ipynb). Try the following commands:
+You can play the simulation interactively using the Jupyter notebook located at [toyctf-blank.ipynb](../notebooks/toyctf-blank.ipynb). Try the following commands:
 
 ```python
 env.plot_environment_graph()
@@ -178,11 +179,10 @@ The plot function displays the subset of the network explorsed so far. After a f
    ![image.png](.attachments/image-4fd79f98-36b2-45ae-82e4-2631aacda090.png)
 
 ### Solution
-The fully solved game is provided in the notebook [toyctf-solved.ipynb](notebooks/toyctf-solved.ipynb).
+The fully solved game is provided in the notebook [toyctf-solved.ipynb](../notebooks/toyctf-solved.ipynb).
 
 ### A random agent playing ToyCTF
-
-The notebook [toyctf-random.ipynb](notebooks/toyctf-random.ipynb)
+The notebook [toyctf-random.ipynb](../notebooks/toyctf-random.ipynb)
 runs a random agent on the ToyCTF enviornment: at each step, the agent
 picks an action at random from the action space.
 
