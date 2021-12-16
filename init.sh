@@ -119,12 +119,15 @@ fi
 ./install-pythonpackages.sh
 
 if [ "${CREATE_VENV}" == "1" ]; then
-  # Add venv to jupyter notebook
+  # Register the `venv`` with jupyter
   python -m ipykernel install --user --name=venv
 fi
 
-# setup checks on every `git push`
-pre-commit install -t pre-push
+if [ ""$GITHUB_ACTION"" == "" ]; then
+  # If not running in CI/CD then configure
+  # pre-commit checks on every `git push` to run pyright and co
+  pre-commit install -t pre-push
+fi
 
 ./createstubs.sh
 

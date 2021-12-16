@@ -1,5 +1,5 @@
 # resolve incompatibility with pytest
-attrs==19.1.0
+attrs==19.2.0
 
 # for vscode intellisense
 jedi
@@ -12,9 +12,8 @@ torch==1.5.1
 flake8
 pep8-naming
 autopep8
-pre-commit
 
-pytest~=5.4.2
+pytest~=6.2.5
 
 jupytext~=1.6.0
 

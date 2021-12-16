@@ -146,7 +146,7 @@ StepInfo = TypedDict(
     })
 
 
-class OutOfBoundIndex(Exception):
+class OutOfBoundIndexError(Exception):
     """The agent attempted to reference an entity (node or a vulnerability) with an invalid index"""
 
 
@@ -566,11 +566,11 @@ class CyberBattleEnv(gym.Env):
         """
         # Ensures that the specified node is known by the agent
         if node_external_index < 0:
-            raise OutOfBoundIndex(f"Node index must be positive, given {node_external_index}")
+            raise OutOfBoundIndexError(f"Node index must be positive, given {node_external_index}")
 
         length = len(self.__discovered_nodes)
         if node_external_index >= length:
-            raise OutOfBoundIndex(
+            raise OutOfBoundIndexError(
                 f"Node index ({node_external_index}) is invalid; only {length} nodes discovered so far.")
 
         node_id = self.__discovered_nodes[node_external_index]
@@ -1069,7 +1069,7 @@ class CyberBattleEnv(gym.Env):
             else:
                 reward = max(0., reward)
 
-        except OutOfBoundIndex as error:
+        except OutOfBoundIndexError as error:
             logging.warning('Invalid entity index: ' + error.__str__())
             observation = self.__get_blank_observation()
             reward = 0.
