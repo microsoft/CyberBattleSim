@@ -10,9 +10,9 @@
 #    source getpythonpath.sh
 #
 
-PYTHON=`which python3.8`
+PYTHON=`which python3`
 if [ -z "$PYTHON" ]; then
-    PYTHON=`which python3`
+    PYTHON=`which python3.8`
 fi
 if [ -z "$PYTHON" ]; then
     PYTHON=`which python`
