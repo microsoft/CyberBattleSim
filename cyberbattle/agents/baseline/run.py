@@ -117,5 +117,5 @@ print("Episode duration -- DQN=Red, Random=Green")
 print(asciichartpy.plot(p.episodes_lengths_for_all_runs(all_runs), {'height': 30, 'colors': colors}))
 
 print("Cumulative rewards -- DQN=Red, Random=Green")
-c = p.averaged_cummulative_rewards(all_runs, args.rewardplot_with)
+c = p.averaged_cummulative_rewards(all_runs, args.rewardplot_width)
 print(asciichartpy.plot(c, {'height': 10, 'colors': colors}))

@@ -147,7 +147,7 @@ docker run -it -v "$(pwd)":/source --rm cyberbattle:1.1 cyberbattle/agents/basel
 Run the following command to run a simulation with a baseline RL agent:
 
 ```bash
-python cyberbattle/agents/baseline/run.py --training_episode_count 1 --eval_episode_count 1 --iteration_count 10 --rewardplot_with 80  --chain_size=20 --ownership_goal 1.0
+python cyberbattle/agents/baseline/run.py --training_episode_count 1 --eval_episode_count 1 --iteration_count 10 --rewardplot_width 80  --chain_size=20 --ownership_goal 1.0
 ```
 
 If everything is setup correctly you should get an output that looks like this:
