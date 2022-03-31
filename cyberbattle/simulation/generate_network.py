@@ -281,8 +281,8 @@ def new_environment(n_servers_per_protocol: int):
                                                   "HTTP": n_servers_per_protocol,
                                                   "RDP": n_servers_per_protocol,
                                               },
-                                              alpha=[(1, 1), (0.2, 0.5)],
-                                              beta=[(1000, 10), (10, 100)])
+                                              alpha=np.array([(1, 1), (0.2, 0.5)]),
+                                              beta=np.array([(1000, 10), (10, 100)]))
 
     network = cyberbattle_model_from_traffic_graph(
         traffic,
