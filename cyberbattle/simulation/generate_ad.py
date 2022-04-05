@@ -7,21 +7,19 @@ import networkx as nx
 ENV_IDENTIFIERS = Identifiers(
     properties=[
         'breach_node',
-        'domain_controller'
+        'domain_controller',
+        "admin"  # whether or not the users of this machine are admins
     ],
-    ports=['SMB', 'AD'],
+    ports=['SMB', 'AD', 'SHELL'],
     local_vulnerabilities=[
         'FindDomainControllers',
         'EnumerateFileShares',
         'AuthorizationSpoofAndCrack',
-        'FindUserSPNs'
+        'ScanForCreds',
+        'DumpNTDS'
     ],
     remote_vulnerabilities=[
         'DomainPasswordSpray',
-        'ScanWindowsLSA',
-        'ScanWindowsSAM',
-        'PassTheHash',
-        'DumpNTDS'
     ]
 )
 
@@ -42,8 +40,8 @@ def create_network_from_smb_traffic(
     # graph.add_edges_from([("domain_controller_1", f"share_{i}") for i in range(0, n_servers)], protocol="AD")
 
     firewall_conf = FirewallConfiguration(
-        [FirewallRule("SMB", RulePermission.ALLOW), FirewallRule("AD", RulePermission.ALLOW)],
-        [FirewallRule("SMB", RulePermission.ALLOW), FirewallRule("AD", RulePermission.ALLOW)])
+        [FirewallRule("SMB", RulePermission.ALLOW), FirewallRule("AD", RulePermission.ALLOW), FirewallRule("SHELL", RulePermission.ALLOW)],
+        [FirewallRule("SMB", RulePermission.ALLOW), FirewallRule("AD", RulePermission.ALLOW), FirewallRule("SHELL", RulePermission.ALLOW)])
 
     def default_vulnerabilities() -> m.VulnerabilityLibrary:
         lib = {}
@@ -65,7 +63,26 @@ def create_network_from_smb_traffic(
             description="Spoof an authoritative source on the network to get a crackable hash, then try to crack it",
             type=m.VulnerabilityType.LOCAL,
             rates=m.Rates(successRate=0.2),
-            outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node=f"share_{shareid}", port="SMB", credential=f"user_{credind}") for credind in credrandset for shareid in range(0, n_servers)])
+            outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node=f"share_{shareid}", port="SMB", credential=f"user_{credind}") for credind in credrandset for shareid in range(0, n_servers)]
+                                        + [m.CachedCredential(node=f"workstation_{credind % n_clients}", port="SHELL", credential=f"user_{credind}") for credind in credrandset])
+        )
+        lib['ScanForCreds'] = m.VulnerabilityInfo(
+            description="Scan the local security managers for credentials. Need to be admin on the box.",
+            type=m.VulnerabilityType.LOCAL,
+            outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node="domain_controller_1", port="AD", credential="dc_1")]),
+            precondition=m.Precondition("admin"),
+            rates=m.Rates(successRate=0.1),
+            reward_string="DA credentials found"
+        )
+        return lib
+
+    def dc_vulnerabilities(lib: m.VulnerabilityLibrary) -> m.VulnerabilityLibrary:
+        lib['DumpNTDS'] = m.VulnerabilityInfo(
+            description="Dump the NTDS file from AD",
+            type=m.VulnerabilityType.LOCAL,
+            outcome=m.CustomerData(),
+            precondition=m.Precondition("domain_controller"),
+            reward_string="Dumped all user hashes. Get crackin'"
         )
         return lib
 
@@ -84,10 +101,14 @@ def create_network_from_smb_traffic(
     for i in range(1, n_clients):
         nodeid = f"workstation_{i}"
         graph.nodes[nodeid].clear()
+        props = []
+        if random.random() > 0.8:
+            props = ["admin"]
         graph.nodes[nodeid].update({'data': m.NodeInfo(
-            services=[],
-            properties=[],
+            services=[m.ListeningService(name="SHELL", allowedCredentials=[f"user_{uid}" for uid in range(0, n_users) if uid % n_clients == i])],
+            properties=props,
             value=0,
+            firewall=firewall_conf,
             vulnerabilities=default_vulnerabilities()
         )})
 
@@ -98,16 +119,18 @@ def create_network_from_smb_traffic(
             services=[],
             properties=[],
             value=50,
+            firewall=firewall_conf,
             vulnerabilities=default_vulnerabilities()
         )})
 
     nodeid = "domain_controller_1"
     graph.nodes[nodeid].clear()
     graph.nodes[nodeid].update({'data': m.NodeInfo(
-        services=[],
+        services=[m.ListeningService(name="AD", allowedCredentials=["dc_1"])],
         properties=["domain_controller"],
         value=100,
-        vulnerabilities=default_vulnerabilities()
+        firewall=firewall_conf,
+        vulnerabilities=dc_vulnerabilities(default_vulnerabilities())
     )})
 
     return graph
