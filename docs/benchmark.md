@@ -13,7 +13,7 @@ Best attacker so far is the Deep Q-Learning
 The next plot shows the cumulative reward function. Note that when once all the network nodes are owned there may still be additional rewards to be obtained by exploiting vulnerabilities on the owned nodes,
 but on this experiment we terminate the game as soon as the agent owns all the nodes. This explains why
 the DQL agent, which optimizes for network ownership, does not get to reach the maximum possible reward despite
-beating all the other agents. The gym's `done` function can easily re-configured to target a specific reward instead, in which case the DQL also beats the other agents.
+beating all the other agents. The gym's `done` function can be easily re-configured to target a specific reward instead, in which case the DQL also beats the other agents.
 
 ![image.png](.attachments/image-f8f00fe7-466f-4d2b-aaee-dd20720854db.png)
 
@@ -30,7 +30,7 @@ With Q-learning, the best results were obtained when training on features that i
 ## Transfer Learning on `chain` environment
 
 This benchmark aims to measure the ability to learn a strategy from one environment and
-apply it to similar envrionments of a different size. We train the agent on an environment of size $x$ and evaluate it on an environment of size $y>x$.
+apply it to similar environments of a different size. We train the agent on an environment of size $x$ and evaluate it on an environment of size $y>x$.
 
 As expected, using features that are proportional to the size of the environment (such as the number of nodes or number of number of credentials) did not provide best results. The agent fared better instead when using temporal features like a sliding-window of ports and node properties recently discovered.
 
