@@ -16,7 +16,8 @@ ENV_IDENTIFIERS = Identifiers(
         'EnumerateFileShares',
         'AuthorizationSpoofAndCrack',
         'ScanForCreds',
-        'DumpNTDS'
+        'DumpNTDS',
+        'ProbeAdmin'
     ],
     remote_vulnerabilities=[
         'DomainPasswordSpray',
@@ -27,8 +28,7 @@ ENV_IDENTIFIERS = Identifiers(
 def create_network_from_smb_traffic(
     n_clients: int,
     n_servers: int,
-    n_users: int,
-    n_domain_admins: int,
+    n_users: int
 ) -> nx.DiGraph:
     graph = nx.DiGraph()
     graph.add_nodes_from([f"workstation_{i}" for i in range(0, n_clients)])
@@ -57,22 +57,39 @@ def create_network_from_smb_traffic(
             outcome=m.LeakedNodesId(nodes=[f"share_{i}" for i in range(0, n_servers)]),
             reward_string="Found shares"
         )
-        # NOTE: The randomization here does not support random credential leakage... This is kind of a major limitation for tooling like responder
-        credrandset = set([random.randrange(0, n_users) for i in range(0, random.randrange(1, 3))])
-        lib['AuthorizationSpoofAndCrack'] = m.VulnerabilityInfo(
-            description="Spoof an authoritative source on the network to get a crackable hash, then try to crack it",
+        lib["ProbeAdmin"] = m.VulnerabilityInfo(
+            description="Probe a workstation to see if you have admin creds on it",
             type=m.VulnerabilityType.LOCAL,
-            rates=m.Rates(successRate=0.2),
-            outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node=f"share_{shareid}", port="SMB", credential=f"user_{credind}") for credind in credrandset for shareid in range(0, n_servers)]
-                                        + [m.CachedCredential(node=f"workstation_{credind % n_clients}", port="SHELL", credential=f"user_{credind}") for credind in credrandset])
+            outcome=m.ProbeFailed(),
+            reward_string="No admin creds."
         )
         lib['ScanForCreds'] = m.VulnerabilityInfo(
             description="Scan the local security managers for credentials. Need to be admin on the box.",
             type=m.VulnerabilityType.LOCAL,
             outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node="domain_controller_1", port="AD", credential="dc_1")]),
             precondition=m.Precondition("admin"),
-            rates=m.Rates(successRate=0.1),
+            rates=m.Rates(successRate=0.9),
             reward_string="DA credentials found"
+        )
+        return lib
+
+    def breach_vulnerabilities(lib: m.VulnerabilityLibrary) -> m.VulnerabilityLibrary:
+        # NOTE: The randomization here does not support random credential leakage... This is kind of a major limitation for tooling like responder
+        credrandset = set([random.randrange(0, n_users) for i in range(0, random.randrange(3, n_clients))])
+        lib['AuthorizationSpoofAndCrack'] = m.VulnerabilityInfo(
+            description="Spoof an authoritative source on the network to get a crackable hash, then try to crack it",
+            type=m.VulnerabilityType.LOCAL,
+            outcome=m.LeakedCredentials(credentials=[m.CachedCredential(node=f"share_{shareid}", port="SMB", credential=f"user_{credind}") for credind in credrandset for shareid in range(0, n_servers)]
+                                        + [m.CachedCredential(node=f"workstation_{credind % n_clients}", port="SHELL", credential=f"user_{credind}") for credind in credrandset])
+        )
+        return lib
+
+    def admin_vulnerabilities(lib: m.VulnerabilityLibrary) -> m.VulnerabilityLibrary:
+        lib["ProbeAdmin"] = m.VulnerabilityInfo(
+            description="Probe a workstation to see if you have admin creds on it",
+            type=m.VulnerabilityType.LOCAL,
+            outcome=m.ProbeSucceeded(discovered_properties=["admin"]),
+            reward_string="Admin creds verified."
         )
         return lib
 
@@ -94,7 +111,7 @@ def create_network_from_smb_traffic(
         {'data': m.NodeInfo(services=[],
                             value=0,
                             properties=["breach_node"],
-                            vulnerabilities=default_vulnerabilities(),
+                            vulnerabilities=breach_vulnerabilities(default_vulnerabilities()),
                             agent_installed=True,
                             firewall=firewall_conf,
                             reimagable=False)})
@@ -103,23 +120,25 @@ def create_network_from_smb_traffic(
         nodeid = f"workstation_{i}"
         graph.nodes[nodeid].clear()
         props = []
-        if random.random() > 0.8:
+        vulns = default_vulnerabilities()
+        if random.random() > 0.2:  # TODO: make this value rarer as network size increases? Kinda wonky considering we only have one exploit path really
             props = ["admin"]
+            vulns = admin_vulnerabilities(vulns)
         graph.nodes[nodeid].update({'data': m.NodeInfo(
             services=[m.ListeningService(name="SHELL", allowedCredentials=[f"user_{uid}" for uid in range(0, n_users) if uid % n_clients == i])],
             properties=props,
-            value=0,
+            value=1,
             firewall=firewall_conf,
-            vulnerabilities=default_vulnerabilities()
+            vulnerabilities=vulns
         )})
 
     for i in range(0, n_servers):
         nodeid = f"share_{i}"
         graph.nodes[nodeid].clear()
         graph.nodes[nodeid].update({'data': m.NodeInfo(
-            services=[],
+            services=[m.ListeningService(name="SMB", allowedCredentials=[f"user_{sid}" for sid in range(0, n_users) if sid % n_servers == i])],
             properties=[],
-            value=50,
+            value=5,
             firewall=firewall_conf,
             vulnerabilities=default_vulnerabilities()
         )})
@@ -142,10 +161,9 @@ def new_random_environment():
     a randomly generated network topology for SMB shares.
     """
     clients = random.randrange(5, 10)
-    servers = random.randrange(5, 10)
-    users = random.randrange(50, 1000)
-    admins = random.randrange(1, 15)
-    network = create_network_from_smb_traffic(clients, servers, users, admins)
+    servers = random.randrange(1, 2)
+    users = random.randrange(20, 100)
+    network = create_network_from_smb_traffic(clients, servers, users)
 
     return m.Environment(network=network,
                          vulnerability_library=dict([]),
