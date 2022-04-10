@@ -20,7 +20,7 @@ ENV_IDENTIFIERS = Identifiers(
         'ProbeAdmin'
     ],
     remote_vulnerabilities=[
-        'DomainPasswordSpray',
+        'PasswordSpray'
     ]
 )
 

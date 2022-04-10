@@ -107,3 +107,15 @@ for env in ad_envs:
                 'maximum_total_credentials': 50000
                 }
     )
+
+if 'ActiveDirectoryTiny-v0' in registry.env_specs:
+    del registry.env_specs['ActiveDirectoryTiny-v0']
+register(
+    id='ActiveDirectoryTiny-v0',
+    cyberbattle_env_identifiers=chainpattern.ENV_IDENTIFIERS,
+    entry_point='cyberbattle._env.active_directory:CyberBattleActiveDirectoryTiny',
+    kwargs={'maximum_discoverable_credentials_per_action': 50000,
+            'maximum_node_count': 30,
+            'maximum_total_credentials': 50000
+            }
+)
