@@ -340,9 +340,9 @@ class CyberBattleEnv(gym.Env):
 
         if effective_maximum_credentials_per_action > self.__bounds.maximum_discoverable_credentials_per_action:
             raise ValueError(
-                f"Some action in the environment returns {effective_maximum_credentials_per_action}"
-                f"credentials which exceeds the maximum number of discoverable credentials"
-                f"{self.__bounds.maximum_discoverable_credentials_per_action}")
+                f"Some action in the environment returns {effective_maximum_credentials_per_action} "
+                f"credentials which exceeds the maximum number of discoverable credentials "
+                f"of {self.__bounds.maximum_discoverable_credentials_per_action}")
 
         refeerenced_ports = model.collect_ports_from_environment(environment)
         undefined_ports = set(refeerenced_ports).difference(environment.identifiers.ports)
