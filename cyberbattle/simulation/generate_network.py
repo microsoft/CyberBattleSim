@@ -263,6 +263,9 @@ def cyberbattle_model_from_traffic_graph(
             graph.nodes[node].clear()
             graph.nodes[node].update({'data': create_node_data(node)})
 
+    # remove all the edges inherited from the network graph
+    graph.clear_edges()
+
     return graph
 
 
@@ -281,8 +284,8 @@ def new_environment(n_servers_per_protocol: int):
                                                   "HTTP": n_servers_per_protocol,
                                                   "RDP": n_servers_per_protocol,
                                               },
-                                              alpha=[(1, 1), (0.2, 0.5)],
-                                              beta=[(1000, 10), (10, 100)])
+                                              alpha=np.array([(1, 1), (0.2, 0.5)], dtype=float),
+                                              beta=np.array([(1000, 10), (10, 100)], dtype=float))
 
     network = cyberbattle_model_from_traffic_graph(
         traffic,
