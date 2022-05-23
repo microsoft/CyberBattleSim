@@ -161,9 +161,12 @@ def cyberbattle_model_from_traffic_graph(
 
     def add_leak_neighbors_vulnerability(
             node_id: m.NodeID,
-            library: m.VulnerabilityLibrary = {}) -> m.VulnerabilityLibrary:
+            library: Optional[m.VulnerabilityLibrary] = None) -> m.VulnerabilityLibrary:
         """Create random vulnerabilities
         that reveals immediate traffic neighbors from a given node"""
+
+        if not library:
+            library = {}
 
         rdp_neighbors = traffic_targets(node_id, 'RDP')
 
