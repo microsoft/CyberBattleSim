@@ -25,7 +25,6 @@ asciichartpy
 ### type stubs
 numpy_stubs @ git+https://github.com/numpy/numpy-stubs/@master#egg=numpy_stubs
 
-networkx-stubs @ git+https://github.com/fmagin/networkx-stubs/@master
 
 # Unfortunately, the official `data-science-types` package overwrites
 # the numpy stubs above, and their stubs are not as reliable.

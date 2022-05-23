@@ -26,6 +26,8 @@ createstub pytest
 createstub setuptools
 createstub ordered_set
 createstub asciichartpy
+createstub networkx
+
 
 if [ ! -d "typings/gym" ]; then
     pyright --createstub gym
@@ -42,12 +44,7 @@ else
     echo stub 'IPython' already created
 fi
 
-if [ ! -d "boolean" ]; then
-    pyright --createstub boolean
-    sed -i '/class BooleanAlgebra(object):/a\    TRUE = ...\n    FALSE = ...' typings/boolean/boolean.pyi
-else
-    echo stub 'boolean' already created
-fi
+createstub boolean
 
 echo 'Typing stub generation completed'
 
