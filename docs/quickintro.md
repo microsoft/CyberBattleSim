@@ -174,7 +174,7 @@ plot()
 c2.connect_and_infect('client', 'Website', 'SSH', 'ReusedMySqlCred-web')
 plot()
 ```
-The plot function displays the subset of the network explorsed so far. After a few attempts the explored network should looks like this:
+The plot function displays the subset of the network explorsed so far. After a few attempts the explored network should look like this:
 
    ![image.png](.attachments/image-4fd79f98-36b2-45ae-82e4-2631aacda090.png)
 
