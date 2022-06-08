@@ -667,7 +667,7 @@ class CyberBattleEnv(gym.Env):
             source_node, target_node, vulnerability_index = action["remote_vulnerability"]
             source_node_id = self.__internal_node_id_from_external_node_index(source_node)
             target_node_id = self.__internal_node_id_from_external_node_index(target_node)
-            return f"remote_vulnerability(`{source_node_id}, `{target_node_id}, `{self.__index_to_remote_vulnerabilityid(vulnerability_index)})"
+            return f"remote_vulnerability(`{source_node_id}, `{target_node_id}, {self.__index_to_remote_vulnerabilityid(vulnerability_index)})"
         elif "connect" in action:
             source_node, target_node, port_index, credential_cache_index = action["connect"]
             assert credential_cache_index >= 0
