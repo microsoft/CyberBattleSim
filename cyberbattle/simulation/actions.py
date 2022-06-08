@@ -586,7 +586,7 @@ class AgentActions:
 
     def print_all_attacks(self) -> None:
         """Pretty print list of all possible attacks from all the nodes currently owned by the attacker"""
-        d.display(pd.DataFrame.from_dict(self.list_all_attacks()))  # type: ignore
+        d.display(pd.DataFrame.from_dict(self.list_all_attacks()).set_index('id'))  # type: ignore
 
 
 class DefenderAgentActions:
