@@ -1,8 +1,8 @@
 gym~=0.17.3
-numpy==1.19.4
+numpy==1.21.0
 boolean.py@git+https://github.com/bastikr/boolean.py/@74063a8588875c058e6dbbb85b69ed052e1f2099#egg=boolpy_stubs
-networkx==2.4
-pyyaml~=5.4.1
+networkx==2.7.1
+pyyaml~=6.0
 setuptools~=49.2.1
 matplotlib~=3.2.1
 plotly~=4.11.0

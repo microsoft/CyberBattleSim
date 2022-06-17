@@ -10,7 +10,7 @@
 
 Example usage:
 
-    python3.8 -m run --training_episode_count 50  --iteration_count 9000 --rewardplot_with 80  --chain_size=20 --ownership_goal 1.0
+    python3.8 -m run --training_episode_count 50  --iteration_count 9000 --rewardplot_width 80  --chain_size=20 --ownership_goal 1.0
 
 """
 import torch
