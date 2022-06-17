@@ -340,9 +340,9 @@ class CyberBattleEnv(gym.Env):
 
         if effective_maximum_credentials_per_action > self.__bounds.maximum_discoverable_credentials_per_action:
             raise ValueError(
-                f"Some action in the environment returns {effective_maximum_credentials_per_action}"
-                f"credentials which exceeds the maximum number of discoverable credentials"
-                f"{self.__bounds.maximum_discoverable_credentials_per_action}")
+                f"Some action in the environment returns {effective_maximum_credentials_per_action} "
+                f"credentials which exceeds the maximum number of discoverable credentials "
+                f"of {self.__bounds.maximum_discoverable_credentials_per_action}")
 
         refeerenced_ports = model.collect_ports_from_environment(environment)
         undefined_ports = set(refeerenced_ports).difference(environment.identifiers.ports)
@@ -655,6 +655,27 @@ class CyberBattleEnv(gym.Env):
         bitmask = self.__get_blank_action_mask()
         self.__update_action_mask(bitmask)
         return bitmask
+
+    def pretty_print_internal_action(self, action: Action) -> str:
+        """Pretty print an action with internal node and vulnerability identifiers"""
+        assert 1 == len(action.keys())
+        assert DiscriminatedUnion.kind(action) != ''
+        if "local_vulnerability" in action:
+            source_node_index, vulnerability_index = action['local_vulnerability']
+            return f"local_vulnerability(`{self.__internal_node_id_from_external_node_index(source_node_index)}, {self.__index_to_local_vulnerabilityid(vulnerability_index)})"
+        elif "remote_vulnerability" in action:
+            source_node, target_node, vulnerability_index = action["remote_vulnerability"]
+            source_node_id = self.__internal_node_id_from_external_node_index(source_node)
+            target_node_id = self.__internal_node_id_from_external_node_index(target_node)
+            return f"remote_vulnerability(`{source_node_id}, `{target_node_id}, {self.__index_to_remote_vulnerabilityid(vulnerability_index)})"
+        elif "connect" in action:
+            source_node, target_node, port_index, credential_cache_index = action["connect"]
+            assert credential_cache_index >= 0
+            assert credential_cache_index < len(self.__credential_cache)
+            source_node_id = self.__internal_node_id_from_external_node_index(source_node)
+            target_node_id = self.__internal_node_id_from_external_node_index(target_node)
+            return f"connect(`{source_node_id}, `{target_node_id}, {self.__index_to_port_name(port_index)}, {self.__credential_cache[credential_cache_index].credential})"
+        raise ValueError("Invalid discriminated union value: " + str(action))
 
     def __execute_action(self, action: Action) -> actions.ActionResult:
         # Assert that the specified action is consistent (i.e., defining a single action type)

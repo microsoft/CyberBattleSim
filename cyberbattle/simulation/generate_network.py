@@ -161,9 +161,12 @@ def cyberbattle_model_from_traffic_graph(
 
     def add_leak_neighbors_vulnerability(
             node_id: m.NodeID,
-            library: m.VulnerabilityLibrary = {}) -> m.VulnerabilityLibrary:
+            library: Optional[m.VulnerabilityLibrary] = None) -> m.VulnerabilityLibrary:
         """Create random vulnerabilities
         that reveals immediate traffic neighbors from a given node"""
+
+        if not library:
+            library = {}
 
         rdp_neighbors = traffic_targets(node_id, 'RDP')
 
@@ -246,22 +249,34 @@ def cyberbattle_model_from_traffic_graph(
                             firewall=firewall_conf,
                             reimagable=False)})
 
-    def create_node_data(node_id: m.NodeID):
+    def create_node_data_without_vulnerabilities(node_id: m.NodeID):
         return m.NodeInfo(
             services=[m.ListeningService(name=port, allowedCredentials=assigned_passwords[(target_node, port)])
                       for (target_node, port) in assigned_passwords.keys()
                       if target_node == node_id
                       ],
             value=random.randint(0, 100),
-            vulnerabilities=create_vulnerabilities_from_traffic_data(node_id),
             agent_installed=False,
             firewall=firewall_conf
         )
 
+    # Step 1: Create all the nodes with associated services and firewall configuration
     for node in list(graph.nodes):
         if node != entry_node_id:
             graph.nodes[node].clear()
-            graph.nodes[node].update({'data': create_node_data(node)})
+            graph.nodes[node].update({'data': create_node_data_without_vulnerabilities(node)})
+
+    # Step 2: Assign vulnerabilities to each node.
+    # This must be a separate step because vulnerabilities definitions
+    # may depend on the passwords assigned to the nodes in Step 1.
+    for node in list(graph.nodes):
+        if node != entry_node_id:
+            node_data = graph.nodes[node]['data']
+            node_data.vulnerabilities = create_vulnerabilities_from_traffic_data(node)
+            graph.nodes[node].update({'data': node_data})
+
+    # remove all the edges inherited from the network graph
+    graph.clear_edges()
 
     return graph
 
@@ -281,8 +296,8 @@ def new_environment(n_servers_per_protocol: int):
                                                   "HTTP": n_servers_per_protocol,
                                                   "RDP": n_servers_per_protocol,
                                               },
-                                              alpha=np.array([(1, 1), (0.2, 0.5)]),
-                                              beta=np.array([(1000, 10), (10, 100)]))
+                                              alpha=np.array([(1, 1), (0.2, 0.5)], dtype=float),
+                                              beta=np.array([(1000, 10), (10, 100)], dtype=float))
 
     network = cyberbattle_model_from_traffic_graph(
         traffic,
