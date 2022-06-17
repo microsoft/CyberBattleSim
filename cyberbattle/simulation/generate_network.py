@@ -276,7 +276,7 @@ def cyberbattle_model_from_traffic_graph(
             graph.nodes[node].update({'data': node_data})
 
     # remove all the edges inherited from the network graph
-    # graph.clear_edges()
+    graph.clear_edges()
 
     return graph
 
