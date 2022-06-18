@@ -12,7 +12,7 @@
 
 PYTHON=`which python`
 if [ -z "$PYTHON" ]; then
-    PYTHON=`which python3.8`
+    PYTHON=`which python3`
 fi
 if [ -z "$PYTHON" ]; then
     PYTHON=`which python3.8`
