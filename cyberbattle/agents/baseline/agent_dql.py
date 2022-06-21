@@ -440,9 +440,9 @@ class DeepQLearnerPolicy(Learner):
 
         # first, attempt to exploit the credential cache
         # using the crecache_policy
-        action_style, gym_action, _ = self.credcache_policy.exploit(wrapped_env, observation)
-        if gym_action:
-            return action_style, gym_action, self.metadata_from_gymaction(wrapped_env, gym_action)
+        # action_style, gym_action, _ = self.credcache_policy.exploit(wrapped_env, observation)
+        # if gym_action:
+        #     return action_style, gym_action, self.metadata_from_gymaction(wrapped_env, gym_action)
 
         # Otherwise on exploit learnt Q-function
 
