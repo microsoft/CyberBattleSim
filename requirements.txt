@@ -1,5 +1,5 @@
 gym~=0.17.3
-numpy==1.21.0
+numpy==1.22.0
 boolean.py@git+https://github.com/bastikr/boolean.py/@74063a8588875c058e6dbbb85b69ed052e1f2099#egg=boolpy_stubs
 networkx==2.7.1
 pyyaml~=6.0
