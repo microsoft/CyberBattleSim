@@ -148,7 +148,7 @@ def create_network_from_smb_traffic(
     graph.nodes[nodeid].update({'data': m.NodeInfo(
         services=[m.ListeningService(name="AD", allowedCredentials=["dc_1"])],
         properties=["domain_controller"],
-        value=100,
+        value=1000,
         firewall=firewall_conf,
         vulnerabilities=dc_vulnerabilities(default_vulnerabilities())
     )})
