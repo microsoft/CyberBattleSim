@@ -1,5 +1,6 @@
 """ Generating random active directory networks"""
 import random
+from typing import Any
 from cyberbattle.simulation.model import FirewallConfiguration, FirewallRule, Identifiers, RulePermission
 from cyberbattle.simulation import model as m
 import networkx as nx
@@ -156,10 +157,11 @@ def create_network_from_smb_traffic(
     return graph
 
 
-def new_random_environment():
+def new_random_environment(seed: Any) -> m.Environment:
     """Create a new simulation environment based on
     a randomly generated network topology for SMB shares.
     """
+    random.seed(seed)
     clients = random.randrange(5, 10)
     servers = random.randrange(1, 2)
     users = random.randrange(20, 100)

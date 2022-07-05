@@ -94,7 +94,7 @@ register(
 )
 
 ad_envs = [f"ActiveDirectory-v{i}" for i in range(0, 10)]
-for env in ad_envs:
+for (index, env) in enumerate(ad_envs):
     if env in registry.env_specs:
         del registry.env_specs[env]
 
@@ -102,10 +102,12 @@ for env in ad_envs:
         id=env,
         cyberbattle_env_identifiers=generate_ad.ENV_IDENTIFIERS,
         entry_point='cyberbattle._env.active_directory:CyberBattleActiveDirectory',
-        kwargs={'maximum_discoverable_credentials_per_action': 50000,
-                'maximum_node_count': 30,
-                'maximum_total_credentials': 50000
-                }
+        kwargs={
+            'seed': index,
+            'maximum_discoverable_credentials_per_action': 50000,
+            'maximum_node_count': 30,
+            'maximum_total_credentials': 50000,
+        }
     )
 
 if 'ActiveDirectoryTiny-v0' in registry.env_specs:
