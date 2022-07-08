@@ -72,6 +72,6 @@ def test_toyctf() -> None:
 
     reward = command.total_reward()
     print('Total reward ' + str(reward))
-    assert reward == 344.0
+    assert reward == 244.0
     assert github is not None
     pass

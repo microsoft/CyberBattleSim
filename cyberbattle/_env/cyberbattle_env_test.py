@@ -97,7 +97,7 @@ def test_step_after_done() -> None:
     ]
 
     env = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(own_atleast_percent=1.0))
-
+    env.reset()
     for a in actions[:-1]:
         observation, reward, done, info = env.step(a)
         print(f"{a}, # done={done} r={reward}")
