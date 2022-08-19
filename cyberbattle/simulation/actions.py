@@ -313,6 +313,8 @@ class AgentActions:
 
         reward = 0
 
+        was_previously_owned_at, is_currently_owned = self.__is_node_owned_history(node_id, node_info)
+
         # if the vulnerability type is a privilege escalation
         # and if the escalation level is not already reached on that node,
         # then add the escalation tag to the node properties
@@ -320,9 +322,19 @@ class AgentActions:
             if outcome.tag in node_info.properties:
                 return False, ActionResult(reward=Penalty.REPEAT, outcome=outcome)
 
+            if not was_previously_owned_at:
+                reward += float(node_info.value)
+
             self.__mark_node_as_owned(node_id, outcome.level)
 
             node_info.properties.append(outcome.tag)
+
+        elif isinstance(outcome, model.LateralMove):
+            if not was_previously_owned_at:
+                reward += float(node_info.value)
+
+            if not is_currently_owned:
+                self.__mark_node_as_owned(node_id)
 
         elif isinstance(outcome, model.ProbeSucceeded):
             for p in outcome.discovered_properties:
@@ -440,6 +452,16 @@ class AgentActions:
         logger.debug(f"BLOCKED TRAFFIC - PORT '{port_name}' - Reason: no rule defined for this port.")
         return False
 
+    def __is_node_owned_history(self, target_node_id, target_node_data):
+        """ Returns whether the node was previously owned and if it's still currently owned."""
+        was_previously_owned_at = self._discovered_nodes[target_node_id].last_connection
+        self._discovered_nodes[target_node_id].last_connection = time()
+
+        is_currently_owned = was_previously_owned_at is not None and \
+            target_node_data.last_reimaging is not None and \
+            was_previously_owned_at >= target_node_data.last_reimaging
+        return was_previously_owned_at, is_currently_owned
+
     def connect_to_remote_machine(
             self,
             source_node_id: model.NodeID,
@@ -510,12 +532,9 @@ class AgentActions:
             if target_node_id not in self._discovered_nodes:
                 self._discovered_nodes[target_node_id] = NodeTrackingInformation()
 
-            was_previously_owned_at = self._discovered_nodes[target_node_id].last_connection
-            self._discovered_nodes[target_node_id].last_connection = time()
+            was_previously_owned_at, is_currently_owned = self.__is_node_owned_history(target_node_id, target_node_data)
 
-            if was_previously_owned_at is not None and \
-                target_node_data.last_reimaging is not None and \
-                    was_previously_owned_at >= target_node_data.last_reimaging:
+            if is_currently_owned:
                 return ActionResult(reward=Penalty.REPEAT, outcome=model.LateralMove())
 
             self.__annotate_edge(source_node_id, target_node_id, EdgeAnnotation.LATERAL_MOVE)
