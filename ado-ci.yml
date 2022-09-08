@@ -37,8 +37,7 @@ steps:
     displayName: "Install apt dependencies"
 
   - script: |
-      python -m pip install flake8
-      flake8 --benchmark
+      python -m pip install flake8==5.0.1
     displayName: "Lint with flake8"
 
   - task: Cache@2
