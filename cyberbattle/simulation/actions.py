@@ -11,7 +11,7 @@
 from dataclasses import dataclass
 import dataclasses
 from datetime import time
-import boolean
+from boolean import boolean
 from collections import OrderedDict
 import logging
 from enum import Enum

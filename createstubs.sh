@@ -27,6 +27,7 @@ createstub setuptools
 createstub ordered_set
 createstub asciichartpy
 createstub networkx
+createstub boolean
 
 
 if [ ! -d "typings/gym" ]; then
@@ -44,13 +45,7 @@ else
     echo stub 'IPython' already created
 fi
 
-createstub boolean
 
 echo 'Typing stub generation completed'
-
-# Stubs that needed manual patching and that
-# were instead checked-in in git
-#   pyright --createstub boolean
-#   pyright --createstub gym
 
 popd

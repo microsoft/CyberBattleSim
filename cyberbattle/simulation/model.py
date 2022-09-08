@@ -30,7 +30,7 @@ import dataclasses
 from dataclasses import dataclass
 import matplotlib.pyplot as plt  # type:ignore
 from enum import Enum, IntEnum
-import boolean
+from boolean import boolean
 import networkx as nx
 import yaml
 import random
