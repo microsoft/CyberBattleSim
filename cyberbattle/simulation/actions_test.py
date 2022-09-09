@@ -276,7 +276,7 @@ def test_exploit_remote_vulnerability(actions_on_simple_environment: Fixture) ->
     # test a valid and functional one.
     result = actions_on_simple_environment.exploit_remote_vulnerability('a', 'c', "RDPBF")
     assert isinstance(result.outcome, model.LateralMove)
-    assert result.reward >= node.value
+    assert result.reward < node.value
 
 
 def test_exploit_local_vulnerability(actions_on_simple_environment: Fixture) -> None:
