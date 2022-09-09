@@ -4,7 +4,6 @@ on:
       - main
   push:
     branches:
-      - wiblum/*
 env:
   containerRegistry: spinshot.azurecr.io
   imageRepository: cyberbattle
