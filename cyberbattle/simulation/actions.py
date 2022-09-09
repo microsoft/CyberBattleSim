@@ -19,7 +19,7 @@ from typing import Iterator, List, NamedTuple, Optional, Set, Tuple, Dict, Typed
 import IPython.core.display as d
 import pandas as pd
 
-from cyberbattle.simulation.model import MachineStatus, PrivilegeLevel, PropertyName, VulnerabilityID, VulnerabilityType
+from cyberbattle.simulation.model import FirewallRule, MachineStatus, PrivilegeLevel, PropertyName, VulnerabilityID, VulnerabilityType
 from . import model
 
 
@@ -190,12 +190,12 @@ class AgentActions:
     def get_discovered_properties(self, node_id: model.NodeID) -> Set[int]:
         return self._discovered_nodes[node_id].discovered_properties
 
-    def __mark_node_as_discovered(self, node_id: model.NodeID) -> None:
+    def __mark_node_as_discovered(self, node_id: model.NodeID) -> bool:
         logger.info('discovered node: ' + node_id)
         newly_discovered = node_id not in self._discovered_nodes
         if newly_discovered:
             self._discovered_nodes[node_id] = NodeTrackingInformation()
-        newly_discovered
+        return newly_discovered
 
     def __mark_nodeproperties_as_discovered(self, node_id: model.NodeID, properties: List[PropertyName]):
         properties_indices = [self._environment.identifiers.properties.index(p)
@@ -362,7 +362,8 @@ class AgentActions:
 
         newly_discovered_nodes, discovered_nodes_value, newly_discovered_credentials = self.__mark_discovered_entities(node_id, outcome)
 
-        reward += discovered_nodes_value
+        # Note: `discovered_nodes_value` should not be added to the reward
+        # unless the discovered nodes got owned, but this case is already covered above
         reward += newly_discovered_nodes * NODE_DISCOVERED_REWARD
         reward += newly_discovered_credentials * CREDENTIAL_DISCOVERED_REWARD
 
@@ -677,17 +678,25 @@ class DefenderAgentActions:
 
     def override_firewall_rule(self, node_id: model.NodeID, port_name: model.PortName, incoming: bool, permission: model.RulePermission):
         node_data = self._environment.get_node(node_id)
-        rules = node_data.firewall.incoming if incoming else node_data.firewall.outgoing
-        matching_rules = [r for r in rules if r.port == port_name]
-        if matching_rules:
-            for r in matching_rules:
-                r.permission = permission
+
+        def add_or_patch_rule(rules) -> List[FirewallRule]:
+            new_rules = []
+            has_matching_rule = False
+            for r in rules:
+                if r.port == port_name:
+                    has_matching_rule = True
+                    new_rules.append(FirewallRule(r.port, permission))
+                else:
+                    new_rules.append(r)
+
+            if not has_matching_rule:
+                new_rules.append(model.FirewallRule(port_name, permission))
+            return new_rules
+
+        if incoming:
+            node_data.firewall.incoming = add_or_patch_rule(node_data.firewall.incoming)
         else:
-            new_rule = model.FirewallRule(port_name, permission)
-            if incoming:
-                node_data.firewall.incoming = [new_rule] + node_data.firewall.incoming
-            else:
-                node_data.firewall.outgoing = [new_rule] + node_data.firewall.outgoing
+            node_data.firewall.outgoing = add_or_patch_rule(node_data.firewall.outgoing)
 
     def block_traffic(self, node_id: model.NodeID, port_name: model.PortName, incoming: bool):
         return self.override_firewall_rule(node_id, port_name, incoming, permission=model.RulePermission.BLOCK)
