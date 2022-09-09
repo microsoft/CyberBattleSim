@@ -673,7 +673,7 @@ class DefenderAgentActions:
             network_node_availability += adjusted_node_availability * node_info.sla_weight
 
         self.__network_availability = network_node_availability / total_node_weights
-        assert(self.__network_availability <= 1.0 and self.__network_availability >= 0.0)
+        assert (self.__network_availability <= 1.0 and self.__network_availability >= 0.0)
 
     def override_firewall_rule(self, node_id: model.NodeID, port_name: model.PortName, incoming: bool, permission: model.RulePermission):
         node_data = self._environment.get_node(node_id)

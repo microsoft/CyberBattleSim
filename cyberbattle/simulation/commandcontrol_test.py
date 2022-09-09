@@ -25,7 +25,7 @@ def test_toyctf() -> None:
     leaked_sas_url = commandcontrol.get_outcome_first_credential(leaked_sas_url_outcome)
 
     blobwithflag = command.connect_and_infect('client', 'AzureStorage', 'HTTPS', leaked_sas_url)
-    assert(blobwithflag is not False)
+    assert (blobwithflag is not False)
 
     browsable_directory = command.run_remote_attack('client', 'Website', 'ScanPageSource')
     assert browsable_directory
@@ -39,7 +39,7 @@ def test_toyctf() -> None:
     azure_ad_credentials = commandcontrol.get_outcome_first_credential(outcome_azure_ad)
 
     azure_vm_info = command.connect_and_infect('client', 'AzureResourceManager', 'HTTPS', azure_ad_credentials)
-    assert(azure_vm_info is not False)
+    assert (azure_vm_info is not False)
 
     azure_resources = command.run_remote_attack('client', 'AzureResourceManager', 'ListAzureResources')
     assert azure_resources
