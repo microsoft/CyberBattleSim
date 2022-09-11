@@ -1,0 +1,58 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Use Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Use node tools
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+
+      - name: Pull pip packages from cache
+        uses: actions/cache@v2
+        with:
+          key: pip | "${{ runner.os }}" | requirements.txt | requirements.dev.txt | setup.py
+          restore-keys: pip | "${{ runner.os }}"
+          path: ${{ env.pythonver.pythonLocation }}/lib/python3.8/site-packages
+
+      - name: Pull typing stubs from cache
+        uses: actions/cache@v2
+        with:
+          key: typingstubs | "${{ runner.os }}" | createstubs.sh
+          restore-keys: typingstubs | "${{ runner.os }}" | createstubs.sh
+          path: typings/
+
+      - name: Initialize build environment
+        run: TERM=dumb && ./init.sh -n
+
+      - name: Papermill notebooks
+        run: |
+          jupyter kernelspec list
+          cd notebooks
+          bash run_all.sh python3
+
+      - name: Archive milled notebooks
+        uses: actions/upload-artifact@v3
+        with:
+          name: papermilled-notebooks
+          path: |
+            notebooks/output/*.ipynb
+            !dist/**/*.md
