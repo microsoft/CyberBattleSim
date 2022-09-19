@@ -9,7 +9,7 @@ traditional Jupyter Notebook to open in your browser
 
 # pylint: disable=invalid-name
 
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional, Tuple, Any
 import numpy as np
 import logging
 
@@ -34,7 +34,7 @@ def random_argmax(array):
     return max_value, max_index
 
 
-def random_argtop_percentile(array, percentile):
+def random_argtop_percentile(array: np.ndarray, percentile: float) -> Tuple[np.floating[Any], int]:
     """Just like `argmax` but if there are multiple elements with the max
     return a random index to break ties instead of returning the first one."""
     top_percentile = np.percentile(array, percentile)
@@ -111,7 +111,7 @@ class QMatrix:
         """exploit: leverage the Q-matrix.
         Returns the expected Q value and the chosen action."""
         expected_q, action = random_argtop_percentile(self.qm[features, :], percentile)
-        return int(action), expected_q
+        return int(action), float(expected_q)
 
 
 class QLearnAttackSource(QMatrix):

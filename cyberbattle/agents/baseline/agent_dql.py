@@ -333,7 +333,7 @@ class DeepQLearnerPolicy(Learner):
                           next_actor_state: Optional[ndarray]):
         # store the transition in memory
         reward_tensor = torch.tensor([reward], device=device, dtype=torch.float)
-        action_tensor = torch.tensor([[np.long(abstract_action)]], device=device, dtype=torch.long)
+        action_tensor = torch.tensor([[np.int_(abstract_action)]], device=device, dtype=torch.long)
         current_state_tensor = torch.as_tensor(actor_state, dtype=torch.float, device=device).unsqueeze(0)
         if next_actor_state is None:
             next_state_tensor = None

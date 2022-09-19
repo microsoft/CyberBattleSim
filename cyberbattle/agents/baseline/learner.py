@@ -359,7 +359,7 @@ def transfer_learning_evaluation(
     eval_epsilon: float,
     eval_episode_count: int,
     iteration_count: int,
-    benchmark_policy=RandomPolicy(),
+    benchmark_policy: Learner = RandomPolicy(),
     benchmark_training_args=dict(title="Benchmark", epsilon=1.0)
 ):
     """Evaluated a trained agent on another environment of different size"""

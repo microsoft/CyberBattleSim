@@ -5,7 +5,7 @@
 features extracted from the environment observations"""
 
 from cyberbattle._env.cyberbattle_env import EnvironmentBounds
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import enum
 import numpy as np
 from gym import spaces, Wrapper
@@ -41,7 +41,7 @@ class Feature(spaces.MultiDiscrete):
         super().__init__(nvec)
 
     def flat_size(self):
-        return np.prod(self.nvec)
+        return np.prod(self.nvec, dtype=int)
 
     def name(self):
         """Return the name of the feature"""
@@ -71,7 +71,7 @@ class Feature_active_node_properties(Feature):
         # list of all properties set/unset on the node
         # Remap to get rid of unknown value 0: 1 -> 1, and -1 -> 0 (and 0-> 0)
         assert node < len(node_prop), f'invalid node index {node} (not discovered yet)'
-        remapped = np.array((1 + node_prop[node]) / 2, dtype=np.int)
+        remapped = np.array((1 + node_prop[node]) / 2, dtype=np.int_)
         return remapped
 
 
@@ -89,7 +89,7 @@ class Feature_active_node_age(Feature):
 
         assert node < discovered_node_count, f'invalid node index {node} (not discovered yet)'
 
-        return np.array([discovered_node_count - node - 1], dtype=np.int)
+        return np.array([discovered_node_count - node - 1], dtype=np.int_)
 
 
 class Feature_active_node_id(Feature):
@@ -99,7 +99,7 @@ class Feature_active_node_id(Feature):
         super().__init__(p, [p.maximum_node_count] * 1)
 
     def get(self, a: StateAugmentation, node) -> ndarray:
-        return np.array([node], dtype=np.int)
+        return np.array([node], dtype=np.int_)
 
 
 class Feature_discovered_nodeproperties_sliding(Feature):
@@ -301,7 +301,7 @@ class RavelEncoding(FeatureEncoder):
     def __init__(self, p: EnvironmentBounds, feature_selection: List[Feature]):
         self.feature_selection = feature_selection
         self.dim_sizes = np.concatenate([f.nvec for f in feature_selection])
-        self.ravelled_size: int = np.prod(self.dim_sizes)
+        self.ravelled_size: np.int64 = np.prod(self.dim_sizes)
         assert np.shape(self.ravelled_size) == (), f'! {np.shape(self.ravelled_size)}'
         super().__init__(p, [self.ravelled_size])
 
@@ -315,7 +315,7 @@ class RavelEncoding(FeatureEncoder):
             f'-> index={index}, max_index={self.ravelled_size-1})'
         return index
 
-    def unravel_index(self, index) -> np.ndarray:
+    def unravel_index(self, index) -> Tuple:
         return np.unravel_index(index, self.dim_sizes)
 
     def pretty_print(self, index):

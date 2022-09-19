@@ -5,7 +5,7 @@
 # Licensed under the MIT License.
 
 PATH_TO_PYRIGHT=`which pyright`
-PYRIGHT_VERSION=@1.1.151
+PYRIGHT_VERSION=@1.1.271
 
 ARGS=$@
 

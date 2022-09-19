@@ -71,16 +71,16 @@ class CredentialCacheExploiter(Learner):
         return ''
 
     def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, info, action_metadata):
-        None
+        return None
 
     def end_of_iteration(self, t, done):
-        None
+        return None
 
     def end_of_episode(self, i_episode, t):
-        None
+        return None
 
     def loss_as_string(self):
         return ''
 
     def new_episode(self):
-        None
+        return None
