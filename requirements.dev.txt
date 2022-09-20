@@ -6,6 +6,8 @@ jedi
 pandas
 jupyter>=1.0.0
 
+ipykernel
+
 # training
 torch==1.12.1
 

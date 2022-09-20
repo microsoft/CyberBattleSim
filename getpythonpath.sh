@@ -25,8 +25,8 @@ fi
 
 PYTHONVER=`$PYTHON --version | cut -d' ' -f2`
 if [[ ! "$PYTHONVER" == "3.8."* ]]; then
-    echo 'Version >=3.8 of Python is required' >&2
-    exit
+    echo 'Version ~=3.8 of Python is required' >&2
+    exit 1
 else
     echo "Compatible version $PYTHONVER of Python detected at $PYTHON"
 fi

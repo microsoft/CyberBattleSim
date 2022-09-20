@@ -86,7 +86,10 @@ else
     # in the rest of the script and when calling pyright to
     # generate stubs
     $SUDO update-alternatives --install /usr/bin/python python /usr/bin/python3.8 2
-    $SUDO update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2
+    $SUDO update-alternatives --install /usr/bin/python3.8 python3 /usr/bin/python3.8 2
+    $SUDO update-alternatives --set python /usr/bin/python3.8
+    $SUDO update-alternatives --set python3 /usr/bin/python3.8
+    update-alternatives --query python
     export PATH="/usr/bin:${PATH}"
 
     # install pyright
