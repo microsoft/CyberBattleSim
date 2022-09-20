@@ -25,12 +25,8 @@ asciichartpy
 
 ### type stubs
 
-# Unfortunately, the official `data-science-types` package overwrites
-# the numpy stubs above, and their stubs are not as reliable.
-# So we use instead one of the project fork that disables the numpy stubs
-# See https://github.com/predictive-analytics-lab/data-science-types/issues/132
-# and https://github.com/microsoft/pyright/issues/861
-#data-science-types~=0.2.20
-data-science-types @ git+https://github.com/blumu/data-science-types/@blumu-patch-1
+#https://github.com/microsoft/python-type-stubs/tree/main/matplotlib
+#https://raw.githubusercontent.com/microsoft/python-type-stubs/main/matplotlib/
+
 
 papermill==2.3.3
