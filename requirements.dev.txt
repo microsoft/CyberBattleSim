@@ -25,10 +25,4 @@ psutil==5.7.2
 asciichart
 asciichartpy
 
-### type stubs
-
-#https://github.com/microsoft/python-type-stubs/tree/main/matplotlib
-#https://raw.githubusercontent.com/microsoft/python-type-stubs/main/matplotlib/
-
-
 papermill==2.3.3
