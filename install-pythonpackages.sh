@@ -7,6 +7,8 @@ set -ex
 
 . ./getpythonpath.sh
 
+export MPLLOCALFREETYPE=1
+
 # Install python packages
 $PYTHON -m pip install --upgrade pip
 $PYTHON -m pip install wheel
