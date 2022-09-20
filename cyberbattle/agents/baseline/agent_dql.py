@@ -35,6 +35,7 @@ import torch.optim as optim
 import torch.nn as nn
 import torch
 import torch.cuda
+from torch.nn.utils.clip_grad import clip_grad_norm_
 
 from .learner import Learner
 from .agent_wrapper import EnvironmentBounds
@@ -315,7 +316,7 @@ class DeepQLearnerPolicy(Learner):
 
         # Gradient clipping
         if norm_clipping:
-            torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 1.0)
+            clip_grad_norm_(self.policy_net.parameters(), 1.0)
         else:
             for param in self.policy_net.parameters():
                 if param.grad is not None:
@@ -454,7 +455,7 @@ class DeepQLearnerPolicy(Learner):
             for from_node in w.owned_nodes(observation)
         ]
 
-        unique_active_actors_features: List[ndarray] = np.unique(active_actors_features, axis=0)
+        unique_active_actors_features: List[ndarray] = list(np.unique(active_actors_features, axis=0))
 
         # array of actor state vector for every possible set of node features
         candidate_actor_state_vector: List[ndarray] = [

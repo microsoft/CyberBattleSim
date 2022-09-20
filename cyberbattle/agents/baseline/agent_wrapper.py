@@ -309,7 +309,7 @@ class RavelEncoding(FeatureEncoder):
         assert len(self.dim_sizes) == len(feature_vector), \
             f'feature vector of size {len(feature_vector)}, ' \
             f'expecting {len(self.dim_sizes)}: {feature_vector} -- {self.dim_sizes}'
-        index: np.int32 = np.ravel_multi_index(feature_vector, self.dim_sizes)
+        index: np.int32 = np.ravel_multi_index(list(feature_vector), list(self.dim_sizes))
         assert index < self.ravelled_size, \
             f'feature vector out of bound ({feature_vector}, dim={self.dim_sizes}) ' \
             f'-> index={index}, max_index={self.ravelled_size-1})'
