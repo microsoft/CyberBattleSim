@@ -476,7 +476,7 @@ class CyberBattleEnv(gym.Env):
             # whether an attempted probing succeeded or not
             'probe_result': spaces.Discrete(3),
             # Esclation result
-            'escalation': spaces.MultiDiscrete(model.PrivilegeLevel.MAXIMUM + 1),
+            'escalation': spaces.Discrete(model.PrivilegeLevel.MAXIMUM + 1),
             # Array of slots describing credentials that were leaked
             'leaked_credentials': spaces.Tuple(
                 # the 1st component indicates if the slot is used or not (SLOT_USED or SLOT_UNSUED)
