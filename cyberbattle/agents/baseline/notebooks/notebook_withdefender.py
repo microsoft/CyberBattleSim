@@ -21,7 +21,8 @@ import cyberbattle.agents.baseline.agent_dql as dqla
 import cyberbattle.agents.baseline.agent_randomcredlookup as rca
 from cyberbattle.agents.baseline.agent_wrapper import Verbosity
 from cyberbattle._env.defender import ScanAndReimageCompromisedMachines
-from cyberbattle._env.cyberbattle_env import AttackerGoal, DefenderConstraint
+from cyberbattle._env.cyberbattle_env import AttackerGoal, CyberBattleEnv, DefenderConstraint
+from typing import cast
 
 importlib.reload(learner)
 importlib.reload(p)
@@ -29,19 +30,19 @@ importlib.reload(p)
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
-cyberbattlechain_defender = gym.make('CyberBattleChain-v0',
-                                     size=10,
-                                     attacker_goal=AttackerGoal(
-                                         own_atleast=0,
-                                         own_atleast_percent=1.0
-                                     ),
-                                     defender_constraint=DefenderConstraint(
-                                         maintain_sla=0.80
-                                     ),
-                                     defender_agent=ScanAndReimageCompromisedMachines(
-                                         probability=0.6,
-                                         scan_capacity=2,
-                                         scan_frequency=5))
+cyberbattlechain_defender = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0',
+                                                          size=10,
+                                                          attacker_goal=AttackerGoal(
+                                                              own_atleast=0,
+                                                              own_atleast_percent=1.0
+                                                          ),
+                                                          defender_constraint=DefenderConstraint(
+                                                              maintain_sla=0.80
+                                                          ),
+                                                          defender_agent=ScanAndReimageCompromisedMachines(
+                                                              probability=0.6,
+                                                              scan_capacity=2,
+                                                              scan_frequency=5)))
 
 
 ep = w.EnvironmentBounds.of_identifiers(

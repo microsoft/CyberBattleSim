@@ -12,6 +12,7 @@ from cyberbattle.agents.baseline.agent_wrapper import Verbosity
 import cyberbattle.agents.baseline.agent_dql as dqla
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.learner as learner
+import cyberbattle.agents.baseline.agent_tabularqlearning as tqa
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
@@ -69,3 +70,24 @@ def test_agent_training() -> None:
     )
 
     assert random_run
+
+
+def test_tabularq_agent_training() -> None:
+    tabularq_run = learner.epsilon_greedy_search(
+        cyberbattlechain,
+        ep,
+        learner=tqa.QTabularLearner(
+            ep,
+            gamma=0.015, learning_rate=0.01, exploit_percentile=100),
+        episode_count=training_episode_count,
+        iteration_count=iteration_count,
+        epsilon=0.90,
+        epsilon_exponential_decay=5000,
+        epsilon_minimum=0.01,
+        verbosity=Verbosity.Quiet,
+        render=False,
+        plot_episodes_length=False,
+        title="Tabular Q-learning"
+    )
+
+    assert tabularq_run

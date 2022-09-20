@@ -18,6 +18,13 @@ createstub() {
         echo stub $name already created
     fi
 }
+param=$1
+if [[ $param == "--recreate" ]]; then
+    echo 'Deleting typing directory'
+    rm -Rf typings/
+fi
+
+echo 'Creating stubs'
 
 mkdir -p typings/
 
@@ -30,6 +37,7 @@ createstub ordered_set
 createstub asciichartpy
 createstub networkx
 createstub boolean
+createstub IPython
 
 
 if [ ! -d "typings/gym" ]; then
@@ -37,14 +45,11 @@ if [ ! -d "typings/gym" ]; then
     # Patch gym stubs
     echo '    spaces = ...' >> typings/gym/spaces/dict.pyi
     echo '    nvec = ...' >> typings/gym/spaces/space.pyi
+    echo '    spaces = ...' >> typings/gym/spaces/space.pyi
+    echo '    spaces = ...' >> typings/gym/spaces/tuple.pyi
+    echo '    n = ...' >> typings/gym/spaces/multi_binary.pyi
 else
     echo stub gym already created
-fi
-
-if [ ! -d "typings/IPython" ]; then
-    pyright --createstub IPython.core.display
-else
-    echo stub 'IPython' already created
 fi
 
 

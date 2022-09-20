@@ -182,15 +182,15 @@ class CyberBattleGraph(gym.Wrapper):
             creds = onp.full(self._bounds.maximum_total_credentials, -1, dtype=onp.int8)
             self.__graph.add_node(
                 node_index,
-                name=observation['discovered_nodes'][node_index],
+                name=observation['_discovered_nodes'][node_index],
                 privilege_level=None, flags=None,  # these are set by __update_nodes()
                 credentials=creds,
                 has_leaked_creds=False,
             )
 
     def __update_edges(self, observation):
-        g_orig = observation['explored_network']
-        node_ids = {n: i for i, n in enumerate(observation['discovered_nodes'])}
+        g_orig = observation['_explored_network']
+        node_ids = {n: i for i, n in enumerate(observation['_discovered_nodes'])}
         for (from_name, to_name), edge_properties in g_orig.edges.items():
             self.__graph.add_edge(node_ids[from_name], node_ids[to_name], **edge_properties)
 
