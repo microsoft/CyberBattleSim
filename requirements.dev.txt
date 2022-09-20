@@ -6,7 +6,8 @@ jedi
 pandas
 jupyter>=1.0.0
 
-torch==1.5.1
+# training
+torch==1.12.1
 
 # linter and formatter
 flake8
@@ -23,8 +24,6 @@ asciichart
 asciichartpy
 
 ### type stubs
-numpy_stubs @ git+https://github.com/numpy/numpy-stubs/@master#egg=numpy_stubs
-
 
 # Unfortunately, the official `data-science-types` package overwrites
 # the numpy stubs above, and their stubs are not as reliable.
