@@ -43,9 +43,8 @@ steps:
   - task: Cache@2
     displayName: "Pull pip packages from cache"
     inputs:
-      key: 'pip | "$(Agent.OS)" | requirements.txt | requirements.dev.txt | setup.py'
-      restoreKeys: |
-        pip | "$(Agent.OS)"
+      key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-setup.py
+      restore-keys: pip-${{ runner.os }}
       path: $(pythonver.pythonLocation)/lib/python3.8/site-packages
 
   - script: |
@@ -59,9 +58,8 @@ steps:
   - task: Cache@2
     displayName: "Pull typing stubs from cache"
     inputs:
-      key: 'typingstubs | "$(Agent.OS)" | createstubs.sh'
-      restoreKeys: |
-        typingstubs | "$(Agent.OS)" | createstubs.sh
+      key: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
+      restore-keys: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
       path: typings/
 
   - script: |
