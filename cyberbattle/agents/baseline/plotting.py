@@ -134,7 +134,7 @@ def plot_all_episodes_loss(all_episodes_losses, name, label):
 def running_mean(x, size):
     """return moving average of x for a window of lenght 'size'"""
     cumsum = np.cumsum(np.insert(x, 0, 0))
-    return (cumsum[size:] - cumsum[:-size]) / float(size)
+    return np.subtract(cumsum[size:], cumsum[:-size]) / float(size)
 
 
 class PlotTraining:

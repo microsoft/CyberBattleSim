@@ -1,10 +1,10 @@
-gym~=0.17.3
-numpy==1.22.0
+gym~=0.21.0
+numpy==1.23.0
 boolean.py==4.0
 networkx==2.7.1
 pyyaml~=6.0
 setuptools~=49.2.1
-matplotlib~=3.2.1
+matplotlib~=3.6.0
 plotly~=4.11.0
 tabulate~=0.8.7
 ordered_set==4.0.2

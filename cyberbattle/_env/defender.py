@@ -20,7 +20,7 @@ class DefenderAgent:
 
     @abstractmethod
     def step(self, environment: Environment, actions: DefenderAgentActions, t: int):
-        None
+        return None
 
 
 class ScanAndReimageCompromisedMachines(DefenderAgent):
