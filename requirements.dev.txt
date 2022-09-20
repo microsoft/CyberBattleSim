@@ -6,8 +6,6 @@ jedi
 pandas
 jupyter>=1.0.0
 
-ipykernel
-
 # training
 torch==1.12.1
 
@@ -19,7 +17,7 @@ autopep8
 pytest~=6.2.5
 
 jupytext~=1.6.0
-
+ipykernel==6.6.1
 psutil==5.7.2
 
 asciichart

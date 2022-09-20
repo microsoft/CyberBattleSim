@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -108,7 +110,7 @@ else
     python /tmp/get-pip.py
 
     if [ "${CREATE_VENV}" == "1" ]; then
-        # Install virtualenv
+        echo 'Install virtualenv'
         python -m pip install --user virtualenv
 
         # Create a virtual environment
