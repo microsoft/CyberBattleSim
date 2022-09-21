@@ -34,10 +34,11 @@ class ContextWrapper(gym.Wrapper):
     def __init__(self, env, options):
 
         super().__init__(env)
+        self.env = env
         assert isinstance(options, dict) and set(options) == {
             'kind', 'local_node_id', 'local_vuln_id', 'remote_node_id', 'remote_vuln_id', 'cred_id'}
         self._options = options
-        self._bounds = self.env._bounds
+        self._bounds = env.bounds
         self._action_context = []
 
     def reset(self):

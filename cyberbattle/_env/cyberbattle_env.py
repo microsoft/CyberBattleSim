@@ -315,7 +315,7 @@ class CyberBattleEnv(gym.Env):
         return self.__environment.identifiers
 
     @property
-    def _bounds(self) -> EnvironmentBounds:
+    def bounds(self) -> EnvironmentBounds:
         return self.__bounds
 
     def validate_environment(self, environment: model.Environment):
