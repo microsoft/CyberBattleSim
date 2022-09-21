@@ -345,7 +345,13 @@ def iterate_network_nodes(network: nx.graph.Graph) -> Iterator[Tuple[NodeID, Nod
         yield nodeid, node_data
 
 
-class Environment(NamedTuple):
+# NOTE: Using `NameTuple` instead of `dataclass` breaks deserialization
+# with PyYaml 2.8.1 due to a new recrusive references to the networkx graph in the field
+#   edges: !!python/object:networkx.classes.reportviews.EdgeView
+#     _adjdict: *id018
+#     _graph: *id019
+@dataclass
+class Environment:
     """ The static graph defining the network of computers """
     network: nx.DiGraph
     vulnerability_library: VulnerabilityLibrary
@@ -561,7 +567,6 @@ def assign_random_labels(
 def setup_yaml_serializer() -> None:
     """Setup a clean YAML formatter for object of type Environment.
     """
-
     yaml.add_representer(Precondition,
                          lambda dumper, data: dumper.represent_scalar('!BooleanExpression',
                                                                       str(data.expression)))  # type: ignore

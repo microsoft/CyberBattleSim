@@ -3,7 +3,7 @@
 set -ex
 
 kernel=$1
-if [ -z "$kernel " ]; then
+if [ -z "$kernel" ]; then
     kernel=venv
 fi
 

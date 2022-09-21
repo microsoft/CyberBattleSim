@@ -97,8 +97,19 @@ def check_reserializing(object_to_serialize: object) -> None:
     assert (serialized == re_serialized)
 
 
-def test_yaml_serialization_environment() -> None:
+def test_yaml_serialization_networkx() -> None:
     """Test Yaml serialization and deserialization for type Environment"""
+    model.setup_yaml_serializer()
+    check_reserializing(model.assign_random_labels(nx.cubical_graph()))
+
+
+def test_yaml_serialization_environment() -> None:
+    """Test Yaml serialization and deserialization for type Environment
+
+    Note: if `model.Environment` is declared as a NamedTuple instead of a @dataclass
+    then this test breaks with networkx>=2.8.1 (but works with 2.8.0)
+    due to the new networkx field `edges._graph` self referencing the graph.
+    """
     network = model.assign_random_labels(nx.cubical_graph())
     env = model.Environment(
         network=network,

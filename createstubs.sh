@@ -19,6 +19,8 @@ createstub() {
     fi
 }
 
+mkdir -p typings/
+
 createstub pandas
 createstub plotly
 createstub progressbar

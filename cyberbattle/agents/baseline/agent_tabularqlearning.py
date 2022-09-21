@@ -9,7 +9,7 @@ traditional Jupyter Notebook to open in your browser
 
 # pylint: disable=invalid-name
 
-from typing import NamedTuple, Optional, Tuple, Any
+from typing import NamedTuple, Optional, Tuple
 import numpy as np
 import logging
 
@@ -34,7 +34,7 @@ def random_argmax(array):
     return max_value, max_index
 
 
-def random_argtop_percentile(array: np.ndarray, percentile: float) -> Tuple[np.floating[Any], int]:
+def random_argtop_percentile(array: np.ndarray, percentile: float):
     """Just like `argmax` but if there are multiple elements with the max
     return a random index to break ties instead of returning the first one."""
     top_percentile = np.percentile(array, percentile)
