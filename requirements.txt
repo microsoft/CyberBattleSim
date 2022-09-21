@@ -1,7 +1,7 @@
 gym~=0.21.0
 numpy==1.23.0
 boolean.py==4.0
-networkx==2.7.1
+networkx==2.8.6
 pyyaml~=6.0
 setuptools~=49.2.1
 matplotlib~=3.6.0
