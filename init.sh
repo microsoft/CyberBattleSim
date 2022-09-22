@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -ex
 
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
@@ -63,6 +63,7 @@ else
     if [ "${ADD_PYTHON39_APTREPO}" == "1" ]; then
         echo 'Adding APT repo ppa:deadsnakes/ppa'
         $SUDO apt install software-properties-common -y
+        $SUDO apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
         $SUDO add-apt-repository ppa:deadsnakes/ppa -y
     fi
 
@@ -88,7 +89,7 @@ else
     # in the rest of the script and when calling pyright to
     # generate stubs
     $SUDO update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
-    $SUDO update-alternatives --install /usr/bin/python3.9 python3 /usr/bin/python3.9 2
+    $SUDO update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2
     $SUDO update-alternatives --set python /usr/bin/python3.9
     $SUDO update-alternatives --set python3 /usr/bin/python3.9
     update-alternatives --query python
@@ -124,7 +125,8 @@ fi
 if ./install-pythonpackages.sh; then
     echo 'Package dependencies successfully installed'
 else
-    echo 'Errors occured when installing package dependencies'
+    echo 'An error occured when installing package dependencies'
+    exit 1
 fi
 
 if [ "${CREATE_VENV}" == "1" ]; then
@@ -132,9 +134,9 @@ if [ "${CREATE_VENV}" == "1" ]; then
   python -m ipykernel install --user --name=venv
 fi
 
-if [ ""$GITHUB_ACTION"" == "" ]; then
-  # If not running in CI/CD then configure
-  # pre-commit checks on every `git push` to run pyright and co
+if [ ""$GITHUB_ACTION"" == "" ] && [ -d ".git" ]; then
+
+  echo 'running under a git enlistment -> configure pre-commit checks on every `git push` to run pyright and co'
   pre-commit install -t pre-push
 fi
 
