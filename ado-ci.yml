@@ -12,8 +12,8 @@ pool:
 
 strategy:
   matrix:
-    Python38:
-      python.version: "3.8"
+    Python39:
+      python.version: "3.9"
 
 steps:
   - checkout: self
@@ -45,7 +45,7 @@ steps:
     inputs:
       key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-setup.py
       restore-keys: pip-${{ runner.os }}
-      path: $(pythonver.pythonLocation)/lib/python3.8/site-packages
+      path: $(pythonver.pythonLocation)/lib/python3.9/site-packages
 
   - script: |
       ./install-pythonpackages.sh

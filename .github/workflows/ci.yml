@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -37,7 +37,7 @@ jobs:
           key: pip-"${{ runner.os }}"-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('setup.py') }}
           restore-keys: pip-"${{ runner.os }}"
 
-          path: ${{ env.pythonver.pythonLocation }}/lib/python3.8/site-packages
+          path: ${{ env.pythonver.pythonLocation }}/lib/python3.9/site-packages
 
       - name: Pull typing stubs from cache
         uses: actions/cache@v2

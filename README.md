@@ -80,12 +80,12 @@ The instructions were tested on a Linux Ubuntu distribution (both native and via
 ./init.sh
 ```
 
-The script installs python3.8 if not present. If you are running a version of Ubuntu older than 20, it will automatically add an additional apt repository to install python3.8.
+The script installs python3.9 if not present. If you are running a version of Ubuntu older than 20, it will automatically add an additional apt repository to install python3.9.
 
 The script will create a [virtual Python environment](https://docs.python.org/3/library/venv.html) under a `venv` subdirectory, you can then
 run Python with `venv/bin/python`.
 
-> Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual environment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.8.
+> Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual environment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.9.
 
 #### Windows Subsystem for Linux
 
@@ -113,7 +113,7 @@ To run your environment within a docker container, we recommend running `docker`
 
 This method is not maintained anymore, please prefer instead running under
 a WSL subsystem Linux environment.
-But if you insist you want to start by installing [Python 3.8](https://www.python.org/downloads/windows/) then in a Powershell prompt run the `./init.ps1` script.
+But if you insist you want to start by installing [Python 3.9](https://www.python.org/downloads/windows/) then in a Powershell prompt run the `./init.ps1` script.
 
 ## Getting started quickly using Docker
 

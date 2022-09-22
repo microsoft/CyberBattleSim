@@ -15,7 +15,7 @@ if [ -z "$PYTHON" ]; then
     PYTHON=`which python3`
 fi
 if [ -z "$PYTHON" ]; then
-    PYTHON=`which python3.8`
+    PYTHON=`which python3.9`
 fi
 
 if [ -z "$PYTHON" ]; then
@@ -24,9 +24,10 @@ if [ -z "$PYTHON" ]; then
 fi
 
 PYTHONVER=`$PYTHON --version | cut -d' ' -f2`
-if [[ ! "$PYTHONVER" == "3.8."* ]]; then
-    echo 'Version ~=3.8 of Python is required' >&2
-    exit 1
+
+if [[ ! "$PYTHONVER" == "3.9."* ]]; then
+    echo 'Version ~=3.9 of Python is required' >&2
+    exit
 else
     echo "Compatible version $PYTHONVER of Python detected at $PYTHON"
 fi

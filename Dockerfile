@@ -8,7 +8,7 @@ ADD *.txt ./
 ADD *.py ./
 RUN export TERM=dumb && ./init.sh -n
 # Override conda python 3.7 install
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 2
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
 ENV PATH="/usr/bin:${PATH}"
 
 COPY . .

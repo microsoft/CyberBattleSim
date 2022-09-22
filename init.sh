@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -ex
 
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
@@ -17,9 +17,9 @@ verlte $UBUNTU_VERSION '20' && OLDER_UBUNTU=1 || OLDER_UBUNTU=0
 
 if [ $OLDER_UBUNTU == 1 ]; then
   echo "Old version of Ubuntu detected ($UBUNTU_VERSION), will register an additional apt repository to install latest version of Python"
-  ADD_PYTHON38_APTREPO=1
+  ADD_PYTHON39_APTREPO=1
 else
-  ADD_PYTHON38_APTREPO=0
+  ADD_PYTHON39_APTREPO=0
 fi
 
 if [ ""$AML_CloudName"" != "" ]; then
@@ -38,7 +38,7 @@ while getopts "nr" opt; do
       ;;
     r)
       echo "Will add apt repo to install latest version of Python"
-      ADD_PYTHON38_APTREPO=1
+      ADD_PYTHON39_APTREPO=1
       ;;
     \?)
       echo "Syntax: init.sh [-n]" >&2
@@ -60,9 +60,10 @@ if [ ! -z "${VIRTUAL_ENV}" ]; then
 else
 
 
-    if [ "${ADD_PYTHON38_APTREPO}" == "1" ]; then
+    if [ "${ADD_PYTHON39_APTREPO}" == "1" ]; then
         echo 'Adding APT repo ppa:deadsnakes/ppa'
         $SUDO apt install software-properties-common -y
+        $SUDO apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
         $SUDO add-apt-repository ppa:deadsnakes/ppa -y
     fi
 
@@ -87,10 +88,10 @@ else
     # Make sure that the desired version of python is used
     # in the rest of the script and when calling pyright to
     # generate stubs
-    $SUDO update-alternatives --install /usr/bin/python python /usr/bin/python3.8 2
-    $SUDO update-alternatives --install /usr/bin/python3.8 python3 /usr/bin/python3.8 2
-    $SUDO update-alternatives --set python /usr/bin/python3.8
-    $SUDO update-alternatives --set python3 /usr/bin/python3.8
+    $SUDO update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
+    $SUDO update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2
+    $SUDO update-alternatives --set python /usr/bin/python3.9
+    $SUDO update-alternatives --set python3 /usr/bin/python3.9
     update-alternatives --query python
     export PATH="/usr/bin:${PATH}"
 
@@ -124,7 +125,8 @@ fi
 if ./install-pythonpackages.sh; then
     echo 'Package dependencies successfully installed'
 else
-    echo 'Errors occured when installing package dependencies'
+    echo 'An error occured when installing package dependencies'
+    exit 1
 fi
 
 if [ "${CREATE_VENV}" == "1" ]; then
@@ -132,9 +134,9 @@ if [ "${CREATE_VENV}" == "1" ]; then
   python -m ipykernel install --user --name=venv
 fi
 
-if [ ""$GITHUB_ACTION"" == "" ]; then
-  # If not running in CI/CD then configure
-  # pre-commit checks on every `git push` to run pyright and co
+if [ ""$GITHUB_ACTION"" == "" ] && [ -d ".git" ]; then
+
+  echo 'running under a git enlistment -> configure pre-commit checks on every `git push` to run pyright and co'
   pre-commit install -t pre-push
 fi
 
