@@ -16,7 +16,7 @@ from collections import OrderedDict
 import logging
 from enum import Enum
 from typing import Iterator, List, NamedTuple, Optional, Set, Tuple, Dict, TypedDict, cast
-import IPython.core.display as d
+from IPython.display import display
 import pandas as pd
 
 from cyberbattle.simulation.model import FirewallRule, MachineStatus, PrivilegeLevel, PropertyName, VulnerabilityID, VulnerabilityType
@@ -52,11 +52,15 @@ class Penalty:
     # penalty for attempting a connection with an invalid password
     WRONG_PASSWORD = -10
 
-    # traffice blocked by outoing rule in a local firewall
+    # traffic blocked by outoing rule in a local firewall
     BLOCKED_BY_LOCAL_FIREWALL = -10
 
-    # traffice blocked by incoming rule in a remote firewall
+    # traffic blocked by incoming rule in a remote firewall
     BLOCKED_BY_REMOTE_FIREWALL = -10
+
+    # invalid action (e.g., running an attack from a node that's not owned)
+    # (Used only if `throws_on_invalid_actions` is set to False)
+    INVALID_ACTION = -1
 
 
 # Reward for the first time a local or remote attack
@@ -107,13 +111,19 @@ class AgentActions:
         This is the AgentActions class. It interacts with and makes changes to the environment.
     """
 
-    def __init__(self, environment: model.Environment):
+    def __init__(self, environment: model.Environment, throws_on_invalid_actions=True):
         """
             AgentActions Constructor
+
+        environment               - CyberBattleSim environment parameters
+        throws_on_invalid_actions - whether to raise an exception when executing an invalid action (e.g., running an attack from a node that's not owned)
+                                    if set to False a negative reward is returned instead.
+
         """
         self._environment = environment
         self._gathered_credentials: Set[model.CredentialID] = set()
         self._discovered_nodes: "OrderedDict[model.NodeID, NodeTrackingInformation]" = OrderedDict()
+        self._throws_on_invalid_actions = throws_on_invalid_actions
 
         # List of all special tags indicating a privilege level reached on a node
         self.privilege_tags = [model.PrivilegeEscalation(p).tag for p in list(PrivilegeLevel)]
@@ -399,10 +409,16 @@ class AgentActions:
         target_node_info: model.NodeInfo = self._environment.get_node(target_node_id)
 
         if not source_node_info.agent_installed:
-            raise ValueError("Agent does not owned the source node '" + node_id + "'")
+            if self._throws_on_invalid_actions:
+                raise ValueError("Agent does not owned the source node '" + node_id + "'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         if target_node_id not in self._discovered_nodes:
-            raise ValueError("Agent has not discovered the target node '" + target_node_id + "'")
+            if self._throws_on_invalid_actions:
+                raise ValueError("Agent has not discovered the target node '" + target_node_id + "'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         succeeded, result = self.__process_outcome(
             model.VulnerabilityType.REMOTE,
@@ -436,7 +452,10 @@ class AgentActions:
         node_info = self._environment.get_node(node_id)
 
         if not node_info.agent_installed:
-            raise ValueError(f"Agent does not owned the node '{node_id}'")
+            if self._throws_on_invalid_actions:
+                raise ValueError(f"Agent does not owned the node '{node_id}'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         succeeded, result = self.__process_outcome(
             model.VulnerabilityType.LOCAL,
@@ -444,7 +463,7 @@ class AgentActions:
             node_id, node_info,
             local_or_remote=True,
             failed_penalty=Penalty.LOCAL_EXPLOIT_FAILED,
-            throw_if_vulnerability_not_present=True)
+            throw_if_vulnerability_not_present=False)
 
         return result
 
@@ -492,13 +511,22 @@ class AgentActions:
         # and that the target node is discovered
 
         if not source_node.agent_installed:
-            raise ValueError(f"Agent does not owned the source node '{source_node_id}'")
+            if self._throws_on_invalid_actions:
+                raise ValueError(f"Agent does not owned the source node '{source_node_id}'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         if target_node_id not in self._discovered_nodes:
-            raise ValueError(f"Agent has not discovered the target node '{target_node_id}'")
+            if self._throws_on_invalid_actions:
+                raise ValueError(f"Agent has not discovered the target node '{target_node_id}'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         if credential not in self._gathered_credentials:
-            raise ValueError(f"Agent has not discovered credential '{credential}'")
+            if self._throws_on_invalid_actions:
+                raise ValueError(f"Agent has not discovered credential '{credential}'")
+            else:
+                return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         if not self.__is_passing_firewall_rules(source_node.firewall.outgoing, port_name):
             logger.info(f"BLOCKED TRAFFIC: source node '{source_node_id}'" +
@@ -607,7 +635,7 @@ class AgentActions:
 
     def print_all_attacks(self) -> None:
         """Pretty print list of all possible attacks from all the nodes currently owned by the attacker"""
-        d.display(pd.DataFrame.from_dict(self.list_all_attacks()).set_index('id'))  # type: ignore
+        display(pd.DataFrame.from_dict(self.list_all_attacks()).set_index('id'))  # type: ignore
 
 
 class DefenderAgentActions:

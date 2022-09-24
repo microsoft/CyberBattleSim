@@ -76,7 +76,7 @@ Observation = TypedDict(
         'lateral_move': numpy.int32,
 
         # whether customer data were just discovered
-        'customer_data_found': numpy.int32,
+        'customer_data_found': Tuple[numpy.int32],
 
         # 0 if there were no probing attempt
         # 1 if an attempted probing failed
@@ -96,24 +96,27 @@ Observation = TypedDict(
         # State information aggregated over all actions executed so far
         # ---------------------------------------------------------
 
-        # size of the credential stack
+        # size of the credential stack (number of tuples in `credential_cache_matrix` that are not zeros)
         'credential_cache_length': int,
 
         # total nodes discovered so far
         'discovered_node_count': int,
 
         # Matrix of properties for all the discovered nodes
-        'discovered_nodes_properties': numpy.ndarray,
+        'discovered_nodes_properties': Tuple[numpy.ndarray, ...],
 
         # Node privilege level on every discovered node (e.g., 0 if not owned, 1 owned, 2  admin, 3 for system)
         'nodes_privilegelevel': numpy.ndarray,
 
-        # Encoding of the credential cache of shape: (credential_cache_length, 2)
+        # Tuple encoding of the credential cache matrix.
+        # It consists of `bounds.maximum_total_credentials` tuples
+        # of numpy array of shape (2)
+        # where only the first `credential_cache_length` tuples are populated.
         #
-        # Each row represent a discovered credential, the row index is the
-        # the credential index is given by the row index (i.e. order of discovery)
-        # A row is of the form: (target_node_discover_index, port_index)
-        'credential_cache_matrix': numpy.ndarray,
+        # Each tuple represent a discovered credential,
+        # the credential index is given by its tuple index (i.e., order of discovery)
+        # Each tuple is of the form: (target_node_discover_index, port_index)
+        'credential_cache_matrix': Tuple[numpy.ndarray, ...],
 
         # ---------------------------------------------------------
         # Raw information fields coming from the simulation environment
@@ -121,17 +124,17 @@ Observation = TypedDict(
         # ---------------------------------------------------------
 
         # internal IDs of the credentials in the cache
-        'credential_cache': List[model.CachedCredential],
+        '_credential_cache': List[model.CachedCredential],
 
         # Mapping node index to internal IDs of all nodes discovered so far.
         # The external node index used by the agent to refer to a node
         # is defined as the index of the node in this array
-        'discovered_nodes': List[model.NodeID],
+        '_discovered_nodes': List[model.NodeID],
 
         # The subgraph of nodes discovered so far with annotated edges
         # representing interactions that took place during the simulation. (See
         # actions.EdgeAnnotation)
-        'explored_network': networkx.DiGraph
+        '_explored_network': networkx.DiGraph
 
     })
 
@@ -295,7 +298,7 @@ class CyberBattleEnv(gym.Env):
         self.__credential_cache: List[model.CachedCredential] = []
         self.__episode_rewards: List[float] = []
         # The actuator used to execute actions in the simulation environment
-        self._actuator = actions.AgentActions(self.__environment)
+        self._actuator = actions.AgentActions(self.__environment, throws_on_invalid_actions=self.__throws_on_invalid_actions)
         self._defender_actuator = actions.DefenderAgentActions(self.__environment)
 
         self.__stepcount = 0
@@ -392,7 +395,9 @@ class CyberBattleEnv(gym.Env):
                  defender_constraint=DefenderConstraint(maintain_sla=0.0),
                  winning_reward=5000.0,
                  losing_reward=0.0,
-                 renderer=''
+                 renderer='',
+                 observation_padding=False,
+                 throws_on_invalid_actions=True,
                  ):
         """Arguments
         ===========
@@ -406,6 +411,10 @@ class CyberBattleEnv(gym.Env):
         winning_reward            - Reward granted to the attacker if the simulation ends because the attacker's goal is reached.
         losing_reward             - Reward granted to the attacker if the simulation ends because the Defender's goal is reached.
         renderer                  - the matplotlib renderer (e.g. 'png')
+        observation_padding       - whether to padd all the observation fields to their maximum size. For instance this will pad the credential matrix
+                                    to fit in `maximum_node_count` rows. Turn on this flag for gym agent that expects observations of fixed sizes.
+        throws_on_invalid_actions - whether to raise an exception if the step function attempts an invalid action (e.g., running an attack from a node that's not owned)
+                                    if set to False a negative reward is returned instead.
         """
 
         # maximum number of entities in a given environment
@@ -422,6 +431,8 @@ class CyberBattleEnv(gym.Env):
         self.__WINNING_REWARD = winning_reward
         self.__LOSING_REWARD = losing_reward
         self.__renderer = renderer
+        self.__observation_padding = observation_padding
+        self.__throws_on_invalid_actions = throws_on_invalid_actions
 
         self.viewer = None
 
@@ -456,15 +467,6 @@ class CyberBattleEnv(gym.Env):
 
         self.action_space = DiscriminatedUnion(cast(dict, action_spaces))  # type: ignore
 
-        action_mask_spaces: ActionSpaceDict = {
-            "local_vulnerability":
-                spaces.MultiBinary(maximum_node_count * local_vulnerabilities_count),
-            "remote_vulnerability":
-                spaces.MultiBinary(maximum_node_count * maximum_node_count * remote_vulnerabilities_count),
-            "connect":
-                spaces.MultiBinary(maximum_node_count * maximum_node_count * port_count * maximum_total_credentials)
-        }
-
         # The observation space returning the outcome of each possible action
         self.observation_space = spaces.Dict({
             # how many new nodes were discovered
@@ -472,7 +474,7 @@ class CyberBattleEnv(gym.Env):
             # successuflly moved to the target node (1) or not (0)
             'lateral_move': spaces.Discrete(2),
             # boolean: 1 if customer secret data were discovered, 0 otherwise
-            'customer_data_found': spaces.MultiBinary(2),
+            'customer_data_found': spaces.MultiBinary(1),
             # whether an attempted probing succeeded or not
             'probe_result': spaces.Discrete(3),
             # Esclation result
@@ -498,7 +500,14 @@ class CyberBattleEnv(gym.Env):
             # (1 for valid, 0 for invalid). Note: a valid action is not necessariliy guaranteed to succeed.
             # For instance it is a valid action to attempt to connect to a remote node with incorrect credentials,
             # even though such action would 'fail' and potentially yield a negative reward.
-            "action_mask": spaces.Dict(action_mask_spaces),
+            "action_mask": spaces.Dict({
+                "local_vulnerability":
+                    spaces.MultiBinary([maximum_node_count, local_vulnerabilities_count]),
+                "remote_vulnerability":
+                    spaces.MultiBinary([maximum_node_count, maximum_node_count, remote_vulnerabilities_count]),
+                "connect":
+                    spaces.MultiBinary([maximum_node_count, maximum_node_count, port_count, maximum_total_credentials])
+            }),
 
             # size of the credential stack
             'credential_cache_length': spaces.Discrete(maximum_total_credentials),
@@ -507,34 +516,34 @@ class CyberBattleEnv(gym.Env):
             'discovered_node_count': spaces.Discrete(maximum_node_count),
 
             # Matrix of properties for all the discovered nodes
-            # 3 values for each matrix cell: set, unset, unknown
-            'discovered_nodes_properties': spaces.MultiDiscrete([3] * maximum_node_count * property_count),
+            # 3 values for each matrix cell: unset (0), set (1), unknown (2)
+            'discovered_nodes_properties': spaces.Tuple([spaces.MultiDiscrete([3] * property_count)] * maximum_node_count),
 
             # Escalation level on every discovered node (e.g., 0 if not owned, 1 for admin, 2 for system)
             'nodes_privilegelevel': spaces.MultiDiscrete([CyberBattleEnv.privilege_levels] * maximum_node_count),
 
             # Encoding of the credential cache of shape: (credential_cache_length, 2)
             #
-            # Each row represent a discovered credential, the row index is the
+            # Each row represent a discovered credential,
             # the credential index is given by the row index (i.e. order of discovery)
             # A row is of the form: (target_node_discover_index, port_index)
             'credential_cache_matrix': spaces.Tuple(
-                [spaces.MultiDiscrete([maximum_node_count, port_count])] * maximum_total_credentials),
+                [spaces.MultiDiscrete([self.__bounds.maximum_node_count, self.__bounds.port_count])] * self.__bounds.maximum_total_credentials),
 
             # ---------------------------------------------------------
             # Fields that were previously in the 'info' dict:
             # ---------------------------------------------------------
 
             # internal IDs of the credentials in the cache
-            'credential_cache': DummySpace(sample=[model.CachedCredential('Sharepoint', "HTTPS", "ADPrincipalCreds")]),
+            '_credential_cache': DummySpace(sample=[model.CachedCredential('Sharepoint', "HTTPS", "ADPrincipalCreds")]),
 
             # internal IDs of nodes discovered so far
-            'discovered_nodes': DummySpace(sample=['node1', 'node0', 'node2']),
+            '_discovered_nodes': DummySpace(sample=['node1', 'node0', 'node2']),
 
             # The subgraph of nodes discovered so far with annotated edges
             # representing interactions that took place during the simulation. (See
             # actions.EdgeAnnotation)
-            'explored_network': DummySpace(sample=networkx.DiGraph()),
+            '_explored_network': DummySpace(sample=networkx.DiGraph()),
         })
 
         # reward_range: A tuple corresponding to the min and max possible rewards
@@ -596,16 +605,16 @@ class CyberBattleEnv(gym.Env):
 
     def __get_blank_action_mask(self) -> ActionMask:
         """Return a blank action mask"""
-        node_count = self.__node_count
+        max_node_count = self.bounds.maximum_node_count
         local_vulnerabilities_count = self.__bounds.local_attacks_count
         remote_vulnerabilities_count = self.__bounds.remote_attacks_count
         port_count = self.__bounds.port_count
         local = numpy.zeros(
-            shape=(node_count, local_vulnerabilities_count), dtype=numpy.int32)
+            shape=(max_node_count, local_vulnerabilities_count), dtype=numpy.int32)
         remote = numpy.zeros(
-            shape=(node_count, node_count, remote_vulnerabilities_count), dtype=numpy.int32)
+            shape=(max_node_count, max_node_count, remote_vulnerabilities_count), dtype=numpy.int32)
         connect = numpy.zeros(
-            shape=(node_count, node_count, port_count, self.__bounds.maximum_total_credentials), dtype=numpy.int32)
+            shape=(max_node_count, max_node_count, port_count, self.__bounds.maximum_total_credentials), dtype=numpy.int32)
         return ActionMask(
             local_vulnerability=local,
             remote_vulnerability=remote,
@@ -671,7 +680,8 @@ class CyberBattleEnv(gym.Env):
         elif "connect" in action:
             source_node, target_node, port_index, credential_cache_index = action["connect"]
             assert credential_cache_index >= 0
-            assert credential_cache_index < len(self.__credential_cache)
+            if credential_cache_index < len(self.__credential_cache):
+                return "connect(invalid)"
             source_node_id = self.__internal_node_id_from_external_node_index(source_node)
             target_node_id = self.__internal_node_id_from_external_node_index(target_node)
             return f"connect(`{source_node_id}, `{target_node_id}, {self.__index_to_port_name(port_index)}, {self.__credential_cache[credential_cache_index].credential})"
@@ -704,8 +714,8 @@ class CyberBattleEnv(gym.Env):
 
         elif "connect" in action:
             source_node, target_node, port_index, credential_cache_index = action["connect"]
-            assert credential_cache_index >= 0
-            assert credential_cache_index < len(self.__credential_cache)
+            if credential_cache_index < 0 or credential_cache_index >= len(self.__credential_cache):
+                return actions.ActionResult(reward=-1, outcome=None)
 
             source_node_id = self.__internal_node_id_from_external_node_index(source_node)
             target_node_id = self.__internal_node_id_from_external_node_index(target_node)
@@ -727,29 +737,48 @@ class CyberBattleEnv(gym.Env):
                 [numpy.array([UNUSED_SLOT, 0, 0, 0], dtype=numpy.int32)]
                 * self.__bounds.maximum_discoverable_credentials_per_action),
             lateral_move=numpy.int32(0),
-            customer_data_found=numpy.int32(0),
+            customer_data_found=(numpy.int32(0),),
             escalation=numpy.int32(PrivilegeLevel.NoAccess),
             action_mask=self.__get_blank_action_mask(),
             probe_result=numpy.int32(0),
-            credential_cache_matrix=numpy.zeros((1, 2)),
-            credential_cache_length=len(self.__credential_cache),
+            credential_cache_matrix=tuple([numpy.zeros((2))] * self.__bounds.maximum_total_credentials),
+            credential_cache_length=0,
             discovered_node_count=len(self.__discovered_nodes),
-            discovered_nodes_properties=numpy.array(
-                [len(self.__discovered_nodes), self.__bounds.property_count], dtype=numpy.int32),
-            nodes_privilegelevel=numpy.array([len(self.__discovered_nodes)], dtype=numpy.int32),
+            discovered_nodes_properties=tuple(
+                [numpy.full((self.__bounds.property_count,), 2, dtype=numpy.int32)] * self.__bounds.maximum_node_count),
+
+            nodes_privilegelevel=numpy.zeros((self.bounds.maximum_node_count,), dtype=numpy.int32),
 
             # raw data not actually encoded as a proper gym numeric space
             # (were previously returned in the 'info' dict)
-            credential_cache=self.__credential_cache,
-            discovered_nodes=self.__discovered_nodes,
-            explored_network=self.__get_explored_network()
+            _credential_cache=self.__credential_cache,
+            _discovered_nodes=self.__discovered_nodes,
+            _explored_network=self.__get_explored_network()
         )
 
         return observation
 
+    def __pad_array_if_requested(self, o, pad_value, desired_length) -> numpy.ndarray:
+        """Pad an array observation with provided padding if the padding option is enabled
+        for this environment"""
+        if self.__observation_padding:
+            padding = numpy.full((desired_length - len(o)), pad_value, dtype=numpy.int32)
+            return numpy.concatenate((o, padding))
+        else:
+            return o
+
+    def __pad_tuple_if_requested(self, o, row_shape, desired_length) -> Tuple[numpy.ndarray, ...]:
+        """Pad a tuple observation with provided padding if the padding option is enabled
+        for this environment"""
+        if self.__observation_padding:
+            padding = [numpy.zeros(row_shape, dtype=numpy.int32)] * (desired_length - len(o))
+            return tuple(o + padding)
+        else:
+            return tuple(o)
+
     def __property_vector(self, node_id: model.NodeID, node_info: model.NodeInfo) -> numpy.ndarray:
         """Property vector for specified node
-        each cell is either 1 if the property is set, -1 if unset, and 0 if unknown (node is not owned by the agent yet)
+        each cell is either 1 if the property is set, 0 if unset, and 2 if unknown (node is not owned by the agent yet)
         """
         properties_indices = list(self._actuator.get_discovered_properties(node_id))
 
@@ -757,8 +786,7 @@ class CyberBattleEnv(gym.Env):
 
         if is_owned:
             # if the node is owned then we know all its properties
-            # => -1 should be the default value
-            vector = numpy.full((self.__bounds.property_count), -1, dtype=numpy.int32)
+            vector = numpy.full((self.__bounds.property_count), 0, dtype=numpy.int32)
         else:
             # otherwise we don't know anything about not discovered properties => 0 should be the default value
             vector = numpy.zeros((self.__bounds.property_count), dtype=numpy.int32)
@@ -766,22 +794,23 @@ class CyberBattleEnv(gym.Env):
         vector[properties_indices] = 1
         return vector
 
-    def __get_property_matrix(self) -> numpy.ndarray:
+    def __get_property_matrix(self) -> Tuple[numpy.ndarray]:
         """Return the Node-Property matrix,
-        where  1 means that the property is set for that node
-              -1 if the property is not set for that node
-               0 if unknown
+        where  0 means the property is not set for that node
+               1 means the property is set for that node
+               2 means the property status is unknown
 
-        e.g.: [ 1 -1 -1 1 ]
-                0  0  0 0
-                -1 1 -1 1 ]
-         1st row: properties of 1st discovered and owned node
+        e.g.: [ 1 0 0 1 ]
+                2 2 2 2
+                0 1 0 1 ]
+         1st row: set and unset properties for the 1st discovered and owned node
          2nd row: no known properties for the 2nd discovered node
          3rd row: properties of 3rd discovered and owned node"""
-        return numpy.array([
+        property_discovered = [
             self.__property_vector(node_id, node_info)
             for node_id, node_info in self._actuator.discovered_nodes()
-        ], dtype=numpy.int32)
+        ]
+        return self.__pad_tuple_if_requested(property_discovered, self.__bounds.property_count, self.__bounds.maximum_node_count)
 
     def __get__owned_nodes_indices(self) -> List[int]:
         """Get list of indices of all owned nodes"""
@@ -799,10 +828,11 @@ class CyberBattleEnv(gym.Env):
                3 if the node is owned and escalated to SYSTEM
                ... further escalation levels defined by the network
         """
-        privilegelevel_array = [
+        privilegelevel_array = numpy.array([
             int(self._actuator.get_node_privilegelevel(node))
-            for node in self.__discovered_nodes]
-        return numpy.array(privilegelevel_array, dtype=numpy.int32)
+            for node in self.__discovered_nodes], dtype=numpy.int32)
+
+        return self.__pad_array_if_requested(privilegelevel_array, PrivilegeLevel.NoAccess, self.__bounds.maximum_node_count)
 
     def __observation_reward_from_action_result(self, result: actions.ActionResult) -> Tuple[Observation, float]:
         obs = self.__get_blank_observation()
@@ -835,17 +865,18 @@ class CyberBattleEnv(gym.Env):
             obs['newly_discovered_nodes_count'] = numpy.int32(newly_discovered_nodes_count)
 
             # Encode the returned credentials in the format expected by the gym agent
-            obs['leaked_credentials'] = tuple(
-                [numpy.array([USED_SLOT,
-                              cache_index,
-                              self.__find_external_index(cached_credential.node),
-                              self.__portname_to_index(cached_credential.port)], numpy.int32)
-                 for cache_index, cached_credential in newly_discovered_creds])
+            leaked_credentials = [numpy.array([USED_SLOT,
+                                               cache_index,
+                                               self.__find_external_index(cached_credential.node),
+                                               self.__portname_to_index(cached_credential.port)], numpy.int32)
+                                  for cache_index, cached_credential in newly_discovered_creds]
+
+            obs['leaked_credentials'] = self.__pad_tuple_if_requested(leaked_credentials, 4, self.__bounds.maximum_discoverable_credentials_per_action)
 
         elif isinstance(outcome, model.LateralMove):
             obs['lateral_move'] = numpy.int32(1)
         elif isinstance(outcome, model.CustomerData):
-            obs['customer_data_found'] = numpy.int32(1)
+            obs['customer_data_found'] = (numpy.int32(1),)
         elif isinstance(outcome, model.ProbeSucceeded):
             obs['probe_result'] = numpy.int32(2)
         elif isinstance(outcome, model.ProbeFailed):
@@ -853,20 +884,19 @@ class CyberBattleEnv(gym.Env):
         elif isinstance(outcome, model.PrivilegeEscalation):
             obs['escalation'] = numpy.int32(outcome.level)
 
-        x = numpy.zeros(shape=(len(self.__credential_cache), 2))
-        for cache_index, cached_credential in enumerate(self.__credential_cache):
-            x[cache_index] = [self.__find_external_index(cached_credential.node),
-                              self.__portname_to_index(cached_credential.port)]
-        obs['credential_cache_matrix'] = x
+        cache = [numpy.array([self.__find_external_index(c.node), self.__portname_to_index(c.port)])
+                 for c in self.__credential_cache]
+
+        obs['credential_cache_matrix'] = self.__pad_tuple_if_requested(cache, 2, self.__bounds.maximum_total_credentials)
 
         # Dynamic statistics to be refreshed
         obs['credential_cache_length'] = len(self.__credential_cache)
-        obs['credential_cache'] = self.__credential_cache
         obs['discovered_node_count'] = len(self.__discovered_nodes)
-        obs['discovered_nodes'] = self.__discovered_nodes
-        obs['explored_network'] = self.__get_explored_network()
         obs['discovered_nodes_properties'] = self.__get_property_matrix()
         obs['nodes_privilegelevel'] = self.__get_privilegelevel_array()
+        obs['_credential_cache'] = self.__credential_cache
+        obs['_discovered_nodes'] = self.__discovered_nodes
+        obs['_explored_network'] = self.__get_explored_network()
 
         self.__update_action_mask(obs['action_mask'])
         return obs, result.reward
@@ -1045,7 +1075,7 @@ class CyberBattleEnv(gym.Env):
         """Return the explored network graph adjacency matrix
         as an numpy array of shape (N,N) where
         N is the number of nodes discovered so far"""
-        return convert_matrix.to_numpy_array(observation['explored_network'], weight='kind_as_float')
+        return convert_matrix.to_numpy_array(observation['_explored_network'], weight='kind_as_float')
 
     def get_explored_network_node_properties_bitmap_as_numpy(self, observation: Observation) -> numpy.ndarray:
         """Return a combined the matrix of adjacencies (left part) and
@@ -1061,8 +1091,8 @@ class CyberBattleEnv(gym.Env):
           V  (            |                 )
 
         """
-        return numpy.block([convert_matrix.to_numpy_array(observation['explored_network'], weight='kind_as_float'),
-                            observation['discovered_nodes_properties']])
+        return numpy.block([convert_matrix.to_numpy_array(observation['_explored_network'], weight='kind_as_float'),
+                            numpy.array(observation['discovered_nodes_properties'])])
 
     def step(self, action: Action) -> Tuple[Observation, float, bool, StepInfo]:
         if self.__done:

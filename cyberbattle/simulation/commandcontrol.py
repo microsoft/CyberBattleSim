@@ -30,7 +30,7 @@ class CommandControl:
     def __init__(self, environment_or_actuator: Union[model.Environment, actions.AgentActions]):
         if isinstance(environment_or_actuator, model.Environment):
             self.__environment = environment_or_actuator
-            self._actuator = actions.AgentActions(self.__environment)
+            self._actuator = actions.AgentActions(self.__environment, throws_on_invalid_actions=True)
         elif isinstance(environment_or_actuator, actions.AgentActions):
             self.__environment = environment_or_actuator._environment
             self._actuator = environment_or_actuator

@@ -245,10 +245,10 @@ def select_random_vulnerabilities(os_type: str, num_vulns: int) \
     ret_val: Dict[str, model.VulnerabilityInfo] = {}
     keys: List[str]
     if os_type == "Linux":
-        keys = random.sample(potential_linux_vulns.keys(), num_vulns)
+        keys = random.sample(list(potential_linux_vulns.keys()), num_vulns)
         ret_val = {k: potential_linux_vulns[k] for k in keys}
     elif os_type == "Windows":
-        keys = random.sample(potential_windows_vulns.keys(), num_vulns)
+        keys = random.sample(list(potential_windows_vulns.keys()), num_vulns)
         ret_val = {k: potential_windows_vulns[k] for k in keys}
     else:
         raise ValueError("Invalid Operating System supplied to select_random_vulnerabilities")
