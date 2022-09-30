@@ -16,10 +16,7 @@ verlte() {
 verlte $UBUNTU_VERSION '20' && OLDER_UBUNTU=1 || OLDER_UBUNTU=0
 
 if [ $OLDER_UBUNTU == 1 ]; then
-  echo "Old version of Ubuntu detected ($UBUNTU_VERSION), will register an additional apt repository to install latest version of Python"
-  ADD_PYTHON39_APTREPO=1
-else
-  ADD_PYTHON39_APTREPO=0
+  echo "Old version of Ubuntu detected ($UBUNTU_VERSION)"
 fi
 
 if [ ""$AML_CloudName"" != "" ]; then
@@ -29,21 +26,22 @@ else
   CREATE_VENV=1
 fi
 
+ADD_PYTHON39_APTREPO=1
 
-while getopts "nr" opt; do
+while getopts "ns" opt; do
   case $opt in
     n)
       echo "Skipping venv creation. Parameters: [$OPTARG]"
       CREATE_VENV=0
       ;;
-    r)
-      echo "Will add apt repo to install latest version of Python"
-      ADD_PYTHON39_APTREPO=1
+    s)
+      echo "Do not register apt repositories needed to install latest version of Python"
+      ADD_PYTHON39_APTREPO=0
       ;;
     \?)
       echo "Syntax: init.sh [-n]" >&2
       echo "   -n    skip creation of virtual environment" >&2
-      echo "   -r    register required apt repository to install latest version of Python for older versions of Ubuntu (e.g. 16)" >&2
+      echo "   -s    skip registration of apt repository needed to to install latest version of Python for older versions of Ubuntu (e.g. 16)" >&2
       exit 1
       ;;
   esac
@@ -75,23 +73,23 @@ else
     curl -sL https://deb.nodesource.com/setup_16.x | $SUDO bash -
 
     # install all apt-get dependencies
-    if [ $OLDER_UBUNTU == 1 ]; then
-        # exclude package not available on older ubuntu
-        cat apt-requirements.txt | grep -v python3-distutils | $SUDO  xargs apt-get install -y
-    else
-        cat apt-requirements.txt | $SUDO xargs apt-get install -y
-    fi
+    cat apt-requirements.txt | $SUDO  xargs apt-get install -y
 
     # $SUDO npm -g upgrade node
     $SUDO npm install -g --unsafe-perm=true --allow-root npm
 
+
+
+    python_bin=`which python3.9`
+
+
     # Make sure that the desired version of python is used
     # in the rest of the script and when calling pyright to
     # generate stubs
-    $SUDO update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
-    $SUDO update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2
-    $SUDO update-alternatives --set python /usr/bin/python3.9
-    $SUDO update-alternatives --set python3 /usr/bin/python3.9
+    $SUDO update-alternatives --install /usr/bin/python python $python_bin 2
+    $SUDO update-alternatives --install /usr/bin/python3 python3 $python_bin 2
+    $SUDO update-alternatives --set python $python_bin
+    $SUDO update-alternatives --set python3 $python_bin
     update-alternatives --query python
     export PATH="/usr/bin:${PATH}"
 
@@ -101,14 +99,8 @@ else
     # installing orca required to export images with plotly
     ./install-orca.sh
 
-    # install pip
-    if [ ! -f "/tmp/get-pip.py" ]; then
-        curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
-    fi
-
     python --version
 
-    python /tmp/get-pip.py
 
     if [ "${CREATE_VENV}" == "1" ]; then
         echo 'Install virtualenv'
