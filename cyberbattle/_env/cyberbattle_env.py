@@ -238,10 +238,10 @@ class AttackerGoal(NamedTuple):
     # Include goal to bring the availability to lower that the specified SLA value
     low_availability: float = 1.0
     # Include goal to own at least the specified number of nodes.
-    own_atleast: int = 0
+    own_atleast: int = 0.0
     # Include goal to own at least the specified percentage of the network nodes.
     # Set to 1.0 to define goal as the ownership of all network nodes.
-    own_atleast_percent: float = 1.0
+    own_atleast_percent: float = 0.0
 
 
 class DefenderGoal(NamedTuple):
