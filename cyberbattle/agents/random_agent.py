@@ -23,7 +23,7 @@ def run_random_agent(episode_count: int, iteration_count: int, gym_env: cyberbat
             action = gym_env.sample_valid_action()
 
             LOGGER.debug(f"action={action}")
-            observation, reward, done, info = gym_env.step(action)
+            observation, reward, done, truncated, info = gym_env.step(action)
 
             total_reward += reward
 
@@ -31,6 +31,10 @@ def run_random_agent(episode_count: int, iteration_count: int, gym_env: cyberbat
                 prettry_printed = gym_env.pretty_print_internal_action(action)
                 print(f'+ rewarded action: {action} total_reward={total_reward} reward={reward} @t={t}\n  {prettry_printed}')
                 gym_env.render()
+
+            if truncated:
+                print(f"Episode truncated after {t+1} timesteps")
+                break
 
             if done:
                 print(f"Episode finished after {t+1} timesteps")

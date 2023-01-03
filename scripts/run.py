@@ -3,9 +3,11 @@
 
 """A sample run of the CyberBattle simulation"""
 
+from typing import cast
 import gym
 import logging
 import sys
+from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 
 def main() -> int:
@@ -20,29 +22,32 @@ def main() -> int:
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
-    env = gym.make('CyberBattleToyCtf-v0')
+    env = cast(CyberBattleEnv, gym.make('CyberBattleToyCtf-v0'))
 
-    logging.info(env.action_space.sample())
-    logging.info(env.observation_space.sample())
+    # logging.info(env.action_space.sample())
+    # logging.info(env.observation_space.sample())
 
     for i_episode in range(1):
         observation = env.reset()
         action_mask = env.compute_action_mask()
         total_reward = 0
         for t in range(500):
-            env.render()
+            # env.render()
 
             # sample a valid action
-            action = env.action_space.sample()
-            while not env.apply_mask(action_mask, action):
-                action = env.action_space.sample()
+            action = env.sample_valid_action()
+            while not env.apply_mask(action, action_mask):
+                action = env.sample_valid_action()
 
-            print('action' + str(action))
-            observation, reward, done, info = env.step(action)
+            print('action: ' + str(action))
+            observation, reward, done, truncated, info = env.step(action)
             action_mask = observation['action_mask']
             total_reward = total_reward + reward
             # print(observation)
             print('total_reward=' + str(total_reward))
+            if truncated:
+                print("Episode truncated after {} timesteps".format(t + 1))
+                break
             if done:
                 print("Episode finished after {} timesteps".format(t + 1))
                 break

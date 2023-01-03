@@ -6,6 +6,7 @@ from typing import NamedTuple
 import gym
 from gym.spaces import Space, Discrete, Tuple
 import numpy as onp
+from cyberbattle._env.cyberbattle_env import Action, CyberBattleEnv
 
 
 class Env(NamedTuple):
@@ -31,7 +32,7 @@ def context_spaces(observation_space, action_space):
 class ContextWrapper(gym.Wrapper):
     __kinds = ('local_vulnerability', 'remote_vulnerability', 'connect')
 
-    def __init__(self, env, options):
+    def __init__(self, env: CyberBattleEnv, options):
 
         super().__init__(env)
         self.env = env
@@ -52,21 +53,21 @@ class ContextWrapper(gym.Wrapper):
         local_node_id = self._options['local_node_id']((obs, kind))
         if kind == 0:
             local_vuln_id = self._options['local_vuln_id']((obs, local_node_id))
-            a = {self.__kinds[kind]: onp.array([local_node_id, local_vuln_id])}
+            a: Action = {"local_vulnerability": onp.array([local_node_id, local_vuln_id])}
         else:
             remote_node_id = self._options['remote_node_id']((obs, kind, local_node_id))
             if kind == 1:
                 remote_vuln_id = \
                     self._options['remote_vuln_id']((obs, local_node_id, remote_node_id))
-                a = {self.__kinds[kind]: onp.array([local_node_id, remote_node_id, remote_vuln_id])}
+                a = {"remote_vulnerability": onp.array([local_node_id, remote_node_id, remote_vuln_id])}
             else:
                 cred_id = self._options['cred_id'](obs)
                 assert cred_id < obs['credential_cache_length']
                 node_id, port_id = obs['credential_cache_matrix'][cred_id].astype('int32')
-                a = {self.__kinds[kind]: onp.array([local_node_id, node_id, port_id, cred_id])}
+                a = {"connect": onp.array([local_node_id, node_id, port_id, cred_id])}
 
-        self._observation, reward, done, info = self.env.step(a)
-        return self._observation, reward, done, {**info, 'action': a}
+        self._observation, reward, done, truncated, info = self.env.step(a)
+        return self._observation, reward, done, truncated, {**info, 'action': a}
 
 
 # --- random option policies --------------------------------------------------------------------- #

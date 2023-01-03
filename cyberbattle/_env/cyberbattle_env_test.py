@@ -3,16 +3,17 @@
 
 """Test the CyberBattle Gym environment"""
 
+from cyberbattle._env.option_wrapper import ContextWrapper, random_options
+from cyberbattle._env.cyberbattle_env import AttackerGoal, CyberBattleEnv
 import pytest
 import gym
 import numpy as np
-
-from .cyberbattle_env import AttackerGoal
+from typing import cast
 
 
 def test_few_gym_iterations() -> None:
     """Run a few iterations of the gym environment"""
-    env = gym.make('CyberBattleToyCtf-v0')
+    env = cast(CyberBattleEnv, gym.make('CyberBattleToyCtf-v0'))
 
     for _ in range(2):
         env.reset()
@@ -24,7 +25,11 @@ def test_few_gym_iterations() -> None:
             # sample a valid action
             action = env.sample_valid_action()
 
-            observation, reward, done, info = env.step(action)
+            observation, reward, done, truncated, info = env.step(action)
+            if truncated:
+                print("Episode truncated after {} timesteps".format(t + 1))
+                break
+
             if done:
                 print("Episode finished after {} timesteps".format(t + 1))
                 break
@@ -99,32 +104,21 @@ def test_step_after_done() -> None:
     env = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(own_atleast_percent=1.0))
     env.reset()
     for a in actions[:-1]:
-        observation, reward, done, info = env.step(a)
-        print(f"{a}, # done={done} r={reward}")
+        observation, reward, done, truncated, info = env.step(a)
+        print(f"{a}, # done={done} truncated={truncated} r={reward}")
 
     with pytest.raises(RuntimeError, match=r'new episode must be started with env\.reset\(\)'):
         env.step(actions[-1])
 
 
-@pytest.mark.parametrize('env_name', ['CyberBattleToyCtf-v0', 'CyberBattleRandom-v0', 'CyberBattleChain-v0'])
-def test_wrap_spec(env_name) -> None:
-    env = gym.make(env_name)
+def test_option_wrapper():
+    env = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(reward=4000))
+    env = ContextWrapper(cast(CyberBattleEnv, env), options=random_options)
 
-    class DummyWrapper(gym.Wrapper):
-        def __init__(self, env):
-            super().__init__(env)
-            assert hasattr(self, 'spec')
-            self.spec.dummy = 7
-
-    assert hasattr(env.spec, 'properties')
-    assert hasattr(env.spec, 'ports')
-    assert hasattr(env.spec, 'local_vulnerabilities')
-    assert hasattr(env.spec, 'remote_vulnerabilities')
-
-    env = DummyWrapper(env)
-
-    assert hasattr(env.spec, 'properties')
-    assert hasattr(env.spec, 'ports')
-    assert hasattr(env.spec, 'local_vulnerabilities')
-    assert hasattr(env.spec, 'remote_vulnerabilities')
-    assert hasattr(env.spec, 'dummy')
+    s = env.reset()
+    for t in range(4):
+        s, r, done, truncated, info = env.step()
+        if r > 0:
+            print(r, done, info['action'])
+        if done:
+            break

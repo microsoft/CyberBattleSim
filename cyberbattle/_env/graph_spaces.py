@@ -22,7 +22,7 @@ class BaseGraph(Space):
         super().__init__()
 
     def sample(self):
-        num_nodes = self.np_random.randint(self.max_num_nodes + 1)
+        num_nodes = self.np_random.integers(0, self.max_num_nodes + 1)
         graph = self._nx_class()
 
         # add nodes with properties

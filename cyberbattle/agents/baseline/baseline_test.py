@@ -13,16 +13,17 @@ import cyberbattle.agents.baseline.agent_dql as dqla
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.learner as learner
 import cyberbattle.agents.baseline.agent_tabularqlearning as tqa
+from typing import cast
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 print(f"torch cuda available={torch.cuda.is_available()}")
 
-cyberbattlechain = gym.make('CyberBattleChain-v0',
-                            size=4,
-                            attacker_goal=cyberbattle_env.AttackerGoal(
-                                own_atleast_percent=1.0,
-                                reward=100))
+cyberbattlechain = cast(cyberbattle_env.CyberBattleEnv, gym.make('CyberBattleChain-v0',
+                                                                 size=4,
+                                                                 attacker_goal=cyberbattle_env.AttackerGoal(
+                                                                     own_atleast_percent=1.0,
+                                                                     reward=100)))
 
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_total_credentials=10,

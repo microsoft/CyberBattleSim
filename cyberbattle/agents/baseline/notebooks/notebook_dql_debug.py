@@ -28,6 +28,9 @@ import cyberbattle.agents.baseline.learner as learner
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.agent_dql as dqla
 from cyberbattle.agents.baseline.agent_wrapper import ActionTrackingStateAugmentation, AgentWrapper, Verbosity
+from typing import cast
+from cyberbattle._env.cyberbattle_env import CyberBattleEnv
+
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 # %% {"tags": ["parameters"]}
@@ -38,7 +41,7 @@ training_episode_count = 10
 # %%
 # Load the gym environment
 
-ctf_env = gym.make(gymid)
+ctf_env = cast(CyberBattleEnv, gym.make(gymid))
 
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_node_count=12,
@@ -91,7 +94,7 @@ for i in range(max_steps):
     print(h[-1])
     if next_action is None:
         break
-    current_o, _, _, _ = wrapped_env.step(next_action)
+    current_o, _, _, _, _ = wrapped_env.step(next_action)
 
 print(f'len: {len(h)}')
 

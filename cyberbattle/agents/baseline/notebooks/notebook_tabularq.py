@@ -23,7 +23,7 @@ import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.agent_tabularqlearning as a
 from cyberbattle.agents.baseline.agent_wrapper import Verbosity
 import cyberbattle.agents.baseline.learner as learner
-from cyberbattle._env.cyberbattle_env import AttackerGoal
+from cyberbattle._env.cyberbattle_env import AttackerGoal, CyberBattleEnv
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
@@ -46,7 +46,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 # Ideally we should decay the learning rate just like gamma and train over a
 # much larger number of episodes
 
-cyberbattlechain_10 = gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(own_atleast_percent=1.0))
+cyberbattlechain_10 = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0', size=10, attacker_goal=AttackerGoal(own_atleast_percent=1.0)))
 
 
 ep = w.EnvironmentBounds.of_identifiers(
@@ -182,9 +182,9 @@ list(zip([Q_attack_10.state_space.pretty_print(i) for i in i2[0]],
 
 # %%
 # Train Q-matrix on CyberBattle network of size 4
-cyberbattlechain_4 = gym.make('CyberBattleChain-v0', size=4,
-                              attacker_goal=AttackerGoal(own_atleast_percent=1.0)
-                              )
+cyberbattlechain_4 = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0', size=4,
+                                                   attacker_goal=AttackerGoal(own_atleast_percent=1.0)
+                                                   ))
 
 qlearning_bestrun_4 = qlearning_run(0.015, gym_env=cyberbattlechain_4)
 

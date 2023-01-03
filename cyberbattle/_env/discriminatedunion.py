@@ -4,13 +4,16 @@
 """A discriminated union space for Gym"""
 
 from collections import OrderedDict
-from typing import Mapping, Union, List
+from typing import Mapping, TypeVar, Union
+from typing import Dict as TypingDict, Generic, cast
 
 from gym import spaces
 from gym.utils import seeding
 
+T_cov = TypeVar("T_cov", covariant=True)
 
-class DiscriminatedUnion(spaces.Dict):  # type: ignore
+
+class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):  # type: ignore
     """
     A discriminated union of simpler spaces.
 
@@ -22,7 +25,7 @@ class DiscriminatedUnion(spaces.Dict):  # type: ignore
     """
 
     def __init__(self,
-                 spaces: Union[None, List[spaces.Space], Mapping[str, spaces.Space]] = None,
+                 spaces: Union[None, TypingDict[str, spaces.Space]] = None,
                  **spaces_kwargs: spaces.Space) -> None:
         """Create a discriminated union space"""
         if spaces is None:
@@ -34,13 +37,13 @@ class DiscriminatedUnion(spaces.Dict):  # type: ignore
         self._np_random, seed = seeding.np_random(seed)
         super().seed(seed)
 
-    def sample(self) -> object:
+    def sample(self) -> T_cov:  # dict[str, object]:
         space_count = len(self.spaces.items())
-        index_k = self.np_random.randint(space_count)
+        index_k = self.np_random.integers(0, space_count)
         kth_key, kth_space = list(self.spaces.items())[index_k]
-        return OrderedDict([(kth_key, kth_space.sample())])
+        return cast(T_cov, OrderedDict([(kth_key, kth_space.sample())]))
 
-    def contains(self, candidate: object) -> bool:
+    def contains(self, candidate) -> bool:
         if not isinstance(candidate, dict) or len(candidate) != 1:
             return False
         k, space = list(candidate)[0]
@@ -64,10 +67,10 @@ class DiscriminatedUnion(spaces.Dict):  # type: ignore
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + ", ". join([str(k) + ":" + str(s) for k, s in self.spaces.items()]) + ")"
 
-    def to_jsonable(self, sample_n: object) -> object:
+    def to_jsonable(self, sample_n: list) -> object:
         return super().to_jsonable(sample_n)
 
-    def from_jsonable(self, sample_n: object) -> object:
+    def from_jsonable(self, sample_n: TypingDict[str, list]) -> object:
         ret = super().from_jsonable(sample_n)
         assert len(ret) == 1
         return ret

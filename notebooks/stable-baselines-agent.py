@@ -11,6 +11,7 @@ from stable_baselines3.a2c.a2c import A2C
 from stable_baselines3.ppo.ppo import PPO
 from cyberbattle._env.flatten_wrapper import FlattenObservationWrapper, FlattenActionWrapper
 import os
+import numpy as np
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 retrain = ['a2c']
 
@@ -69,8 +70,8 @@ model = A2C("MultiInputPolicy", env2).load('a2c_trained_toyctf')
 # %%
 obs = env2.reset()
 for i in range(1000):
-    action, _states = model.predict(obs, deterministic=True)
-    obs, reward, done, info = env2.step(action)
+    action, _states = model.predict(np.array(obs), deterministic=True)
+    obs, reward, done, truncated, info = env2.step(action)
 
 env2.render()
 env2.close()

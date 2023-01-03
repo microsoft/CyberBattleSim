@@ -21,7 +21,7 @@ class StateAugmentation:
     def __init__(self, observation: cyberbattle_env.Observation):
         self.observation = observation
 
-    def on_step(self, action: cyberbattle_env.Action, reward: float, done: bool, observation: cyberbattle_env.Observation):
+    def on_step(self, action: cyberbattle_env.Action, reward: float, truncated, done: bool, observation: cyberbattle_env.Observation):
         self.observation = observation
 
     def on_reset(self, observation: cyberbattle_env.Observation):
@@ -456,14 +456,14 @@ class ActionTrackingStateAugmentation(StateAugmentation):
         self.env_properties = p
         super().__init__(observation)
 
-    def on_step(self, action: cyberbattle_env.Action, reward: float, done: bool, observation: cyberbattle_env.Observation):
+    def on_step(self, action: cyberbattle_env.Action, reward: float, truncated, done: bool, observation: cyberbattle_env.Observation):
         node = cyberbattle_env.sourcenode_of_action(action)
         abstract_action = self.aa.abstract_from_gymaction(action)
         if reward > 0:
             self.success_action_count[node, abstract_action] += 1
         else:
             self.failed_action_count[node, abstract_action] += 1
-        super().on_step(action, reward, done, observation)
+        super().on_step(action, reward, done, truncated, observation)
 
     def on_reset(self, observation: cyberbattle_env.Observation):
         p = self.env_properties
@@ -519,12 +519,13 @@ class AgentWrapper(Wrapper):
 
     def __init__(self, env: cyberbattle_env.CyberBattleEnv, state: StateAugmentation):
         super().__init__(env)
+        self.env = env
         self.state = state
 
     def step(self, action: cyberbattle_env.Action):
-        observation, reward, done, info = self.env.step(action)
-        self.state.on_step(action, reward, done, observation)
-        return observation, reward, done, info
+        observation, reward, done, truncated, info = self.env.step(action)
+        self.state.on_step(action, reward, done, truncated, observation)
+        return observation, reward, done, truncated, info
 
     def reset(self):
         observation = self.env.reset()

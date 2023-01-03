@@ -20,14 +20,16 @@ import sys
 import cyberbattle.agents.baseline.plotting as p
 import cyberbattle.agents.baseline.agent_wrapper as w
 from cyberbattle.agents.baseline.agent_wrapper import Verbosity
+from typing import cast
+from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 # %%
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
 # %%
-cyberbattlechain_10 = gym.make('CyberBattleChain-v0', size=10,
-                               attacker_goal=AttackerGoal(own_atleast_percent=1.0))
+cyberbattlechain_10 = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0', size=10,
+                                                    attacker_goal=AttackerGoal(own_atleast_percent=1.0)))
 
 
 # %%
