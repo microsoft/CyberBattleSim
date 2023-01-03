@@ -680,7 +680,7 @@ class CyberBattleEnv(gym.Env):
         elif "connect" in action:
             source_node, target_node, port_index, credential_cache_index = action["connect"]
             assert credential_cache_index >= 0
-            if credential_cache_index < len(self.__credential_cache):
+            if credential_cache_index >= len(self.__credential_cache):
                 return "connect(invalid)"
             source_node_id = self.__internal_node_id_from_external_node_index(source_node)
             target_node_id = self.__internal_node_id_from_external_node_index(target_node)
