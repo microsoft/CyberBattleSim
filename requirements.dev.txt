@@ -7,7 +7,7 @@ pandas
 jupyter>=1.0.0
 
 # training
-torch==1.12.1
+torch==1.13.1
 stable-baselines3==1.6.0
 
 # linter and formatter
