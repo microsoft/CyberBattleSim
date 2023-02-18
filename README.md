@@ -132,14 +132,14 @@ The quickest method to get up and running is via the Docker container.
 commit=7c1f8c80bc53353937e3c69b0f5f799ebb2b03ee
 docker login spinshot.azurecr.io
 docker pull spinshot.azurecr.io/cyberbattle:$commit
-docker run -it spinshot.azurecr.io/cyberbattle:$commit cyberbattle/agents/baseline/run.py
+docker run -it spinshot.azurecr.io/cyberbattle:$commit python -m cyberbattle.agents.baseline.run
 ```
 
 ### Recreating the Docker image
 
 ```bash
 docker build -t cyberbattle:1.1 .
-docker run -it -v "$(pwd)":/source --rm cyberbattle:1.1 cyberbattle/agents/baseline/run.py
+docker run -it -v "$(pwd)":/source --rm cyberbattle:1.1 python -m cyberbattle.agents.baseline.run
 ```
 
 ## Check your environment

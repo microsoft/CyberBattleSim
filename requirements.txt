@@ -1,4 +1,4 @@
-gym~=0.21.0
+gym==0.21.0  # There is a breaking changes in 0.22 that's incompatible with stable-baselines3
 numpy==1.23.0
 boolean.py==4.0
 networkx==2.8.6
