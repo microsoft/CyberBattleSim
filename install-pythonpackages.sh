@@ -13,7 +13,7 @@ export MPLLOCALFREETYPE=1
 $PYTHON -m pip install --upgrade pip
 $PYTHON -m pip install --upgrade setuptools==65.5.0 # specific version needed for gym==0.21.0
 $PYTHON -m pip install --upgrade distlib
-$PYTHON -m pip install wheel
+$PYTHON -m pip install wheel==0.38.4 # specific version needed for gym==0.21.0
 $PYTHON -m pip install -e .
 $PYTHON -m pip install -e .[dev]
 
