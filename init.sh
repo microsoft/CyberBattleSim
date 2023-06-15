@@ -107,7 +107,7 @@ else
         python -m pip install --user virtualenv
 
         # Create a virtual environment
-        python -m venv venv
+        python -m virtualenv --always-copy --python=python3.9 venv
 
         source venv/bin/activate
     fi
