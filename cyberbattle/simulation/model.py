@@ -35,6 +35,9 @@ import networkx as nx
 import yaml
 import random
 
+import matplotlib  # type: ignore
+matplotlib.use('Agg')
+
 VERSION_TAG = "0.1.0"
 
 ALGEBRA = boolean.BooleanAlgebra()

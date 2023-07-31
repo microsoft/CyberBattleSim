@@ -1,5 +1,0 @@
-libgtk-3-0
-xvfb
-chromium-browser
-libgconf-2-4
-npm

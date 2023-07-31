@@ -11,28 +11,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: [3.9]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
 
       - name: Use Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
-      - name: Use node tools
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
+      # - name: Use node tools
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: 16.x
 
       - name: Pull pip packages from cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           key: pip-"${{ runner.os }}"-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('setup.py') }}
           restore-keys: pip-"${{ runner.os }}"
@@ -40,25 +41,63 @@ jobs:
           path: ${{ env.pythonver.pythonLocation }}/lib/python3.9/site-packages
 
       - name: Pull typing stubs from cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           key: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
           restore-keys: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
           path: typings/
-
-      - name: Initialize build environment
-        run: TERM=dumb && ./init.sh -n
 
       - name: Lint [flake8]
         run: |
           pip install flake8
           flake8 --benchmark
 
+      - name: Initialize build environment
+        run: conda env create -f ./env.yml
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.9
+          miniconda-version: "latest"
+          activate-environment: cybersim
+          auto-activate-base: false
+          environment-file: env.yml
+
+      - name: Conda info
+        shell: bash -el {0}
+        run: conda info
+
       - name: Typecheck [pyright]
-        run: ./pyright.sh
+        shell: bash -el {0}
+        run: |
+          conda activate cybersim
+          which python
+          echo $PATH
+          ./createstubs.sh
+          pyright
 
       - name: Test [pytest]
+        shell: bash -el {0}
         run: |
+          conda activate cybersim
           pip install six pexpect wcwidth
           pip install pytest-azurepipelines
           python -m pytest -v cyberbattle
+
+      - name: Papermill notebooks
+        shell: bash -el {0}
+        run: |
+          conda activate cybersim
+          jupyter kernelspec list
+          cd notebooks
+          bash run_all.sh python3
+        if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')
+
+      - name: Archive milled notebooks
+        uses: actions/upload-artifact@v3
+        with:
+          name: papermilled-notebooks
+          path: |
+            notebooks/output/*.ipynb
+            !dist/**/*.md
+        if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')

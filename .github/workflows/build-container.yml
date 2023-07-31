@@ -4,6 +4,7 @@ on:
       - main
   push:
     branches:
+      - "**"
 env:
   containerRegistry: spinshot.azurecr.io
   imageRepository: cyberbattle
@@ -12,7 +13,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: |
           docker build . -t  ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
+
+      - name: Login to ACR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.containerRegistry }}
+          username: ${{ secrets.ACR_TOKEN_NAME }}
+          password: ${{ secrets.ACR_TOKEN_PASSWORD }}
+        if: github.ref_name == 'main'
+
+      - run: |
+          docker push ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
+        if: github.ref_name == 'main'

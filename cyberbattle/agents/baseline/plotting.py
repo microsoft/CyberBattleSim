@@ -6,6 +6,9 @@
 import matplotlib.pyplot as plt  # type:ignore
 import numpy as np
 
+import matplotlib  # type: ignore
+matplotlib.use('Agg')
+
 
 def new_plot(title):
     """Prepare a new plot of cumulative rewards"""

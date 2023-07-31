@@ -4,17 +4,22 @@ set -ex
 
 kernel=$1
 if [ -z "$kernel" ]; then
-    kernel=venv
+    kernel=cybersim
 fi
+
+script_dir=$(dirname "$0")
+
+# Change the current directory to the parent directory of the script
+pushd "$script_dir/.."
 
 run () {
     base=$1
-    papermill --kernel $kernel $base.ipynb output/$base.ipynb
+    papermill --kernel $kernel notebooks/$base.ipynb notebooks/output/$base.ipynb
 }
 
 jupyter kernelspec list
 
-mkdir output -p
+mkdir notebooks/output -p
 
 declare -a all_notebooks=(
     notebook_benchmark-toyctf
@@ -45,3 +50,5 @@ for file in ${all_notebooks[@]}
 do
     run $file
 done
+
+popd
