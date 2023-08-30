@@ -85,30 +85,27 @@ Then run the following command:
 sudo apt install libnss3-dev libgtk-3-0 libxss1 libasound2-dev libgtk2.0-0 libgconf-2-4
 ```
 
-### Instal conda
-
-If conda is not installed alreayd you can install it by running the `install_conda.sh` script.
-Then open a new terminal and create the conda environment with:
-
-```bash
-conda env create -f env.yml
-```
-
-
 ### On Linux or WSL
 
-The instructions were tested on a Linux Ubuntu distribution (both native and via WSL). Run the following command to set-up your dev environment and install all the required dependencies (apt and pip packages):
+The instructions were tested on a Linux Ubuntu distribution (both native and via WSL).
+
+If conda is not installed already, you need to install it by running the `install_conda.sh` script.
 
 ```bash
-./init.sh
+bash install_conda.sh
 ```
 
-The script installs python3.9 if not present. If you are running a version of Ubuntu older than 20, it will automatically add an additional apt repository to install python3.9.
+Once this is done, open a new terminal and run the initialization script:
+```bash
+bash init.sh
+```
+This will create a conda environmen named `cybersim` with all the required OS and python dependencies.
 
-The script will create a [virtual Python environment](https://docs.python.org/3/library/venv.html) under a `venv` subdirectory, you can then
-run Python with `venv/bin/python`.
+To activate the environment run:
 
-> Note: If you prefer Python from a global installation instead of a virtual environment then you can skip the creation of the virtual environment by running the script with `./init.sh -n`. This will instead install all the Python packages on a system-wide installation of Python 3.9.
+```bash
+conda activate cybersim
+```
 
 #### Windows Subsystem for Linux
 
@@ -209,8 +206,7 @@ Cumulative rewards -- DQN=Red, Random=Green
 ## Jupyter notebooks
 
 To quickly get familiar with the project, you can open one of the provided Jupyter notebooks to play interactively with
-the gym environments. Just start jupyter with `jupyter notebook`, or
-`venv/bin/jupyter notebook` if you are using a virtual environment setup.
+the gym environments. Just start jupyter with `jupyter notebook` from the conda environment.
 
 - 'Capture The Flag' toy environment notebooks:
   - [Random agent](notebooks/toyctf-random.ipynb)
