@@ -5,8 +5,6 @@
 
 set -e
 
-. ./getpythonpath.sh
-
 pushd "$(dirname "$0")"
 
 echo "$(tput setaf 2)Creating type stubs$(tput sgr0)"

@@ -1,9 +1,10 @@
+setuptools~=65.5.0 # specific version needed for gym==0.21.0
+wheel==0.38.4
 gym==0.21.0  # There is a breaking changes in 0.22 that's incompatible with stable-baselines3
 numpy==1.23.0
 boolean.py==4.0
 networkx==2.8.6
 pyyaml~=6.0
-setuptools~=65.5.1
 matplotlib~=3.6.0
 plotly~=4.11.0
 tabulate~=0.8.7

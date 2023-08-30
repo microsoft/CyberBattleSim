@@ -1,16 +1,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-FROM mcr.microsoft.com/azureml/onnxruntime:latest-cuda
+#FROM openvino/onnxruntime_ep_ubuntu20:latest
+# mcr.microsoft.com/azureml/onnxruntime:latest-cuda
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
+
 WORKDIR /root
 ADD *.sh ./
 ADD *.txt ./
-ADD *.py ./
-RUN export TERM=dumb && ./init.sh -n
-# Override conda python 3.7 install
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 2
-ENV PATH="/usr/bin:${PATH}"
-
+ADD *.yml ./
+RUN conda env create -f env.yml
+RUN conda init bash
+ENV PATH /opt/miniconda/envs/cybersim/bin:$PATH
+SHELL ["/bin/bash", "-c"]
+RUN activate cybersim
+RUN pyright
+RUN ./createstubs.sh
 COPY . .
 
 # To build the docker image:

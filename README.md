@@ -72,6 +72,29 @@ Start by checking out the repository:
    git clone https://github.com/microsoft/CyberBattleSim.git
    ```
 
+### OS components
+
+If you get the following error when running the papermill on the notebooks
+(or alternatively when running `orca --help`)
+```
+/home/wiblum/miniconda3/envs/cybersim/lib/orca_app/orca: error while loading shared libraries: libXss.so.1: cannot open shared object file: No such file or directory
+```
+or other share libraries like `libgdk_pixbuf-2.0.so.0`,
+Then run the following command:
+```
+sudo apt install libnss3-dev libgtk-3-0 libxss1 libasound2-dev libgtk2.0-0 libgconf-2-4
+```
+
+### Instal conda
+
+If conda is not installed alreayd you can install it by running the `install_conda.sh` script.
+Then open a new terminal and create the conda environment with:
+
+```bash
+conda env create -f env.yml
+```
+
+
 ### On Linux or WSL
 
 The instructions were tested on a Linux Ubuntu distribution (both native and via WSL). Run the following command to set-up your dev environment and install all the required dependencies (apt and pip packages):
@@ -147,9 +170,9 @@ docker run -it -v "$(pwd)":/source --rm cyberbattle:1.1 python -m cyberbattle.ag
 Run the following commands to run a simulation with a baseline RL agent:
 
 ```bash
-python cyberbattle/agents/baseline/run.py --training_episode_count 5 --eval_episode_count 3 --iteration_count 100 --rewardplot_width 80  --chain_size=4 --ownership_goal 0.2
+python -m cyberbattle.agents.baseline.run --training_episode_count 5 --eval_episode_count 3 --iteration_count 100 --rewardplot_width 80  --chain_size=4 --ownership_goal 0.2
 
-python cyberbattle/agents/baseline/run.py --training_episode_count 5 --eval_episode_count 3 --iteration_count 100 --rewardplot_width 80  --chain_size=4 --reward_goal 50 --ownership_goal 0
+python -m cyberbattle.agents.baseline.run --training_episode_count 5 --eval_episode_count 3 --iteration_count 100 --rewardplot_width 80  --chain_size=4 --reward_goal 50 --ownership_goal 0
 ```
 
 If everything is setup correctly you should get an output that looks like this:
