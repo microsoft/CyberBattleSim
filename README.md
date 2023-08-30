@@ -92,12 +92,12 @@ The instructions were tested on a Linux Ubuntu distribution (both native and via
 If conda is not installed already, you need to install it by running the `install_conda.sh` script.
 
 ```bash
-install_conda.sh
+bash install_conda.sh
 ```
 
 Once this is done, open a new terminal and run the initialization script:
 ```bash
-./init.sh
+bash init.sh
 ```
 This will create a conda environmen named `cybersim` with all the required OS and python dependencies.
 
