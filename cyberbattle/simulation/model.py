@@ -24,7 +24,7 @@ formally defined by:
   - FirewallRule: PortName x { ALLOW, BLOCK }
 """
 
-from datetime import datetime, time
+from datetime import datetime
 from typing import NamedTuple, List, Dict, Optional, Union, Tuple, Iterator
 import dataclasses
 from dataclasses import dataclass, field
@@ -314,7 +314,7 @@ class NodeInfo:
     # Can the node be re-imaged by a defender agent?
     reimagable: bool = True
     # Last time the node was reimaged
-    last_reimaging: Optional[time] = None
+    last_reimaging: Optional[datetime] = None
     # String displayed when the node gets owned
     owned_string: str = ""
     # Machine status: running or stopped
