@@ -794,7 +794,7 @@ class CyberBattleEnv(gym.Env):
         vector[properties_indices] = 1
         return vector
 
-    def __get_property_matrix(self) -> Tuple[numpy.ndarray]:
+    def __get_property_matrix(self) -> Tuple[numpy.ndarray, ...]:
         """Return the Node-Property matrix,
         where  0 means the property is not set for that node
                1 means the property is set for that node

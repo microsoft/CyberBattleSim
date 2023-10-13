@@ -206,7 +206,15 @@ Cumulative rewards -- DQN=Red, Random=Green
 ## Jupyter notebooks
 
 To quickly get familiar with the project, you can open one of the provided Jupyter notebooks to play interactively with
-the gym environments. Just start jupyter with `jupyter notebook` from the conda environment.
+the gym environments. At the root of the repository run the following command and then open the notebook in the `notebooks` folder
+from the Jupyter interface:
+
+```python
+export PYTHONPATH=$(pwd)
+jupyter lab
+```
+
+Some notebooks to get started:
 
 - 'Capture The Flag' toy environment notebooks:
   - [Random agent](notebooks/toyctf-random.ipynb)
