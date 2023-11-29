@@ -12,3 +12,4 @@ ordered_set==4.0.2
 progressbar2==3.51.4
 decorator==4.3
 zipp==3.8.1
+ipython==8.16.1
