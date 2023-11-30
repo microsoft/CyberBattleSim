@@ -17,7 +17,7 @@ autopep8
 
 pytest~=6.2.5
 
-jupytext~=1.6.0
+jupytext~=1.15.2
 ipykernel==6.6.1
 psutil==5.7.2
 
