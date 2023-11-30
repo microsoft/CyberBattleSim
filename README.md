@@ -92,7 +92,7 @@ The instructions were tested on a Linux Ubuntu distribution (both native and via
 If conda is not installed already, you need to install it by running the `install_conda.sh` script.
 
 ```bash
-bash install_conda.sh
+bash install-conda.sh
 ```
 
 Once this is done, open a new terminal and run the initialization script:
