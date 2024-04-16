@@ -41,7 +41,7 @@ autopep8==2.0.4
 babel==2.13.0
 backcall==0.2.0
 beautifulsoup4==4.12.2
-black==23.9.1
+black==24.3.0
 bleach==6.1.0
 boolean.py==4.0
 cffi==1.16.0
