@@ -75,7 +75,7 @@ jsonpointer==2.4
 jsonschema==4.17.3
 jupyter-client==7.4.9
 jupyter-console==6.4.4
-jupyter-events==0.6.3
+jupyter-events==0.10.0
 jupyter-lsp==2.2.2
 jupyter-server==2.11.2
 jupyter-server-terminals==0.4.4
