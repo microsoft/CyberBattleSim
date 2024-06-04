@@ -1,5 +1,4 @@
-# resolve incompatibility with pytest
-attrs==19.2.0
+
 
 # for vscode intellisense
 jedi==0.19.1
@@ -15,7 +14,9 @@ flake8
 pep8-naming
 autopep8
 
-pytest~=6.2.5
+pytest~=8.2.2
+# resolve incompatibility with pytest
+#attrs==19.2.0
 
 jupytext~=1.15.2
 ipykernel==6.6.1
