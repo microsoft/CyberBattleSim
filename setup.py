@@ -24,11 +24,11 @@ def get_install_requires(requirements_txt) -> List[str]:
 
 # main setup kw args
 setup_kwargs = {
-    'name': 'loonshot-sim',
-    'version': '0.1',
-    'description': "The simulation and RL code for the S+C loonshot project",
-    'author': 'S+C Loonshot Team',
-    'author_email': 'scloonshot@Microsoft.com',
+    'name': 'cyberbattlesim',
+    'version': '0.1.0',
+    'description': "An experimentation and research platform to investigate the interaction of automated agents in an abstract simulated network environments.",
+    'author': 'CyberBattleSim Team',
+    'author_email': 'cyberbattlesim@microsoft.com',
     'install_requires': get_install_requires("requirements.txt"),
     'classifiers': [
         'Environment :: Other Environment',
