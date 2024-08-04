@@ -1,4 +1,4 @@
-setuptools~=65.5.0 # specific version needed for gym==0.21.0
+setuptools~=70.0.0 # specific version needed for gym==0.21.0
 wheel==0.38.4
 gym==0.21.0  # There is a breaking changes in 0.22 that's incompatible with stable-baselines3
 numpy==1.23.0
