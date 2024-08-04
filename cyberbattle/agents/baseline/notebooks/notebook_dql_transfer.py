@@ -28,6 +28,7 @@ import cyberbattle.agents.baseline.agent_randomcredlookup as rca
 import importlib
 import cyberbattle._env.cyberbattle_env as cyberbattle_env
 import cyberbattle._env.cyberbattle_chain as cyberbattle_chain
+from typing import cast
 
 importlib.reload(learner)
 importlib.reload(cyberbattle_env)
@@ -45,9 +46,9 @@ torch.cuda.is_available()
 # pio.orca.config.use_xvfb = True
 # pio.orca.config.save()
 # %%
-cyberbattlechain_4 = gym.make('CyberBattleChain-v0', size=4, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
-cyberbattlechain_10 = gym.make('CyberBattleChain-v0', size=10, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
-cyberbattlechain_20 = gym.make('CyberBattleChain-v0', size=20, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0))
+cyberbattlechain_4 = cast(cyberbattle_env.CyberBattleEnv, gym.make('CyberBattleChain-v0', size=4, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0)))
+cyberbattlechain_10 = cast(cyberbattle_env.CyberBattleEnv, gym.make('CyberBattleChain-v0', size=10, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0)))
+cyberbattlechain_20 = cast(cyberbattle_env.CyberBattleEnv, gym.make('CyberBattleChain-v0', size=20, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0)))
 
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_total_credentials=22,

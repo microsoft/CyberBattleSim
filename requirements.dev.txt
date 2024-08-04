@@ -7,7 +7,7 @@ jupyter>=1.0.0
 
 # training
 torch==1.13.1
-stable-baselines3==1.6.0
+stable-baselines3==2.3.2
 
 # linter and formatter
 flake8

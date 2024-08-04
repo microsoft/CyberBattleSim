@@ -42,7 +42,7 @@ class Learner(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, info, action_metadata) -> None:
+    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, truncated, info, action_metadata) -> None:
         raise NotImplementedError
 
     def parameters_as_string(self) -> str:
@@ -68,7 +68,7 @@ class RandomPolicy(Learner):
     def exploit(self, wrapped_env: AgentWrapper, observation) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
         raise NotImplementedError
 
-    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, info, action_metadata):
+    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, truncated, info, action_metadata):
         return None
 
 
@@ -269,7 +269,7 @@ def epsilon_greedy_search(
 
             # Take the step
             logging.debug(f"gym_action={gym_action}, action_metadata={action_metadata}")
-            observation, reward, done, info = wrapped_env.step(gym_action)
+            observation, reward, done, truncated, info = wrapped_env.step(gym_action)
 
             action_type = 'exploit' if action_style == 'exploit' else 'explore'
             outcome = 'reward' if reward > 0 else 'noreward'
@@ -280,7 +280,7 @@ def epsilon_greedy_search(
             else:
                 stats[action_type][outcome]['connect'] += 1
 
-            learner.on_step(wrapped_env, observation, reward, done, info, action_metadata)
+            learner.on_step(wrapped_env, observation, reward, done, truncated, info, action_metadata)
             assert np.shape(reward) == ()
 
             all_rewards.append(reward)

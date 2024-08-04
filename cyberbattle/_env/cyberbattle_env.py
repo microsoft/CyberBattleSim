@@ -11,10 +11,10 @@ import networkx
 from networkx import convert_matrix
 from typing import NamedTuple, Optional, Tuple, List, Dict, TypeVar, TypedDict, cast
 
-import numpy
-import gym
-from gym import spaces
+from gym import spaces, Env
 from gym.utils import seeding
+
+import numpy
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -36,14 +36,6 @@ UNUSED_SLOT = numpy.int32(0)
 # Value defining a used space slot
 USED_SLOT = numpy.int32(1)
 
-
-# Action Space dictionary type
-# The actual action space is later defined as a 'spaces.Dict(x)' where x:ActionSpaceDict
-ActionSpaceDict = TypedDict(
-    'ActionSpaceDict', {'local_vulnerability': spaces.Space,  # type: ignore
-                        'remote_vulnerability': spaces.Space,  # type: ignore
-                        'connect': spaces.Space  # type: ignore
-                        })
 
 # The type of a sample from the Action space
 Action = TypedDict(
@@ -123,9 +115,6 @@ Observation = TypedDict(
         # that are not encoded as gym spaces (were previously in the 'info' field)
         # ---------------------------------------------------------
 
-        # internal IDs of the credentials in the cache
-        '_credential_cache': List[model.CachedCredential],
-
         # Mapping node index to internal IDs of all nodes discovered so far.
         # The external node index used by the agent to refer to a node
         # is defined as the index of the node in this array
@@ -145,7 +134,9 @@ StepInfo = TypedDict(
         'description': str,
         'duration_in_ms': float,
         'step_count': int,
-        'network_availability': float
+        'network_availability': float,
+        # internal IDs of the credentials in the cache
+        'credential_cache': List[model.CachedCredential]
     })
 
 
@@ -255,7 +246,92 @@ class DefenderConstraint(NamedTuple):
     maintain_sla: float
 
 
-class CyberBattleEnv(gym.Env):
+class ObservationSpaceType(spaces.Dict):
+
+    def __init__(self, bounds: EnvironmentBounds):
+        super().__init__(
+            {
+                # how many new nodes were discovered
+                'newly_discovered_nodes_count': spaces.Discrete(NA + bounds.maximum_node_count),
+                # successuflly moved to the target node (1) or not (0)
+                'lateral_move': spaces.Discrete(2),
+                # boolean: 1 if customer secret data were discovered, 0 otherwise
+                'customer_data_found': spaces.MultiBinary(2),
+                # whether an attempted probing succeeded or not
+                'probe_result': spaces.Discrete(3),
+                # Esclation result
+                'escalation': spaces.Discrete(model.PrivilegeLevel.MAXIMUM + 1),
+                # Array of slots describing credentials that were leaked
+                'leaked_credentials': spaces.Tuple(
+                    # the 1st component indicates if the slot is used or not (SLOT_USED or SLOT_UNSUED)
+                    # the 2nd component gives the credential unique index (external identifier exposed to the agent)
+                    # the 3rd component gives the target node ID
+                    # the 4th component gives the port number
+                    #
+                    #  The actual credential secret is not returned by the environment.
+                    #  To use the credential as a parameter to another action the agent should refer to it by its index
+                    #  e.g. (UNUSED_SLOT,_,_,_) encodes an empty slot
+                    #       (USED_SLOT,1,56,22) encodes a leaked credential identified by its index 1,
+                    #          that was used to authenticat to target node 56 on port number 22 (e.g. SSH)
+
+                    [spaces.MultiDiscrete([NA + 1, bounds.maximum_total_credentials,
+                                           bounds.maximum_node_count, bounds.port_count])]
+                    * bounds.maximum_discoverable_credentials_per_action),
+
+                # Boolean bitmasks defining the subset of valid actions in the current state.
+                # (1 for valid, 0 for invalid). Note: a valid action is not necessariliy guaranteed to succeed.
+                # For instance it is a valid action to attempt to connect to a remote node with incorrect credentials,
+                # even though such action would 'fail' and potentially yield a negative reward.
+                "action_mask": spaces.Dict({
+                    "local_vulnerability":
+                    spaces.MultiBinary(bounds.maximum_node_count * bounds.local_attacks_count),
+                    "remote_vulnerability":
+                    spaces.MultiBinary(bounds.maximum_node_count * bounds.maximum_node_count * bounds.remote_attacks_count),
+                    "connect":
+                    spaces.MultiBinary(bounds.maximum_node_count * bounds.maximum_node_count * bounds.port_count * bounds.maximum_total_credentials)
+                }),
+
+                # size of the credential stack
+                'credential_cache_length': spaces.Discrete(bounds.maximum_total_credentials),
+
+                # total nodes discovered so far
+                'discovered_node_count': spaces.Discrete(bounds.maximum_node_count),
+
+                # Matrix of properties for all the discovered nodes
+                # 3 values for each matrix cell: set, unset, unknown
+                'discovered_nodes_properties': spaces.MultiDiscrete([3] * bounds.maximum_node_count * bounds.property_count),
+
+                # Escalation level on every discovered node (e.g., 0 if not owned, 1 for admin, 2 for system)
+                'nodes_privilegelevel': spaces.MultiDiscrete([CyberBattleEnv.privilege_levels] * bounds.maximum_node_count),
+
+                # Encoding of the credential cache of shape: (credential_cache_length, 2)
+                #
+                # Each row represent a discovered credential,
+                # the credential index is given by the row index (i.e. order of discovery)
+                # A row is of the form: (target_node_discover_index, port_index)
+                'credential_cache_matrix': spaces.Tuple(
+                    [spaces.MultiDiscrete([bounds.maximum_node_count, bounds.port_count])] * bounds.maximum_total_credentials),
+
+                # ---------------------------------------------------------
+                # Fields that were previously in the 'info' dict:
+                # ---------------------------------------------------------
+
+                # internal IDs of nodes discovered so far
+                '_discovered_nodes': DummySpace(sample=['node1', 'node0', 'node2']),
+
+                # The subgraph of nodes discovered so far with annotated edges
+                # representing interactions that took place during the simulation. (See
+                # actions.EdgeAnnotation)
+                '_explored_network': DummySpace(sample=networkx.DiGraph()),
+            })
+
+
+class CyberBattleSpaceKind(Env[Observation, Action]):
+    action_space: DiscriminatedUnion
+    observation_space: spaces.Dict
+
+
+class CyberBattleEnv(CyberBattleSpaceKind):
     """OpenAI Gym environment interface to the CyberBattle simulation.
 
     # Actions
@@ -396,7 +472,7 @@ class CyberBattleEnv(gym.Env):
                  winning_reward=5000.0,
                  losing_reward=0.0,
                  renderer='',
-                 observation_padding=False,
+                 observation_padding=True,
                  throws_on_invalid_actions=True,
                  ):
         """Arguments
@@ -411,8 +487,9 @@ class CyberBattleEnv(gym.Env):
         winning_reward            - Reward granted to the attacker if the simulation ends because the attacker's goal is reached.
         losing_reward             - Reward granted to the attacker if the simulation ends because the Defender's goal is reached.
         renderer                  - the matplotlib renderer (e.g. 'png')
-        observation_padding       - whether to padd all the observation fields to their maximum size. For instance this will pad the credential matrix
+        observation_padding       - whether to pad all the observation fields to their maximum size. For instance this will pad the credential matrix
                                     to fit in `maximum_node_count` rows. Turn on this flag for gym agent that expects observations of fixed sizes.
+                                    must be set to True with gym >=0.26
         throws_on_invalid_actions - whether to raise an exception if the step function attempts an invalid action (e.g., running an attack from a node that's not owned)
                                     if set to False a negative reward is returned instead.
         """
@@ -449,10 +526,9 @@ class CyberBattleEnv(gym.Env):
         local_vulnerabilities_count = self.__bounds.local_attacks_count
         remote_vulnerabilities_count = self.__bounds.remote_attacks_count
         maximum_node_count = self.__bounds.maximum_node_count
-        property_count = self.__bounds.property_count
         port_count = self.__bounds.port_count
 
-        action_spaces: ActionSpaceDict = {
+        action_spaces = {
             "local_vulnerability": spaces.MultiDiscrete(
                 # source_node_id, vulnerability_id
                 [maximum_node_count, local_vulnerabilities_count]),
@@ -465,86 +541,9 @@ class CyberBattleEnv(gym.Env):
                 [maximum_node_count, maximum_node_count, port_count, maximum_total_credentials])
         }
 
-        self.action_space = DiscriminatedUnion(cast(dict, action_spaces))  # type: ignore
+        self.action_space = DiscriminatedUnion[Action](cast(dict, action_spaces))  # type: ignore
 
-        # The observation space returning the outcome of each possible action
-        self.observation_space = spaces.Dict({
-            # how many new nodes were discovered
-            'newly_discovered_nodes_count': spaces.Discrete(NA + maximum_node_count),
-            # successuflly moved to the target node (1) or not (0)
-            'lateral_move': spaces.Discrete(2),
-            # boolean: 1 if customer secret data were discovered, 0 otherwise
-            'customer_data_found': spaces.MultiBinary(1),
-            # whether an attempted probing succeeded or not
-            'probe_result': spaces.Discrete(3),
-            # Esclation result
-            'escalation': spaces.Discrete(model.PrivilegeLevel.MAXIMUM + 1),
-            # Array of slots describing credentials that were leaked
-            'leaked_credentials': spaces.Tuple(
-                # the 1st component indicates if the slot is used or not (SLOT_USED or SLOT_UNSUED)
-                # the 2nd component gives the credential unique index (external identifier exposed to the agent)
-                # the 3rd component gives the target node ID
-                # the 4th component gives the port number
-                #
-                #  The actual credential secret is not returned by the environment.
-                #  To use the credential as a parameter to another action the agent should refer to it by its index
-                #  e.g. (UNUSED_SLOT,_,_,_) encodes an empty slot
-                #       (USED_SLOT,1,56,22) encodes a leaked credential identified by its index 1,
-                #          that was used to authenticat to target node 56 on port number 22 (e.g. SSH)
-
-                [spaces.MultiDiscrete([NA + 1, self.__bounds.maximum_total_credentials,
-                                       maximum_node_count, port_count])]
-                * self.__bounds.maximum_discoverable_credentials_per_action),
-
-            # Boolean bitmasks defining the subset of valid actions in the current state.
-            # (1 for valid, 0 for invalid). Note: a valid action is not necessariliy guaranteed to succeed.
-            # For instance it is a valid action to attempt to connect to a remote node with incorrect credentials,
-            # even though such action would 'fail' and potentially yield a negative reward.
-            "action_mask": spaces.Dict({
-                "local_vulnerability":
-                    spaces.MultiBinary([maximum_node_count, local_vulnerabilities_count]),
-                "remote_vulnerability":
-                    spaces.MultiBinary([maximum_node_count, maximum_node_count, remote_vulnerabilities_count]),
-                "connect":
-                    spaces.MultiBinary([maximum_node_count, maximum_node_count, port_count, maximum_total_credentials])
-            }),
-
-            # size of the credential stack
-            'credential_cache_length': spaces.Discrete(maximum_total_credentials),
-
-            # total nodes discovered so far
-            'discovered_node_count': spaces.Discrete(maximum_node_count),
-
-            # Matrix of properties for all the discovered nodes
-            # 3 values for each matrix cell: unset (0), set (1), unknown (2)
-            'discovered_nodes_properties': spaces.Tuple([spaces.MultiDiscrete([3] * property_count)] * maximum_node_count),
-
-            # Escalation level on every discovered node (e.g., 0 if not owned, 1 for admin, 2 for system)
-            'nodes_privilegelevel': spaces.MultiDiscrete([CyberBattleEnv.privilege_levels] * maximum_node_count),
-
-            # Encoding of the credential cache of shape: (credential_cache_length, 2)
-            #
-            # Each row represent a discovered credential,
-            # the credential index is given by the row index (i.e. order of discovery)
-            # A row is of the form: (target_node_discover_index, port_index)
-            'credential_cache_matrix': spaces.Tuple(
-                [spaces.MultiDiscrete([self.__bounds.maximum_node_count, self.__bounds.port_count])] * self.__bounds.maximum_total_credentials),
-
-            # ---------------------------------------------------------
-            # Fields that were previously in the 'info' dict:
-            # ---------------------------------------------------------
-
-            # internal IDs of the credentials in the cache
-            '_credential_cache': DummySpace(sample=[model.CachedCredential('Sharepoint', "HTTPS", "ADPrincipalCreds")]),
-
-            # internal IDs of nodes discovered so far
-            '_discovered_nodes': DummySpace(sample=['node1', 'node0', 'node2']),
-
-            # The subgraph of nodes discovered so far with annotated edges
-            # representing interactions that took place during the simulation. (See
-            # actions.EdgeAnnotation)
-            '_explored_network': DummySpace(sample=networkx.DiGraph()),
-        })
+        self.observation_space = ObservationSpaceType(self.__bounds)
 
         # reward_range: A tuple corresponding to the min and max possible rewards
         self.reward_range = (-float('inf'), float('inf'))
@@ -751,7 +750,6 @@ class CyberBattleEnv(gym.Env):
 
             # raw data not actually encoded as a proper gym numeric space
             # (were previously returned in the 'info' dict)
-            _credential_cache=self.__credential_cache,
             _discovered_nodes=self.__discovered_nodes,
             _explored_network=self.__get_explored_network()
         )
@@ -894,7 +892,6 @@ class CyberBattleEnv(gym.Env):
         obs['discovered_node_count'] = len(self.__discovered_nodes)
         obs['discovered_nodes_properties'] = self.__get_property_matrix()
         obs['nodes_privilegelevel'] = self.__get_privilegelevel_array()
-        obs['_credential_cache'] = self.__credential_cache
         obs['_discovered_nodes'] = self.__discovered_nodes
         obs['_explored_network'] = self.__get_explored_network()
 
@@ -914,11 +911,11 @@ class CyberBattleEnv(gym.Env):
 
         return Action(connect=numpy.array([
             np_random.choice(self.__get__owned_nodes_indices()),
-            np_random.randint(len(self.__discovered_nodes)),
-            np_random.randint(self.__bounds.port_count),
+            np_random.integers(0, len(self.__discovered_nodes)),
+            np_random.integers(0, self.__bounds.port_count),
             # credential space is sparse so we force sampling
             # from the set of credentials that were discovered so far
-            np_random.randint(len(self.__credential_cache))], numpy.int32))
+            np_random.integers(0, len(self.__credential_cache))], numpy.int32))
 
     def sample_action_in_range(self, kinds: Optional[List[int]] = None) -> Action:
         """Sample an action in the expected component ranges but
@@ -949,12 +946,12 @@ class CyberBattleEnv(gym.Env):
         elif kind == 1:
             action = Action(local_vulnerability=numpy.array([
                 np_random.choice(self.__get__owned_nodes_indices()),
-                np_random.randint(self.__bounds.local_attacks_count)], numpy.int32))
+                np_random.integers(0, self.__bounds.local_attacks_count)], numpy.int32))
         else:
             action = Action(remote_vulnerability=numpy.array([
                 np_random.choice(self.__get__owned_nodes_indices()),
-                np_random.randint(len(self.__discovered_nodes)),
-                np_random.randint(self.__bounds.remote_attacks_count)], numpy.int32))
+                np_random.integers(0, len(self.__discovered_nodes)),
+                np_random.integers(0, self.__bounds.remote_attacks_count)], numpy.int32))
 
         return action
 
@@ -1004,9 +1001,9 @@ class CyberBattleEnv(gym.Env):
     def sample_valid_action_with_luck(self) -> Action:
         """Sample an action until getting a valid one"""
         action_mask = self.compute_action_mask()
-        action = cast(Action, self.action_space.sample())
+        action = self.action_space.sample()
         while not self.apply_mask(action, action_mask):
-            action = cast(Action, self.action_space.sample())
+            action = self.action_space.sample()
         return action
 
     def __get_explored_network(self) -> networkx.DiGraph:
@@ -1094,7 +1091,7 @@ class CyberBattleEnv(gym.Env):
         return numpy.block([convert_matrix.to_numpy_array(observation['_explored_network'], weight='kind_as_float'),
                             numpy.array(observation['discovered_nodes_properties'])])
 
-    def step(self, action: Action) -> Tuple[Observation, float, bool, StepInfo]:
+    def step(self, action: Action) -> Tuple[Observation, float, bool, bool, StepInfo]:
         if self.__done:
             raise RuntimeError("new episode must be started with env.reset()")
 
@@ -1129,10 +1126,12 @@ class CyberBattleEnv(gym.Env):
             description='CyberBattle simulation',
             duration_in_ms=duration,
             step_count=self.__stepcount,
-            network_availability=self._defender_actuator.network_availability)
+            network_availability=self._defender_actuator.network_availability,
+            credential_cache=self.__credential_cache
+        )
         self.__episode_rewards.append(reward)
 
-        return observation, reward, self.__done, info
+        return observation, reward, self.__done, False, info
 
     def reset(self) -> Observation:
         LOGGER.info("Resetting the CyberBattle environment")

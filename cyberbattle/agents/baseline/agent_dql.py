@@ -346,7 +346,7 @@ class DeepQLearnerPolicy(Learner):
         self.optimize_model()
 
     def on_step(self, wrapped_env: w.AgentWrapper,
-                observation, reward: float, done: bool, info, action_metadata):
+                observation, reward: float, done: bool, truncated: bool, info, action_metadata):
         agent_state = wrapped_env.state
         if done:
             self.update_q_function(reward,

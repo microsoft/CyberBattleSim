@@ -36,21 +36,6 @@ createstub asciichartpy
 createstub networkx
 createstub boolean
 createstub IPython
-
-
-if [ ! -d "typings/gym" ]; then
-    pyright --createstub gym
-    # Patch gym stubs
-    echo '    spaces = ...' >> typings/gym/spaces/dict.pyi
-    echo '    nvec = ...' >> typings/gym/spaces/space.pyi
-    echo '    spaces = ...' >> typings/gym/spaces/space.pyi
-    echo '    spaces = ...' >> typings/gym/spaces/tuple.pyi
-    echo '    n = ...' >> typings/gym/spaces/multi_binary.pyi
-else
-    echo stub gym already created
-fi
-
-
 echo 'Typing stub generation completed'
 
 popd
