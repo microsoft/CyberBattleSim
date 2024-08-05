@@ -1,17 +1,18 @@
-"""Space flattening wrappers fro the CyberBattleEnv gym environment.
+"""Wrappers used to flatten action and observation spaces
+for CyberBattleEnv gym environment.
 """
 from collections import OrderedDict
 from sqlite3 import NotSupportedError
 from gym import spaces
 import numpy as np
-from cyberbattle._env.cyberbattle_env import DummySpace, CyberBattleEnv, Action
+from cyberbattle._env.cyberbattle_env import DummySpace, CyberBattleEnv, Action, CyberBattleSpaceKind
 from gym.core import ObservationWrapper, ActionWrapper
 
 
 class FlattenObservationWrapper(ObservationWrapper):
     """
     Flatten all nested dictionaries and tuples from the
-     observation space of a CyberBattleSim environment`CyberBattleEnv`.
+     observation space of a CyberBattleSim environment.
      The resulting observation space is a dictionary containing only
      subspaces of types: `Discrete`, `MultiBinary`, and `MultiDiscrete`.
     """
@@ -28,7 +29,7 @@ class FlattenObservationWrapper(ObservationWrapper):
         else:
             return space
 
-    def __init__(self, env: CyberBattleEnv, ignore_fields=['action_mask']):
+    def __init__(self, env: CyberBattleSpaceKind, ignore_fields=['action_mask']):
         ObservationWrapper.__init__(self, env)
         self.env = env
         self.ignore_fields = ignore_fields
@@ -56,14 +57,14 @@ class FlattenObservationWrapper(ObservationWrapper):
 
     def flatten_multibinary_observation(self, space, o):
         if isinstance(space, spaces.MultiBinary) and \
-                type(space.n) in [tuple, list, np.ndarray] and \
+                isinstance(space.n, tuple) and \
                 len(space.n) > 1:
             flatten_dim = np.multiply.reduce(space.n)
             return tuple(o.reshape(flatten_dim))
         else:
             return o
 
-    def observation(self, observation: dict):
+    def observation(self, observation):
         o = OrderedDict({})
         for key, space in self.env.observation_space.spaces.items():
             value = observation[key]
@@ -86,11 +87,16 @@ class FlattenObservationWrapper(ObservationWrapper):
 
         return o
 
+    def step(self, action):
+        """Returns a modified observation using :meth:`self.observation` after calling :meth:`env.step`."""
+        observation, reward, terminated, truncated, info = self.env.step(action)
+        return self.observation(observation), reward, terminated, truncated, info
+
 
 class FlattenActionWrapper(ActionWrapper):
     """
     Flatten all nested dictionaries and tuples from the
-     action space of a CyberBattleSim environment`CyberBattleEnv`.
+     action space of a CyberBattleSim environment.
      The resulting action space is a dictionary containing only
      subspaces of types: `Discrete`, `MultiBinary`, and `MultiDiscrete`.
     """

@@ -21,7 +21,7 @@ __all__ = (
 
 def register(id: str, cyberbattle_env_identifiers: model.Identifiers, **kwargs):
     """ same as gym.envs.registry.register, but adds CyberBattle specs to env.spec  """
-    if id in registry.env_specs:
+    if id in registry:
         raise Error('Cannot re-register id: {}'.format(id))
     spec = EnvSpec(id, **kwargs)
     # Map from port number to port names : List[model.PortName]
@@ -33,11 +33,11 @@ def register(id: str, cyberbattle_env_identifiers: model.Identifiers, **kwargs):
     # Array defining an index for every possible remote  vulnerability name : List[model.VulnerabilityID]
     spec.remote_vulnerabilities = cyberbattle_env_identifiers.remote_vulnerabilities
 
-    registry.env_specs[id] = spec
+    registry[id] = spec
 
 
-if 'CyberBattleToyCtf-v0' in registry.env_specs:
-    del registry.env_specs['CyberBattleToyCtf-v0']
+if 'CyberBattleToyCtf-v0' in registry:
+    del registry['CyberBattleToyCtf-v0']
 
 register(
     id='CyberBattleToyCtf-v0',
@@ -50,8 +50,8 @@ register(
     # max_episode_steps=2600,
 )
 
-if 'CyberBattleTiny-v0' in registry.env_specs:
-    del registry.env_specs['CyberBattleTiny-v0']
+if 'CyberBattleTiny-v0' in registry:
+    del registry['CyberBattleTiny-v0']
 
 register(
     id='CyberBattleTiny-v0',
@@ -67,8 +67,8 @@ register(
 )
 
 
-if 'CyberBattleRandom-v0' in registry.env_specs:
-    del registry.env_specs['CyberBattleRandom-v0']
+if 'CyberBattleRandom-v0' in registry:
+    del registry['CyberBattleRandom-v0']
 
 register(
     id='CyberBattleRandom-v0',
@@ -76,8 +76,8 @@ register(
     entry_point='cyberbattle._env.cyberbattle_random:CyberBattleRandom',
 )
 
-if 'CyberBattleChain-v0' in registry.env_specs:
-    del registry.env_specs['CyberBattleChain-v0']
+if 'CyberBattleChain-v0' in registry:
+    del registry['CyberBattleChain-v0']
 
 register(
     id='CyberBattleChain-v0',
@@ -95,8 +95,8 @@ register(
 
 ad_envs = [f"ActiveDirectory-v{i}" for i in range(0, 10)]
 for (index, env) in enumerate(ad_envs):
-    if env in registry.env_specs:
-        del registry.env_specs[env]
+    if env in registry:
+        del registry[env]
 
     register(
         id=env,
@@ -110,8 +110,8 @@ for (index, env) in enumerate(ad_envs):
         }
     )
 
-if 'ActiveDirectoryTiny-v0' in registry.env_specs:
-    del registry.env_specs['ActiveDirectoryTiny-v0']
+if 'ActiveDirectoryTiny-v0' in registry:
+    del registry['ActiveDirectoryTiny-v0']
 register(
     id='ActiveDirectoryTiny-v0',
     cyberbattle_env_identifiers=chainpattern.ENV_IDENTIFIERS,

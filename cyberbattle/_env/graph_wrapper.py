@@ -141,9 +141,9 @@ class CyberBattleGraph(gym.Wrapper):
 
     def __init__(self, env, maximum_total_credentials=22, maximum_node_count=22):
         super().__init__(env)
-        self._bounds = self.env.bounds
+        self._bounds = env.bounds
         self.__graph = nx.DiGraph()
-        self.observation_space = DiGraph(self.bounds.maximum_node_count)
+        self.observation_space = DiGraph(self._bounds.maximum_node_count)
 
     def reset(self):
         observation = self.env.reset()
@@ -168,13 +168,13 @@ class CyberBattleGraph(gym.Wrapper):
 
         """
         kind_id, *indicators = action
-        observation, reward, done, info = self.env.step({self.__kinds[kind_id]: indicators})
+        observation, reward, done, truncated, info = self.env.step({self.__kinds[kind_id]: indicators})
         for _ in range(observation['newly_discovered_nodes_count']):
             self.__add_node(observation)
         if True:  # TODO: do we need to update edges and nodes every time?
             self.__update_edges(observation)
             self.__update_nodes(observation)
-        return self.__graph, reward, done, info
+        return self.__graph, reward, done, truncated, info
 
     def __add_node(self, observation):
         while self.__graph.number_of_nodes() < observation['discovered_node_count']:
