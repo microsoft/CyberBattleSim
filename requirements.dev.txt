@@ -63,7 +63,7 @@ fastjsonschema==2.18.1
 filelock==3.12.4
 fonttools==4.43.1
 fqdn==1.5.1
-gym==0.21.0
+gym==0.26.2
 identify==2.5.30
 iniconfig==2.0.0
 ipython==8.16.1
