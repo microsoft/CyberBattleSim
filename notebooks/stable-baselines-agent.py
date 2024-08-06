@@ -53,18 +53,18 @@ env2 = FlattenObservationWrapper(cast(CyberBattleEnv, env1), ignore_fields=ignor
 
 # %%
 if "a2c" in retrain:
-    model_a2c = A2C("MultiInputPolicy", env2).learn(10000)
+    model_a2c = A2C("MultiInputPolicy", env2).learn(10000) # type: ignore
     model_a2c.save("a2c_trained_toyctf")
 
 
 # %%
 if "ppo" in retrain:
-    model_ppo = PPO("MultiInputPolicy", env2).learn(100)
+    model_ppo = PPO("MultiInputPolicy", env2).learn(100) # type: ignore
     model_ppo.save("ppo_trained_toyctf")
 
 
 # %%
-model = A2C("MultiInputPolicy", env2).load("a2c_trained_toyctf")
+model = A2C("MultiInputPolicy", env2).load("a2c_trained_toyctf") # type: ignore
 # model = PPO("MultiInputPolicy", env2).load('ppo_trained_toyctf')
 
 

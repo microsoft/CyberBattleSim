@@ -25,15 +25,6 @@ def register(id: str, cyberbattle_env_identifiers: model.Identifiers, **kwargs):
     if id in registry:
         raise Error("Cannot re-register id: {}".format(id))
     spec = EnvSpec(id, **kwargs)
-    # Map from port number to port names : List[model.PortName]
-    spec.ports = cyberbattle_env_identifiers.ports
-    # Array of all possible node properties (not necessarily all used in the network) : List[model.PropertyName]
-    spec.properties = cyberbattle_env_identifiers.properties
-    # Array defining an index for every possible local vulnerability name : List[model.VulnerabilityID]
-    spec.local_vulnerabilities = cyberbattle_env_identifiers.local_vulnerabilities
-    # Array defining an index for every possible remote  vulnerability name : List[model.VulnerabilityID]
-    spec.remote_vulnerabilities = cyberbattle_env_identifiers.remote_vulnerabilities
-
     registry[id] = spec
 
 
