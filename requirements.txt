@@ -13,3 +13,4 @@ progressbar2==3.51.4
 decorator==4.3
 zipp==3.19.1
 ipython==8.16.1
+pandas==2.1.1

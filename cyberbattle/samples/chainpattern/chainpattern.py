@@ -124,7 +124,7 @@ def create_network_chain_link(n: int) -> Dict[NodeID, NodeInfo]:
                                              outgoing=DEFAULT_ALLOW_RULES),
             value=100,
             properties=["MySql", "Ubuntu", "nginx/1.10.3"],
-            owned_string="Intermediate chain node owned, no intinsic value",
+            owned_string="Intermediate chain node owned, no intrinsic value",
             vulnerabilities=dict(
                 ProbeLinux=m.VulnerabilityInfo(
                     description="Probe to check if the node runs Linux",
