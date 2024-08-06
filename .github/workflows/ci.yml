@@ -42,10 +42,7 @@ jobs:
           restore-keys: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
           path: typings/
 
-      - name: Lint [flake8]
-        run: |
-          pip install flake8
-          flake8 --benchmark
+      - uses: chartboost/ruff-action@v1
 
       - uses: conda-incubator/setup-miniconda@v2
         with:

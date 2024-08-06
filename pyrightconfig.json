@@ -5,11 +5,7 @@
         "typings",
         "venv"
     ],
-    "ignore": [
-        "cyberbattle/__init__.py",
-        "cyberbattle/agents/__init__.py",
-        "notebooks/stable-baselines-agent.py"
-    ],
+    "ignore": [],
     "typeshedPaths": [
         "typings"
     ],
@@ -21,7 +17,7 @@
     "reportDuplicateImport": "warning",
     "reportUnnecessaryCast": "warning",
     "reportUndefinedVariable": "error",
-    "reportIncompatibleMethodOverride": "information",
+    "reportIncompatibleMethodOverride": "warning",
     "reportIncompatibleVariableOverride": "information",
     "strictParameterNoneValue": true,
     "strict": []

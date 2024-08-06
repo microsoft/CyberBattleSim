@@ -12,9 +12,7 @@ torch==2.2.0
 stable-baselines3==2.3.2
 
 # linter and formatter
-flake8
-pep8-naming
-autopep8
+ruff==0.5.6
 
 # testing
 pytest~=8.3.2
@@ -42,7 +40,6 @@ autopep8==2.0.4
 babel==2.13.0
 backcall==0.2.0
 beautifulsoup4==4.12.2
-black==24.3.0
 bleach==6.1.0
 cffi==1.16.0
 cfgv==3.4.0

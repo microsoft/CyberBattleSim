@@ -1,0 +1,6 @@
+[tool.ruff]
+line-length = 200
+exclude = [
+    "typings",
+    "venv"
+]
