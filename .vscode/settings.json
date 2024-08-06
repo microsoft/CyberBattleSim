@@ -28,9 +28,6 @@
     "jupyter.jupyterServerType": "local",
     "jupyter.notebookFileRoot": "${workspaceFolder}",
     "files.trimFinalNewlines": true,
-    "editor.defaultFormatter": "ms-python.flake8",
-    "flake8.args": [
-    ],
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "files.trimTrailingWhitespace": true,
-
 }

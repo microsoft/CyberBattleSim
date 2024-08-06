@@ -14,7 +14,7 @@ from gym.utils import seeding
 T_cov = TypeVar("T_cov", covariant=True)
 
 
-class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):  # type: ignore
+class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):
     """
     A discriminated union of simpler spaces.
 
@@ -22,6 +22,9 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):  # type: ignore
 
     self.observation_space = discriminatedunion.DiscriminatedUnion(
         {"foo": spaces.Discrete(2), "Bar": spaces.Discrete(3)})
+
+    Generic type T_cov is the type of the contained discriminated values.
+    It should be defined as  a typed dictionary, e.g.:  TypedDict('Choices', {'foo': int, 'Bar': int})
 
     """
 
@@ -47,7 +50,7 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):  # type: ignore
     def seed(self, seed: Union[dict, None, int] = None):
         return super().seed(seed)
 
-    def sample(self, mask=None) -> T_cov:  # dict[str, object]:
+    def sample(self, mask=None) -> T_cov:   # type: ignore
         space_count = len(self.spaces.items())
         index_k = self.union_np_random.integers(0, space_count)
         kth_key, kth_space = list(self.spaces.items())[index_k]

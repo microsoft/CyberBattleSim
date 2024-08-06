@@ -4,8 +4,9 @@
 """Agent wrapper for CyberBattle envrionments exposing additional
 features extracted from the environment observations"""
 
+from abc import abstractmethod
 from cyberbattle._env.cyberbattle_env import EnvironmentBounds
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, overload
 import enum
 import numpy as np
 from gym import spaces, Wrapper
@@ -25,7 +26,7 @@ class StateAugmentation:
         self,
         action: cyberbattle_env.Action,
         reward: float,
-        truncated,
+        truncated: bool,
         done: bool,
         observation: cyberbattle_env.Observation,
     ):
@@ -35,6 +36,7 @@ class StateAugmentation:
         self.observation = observation
 
 
+# Abstract class for a feature (either global or node-specific)
 class Feature(spaces.MultiDiscrete):
     """
     Feature consisting of multiple discrete dimensions.
@@ -55,22 +57,67 @@ class Feature(spaces.MultiDiscrete):
         p = len(type(Feature(self.env_properties, [])).__name__) + 1
         return type(self).__name__[p:]
 
-    def get(self, a: StateAugmentation, node: Optional[int]) -> np.ndarray:
+    def pretty_print(self, v):
+        return v
+
+    @abstractmethod
+    def get(self, a: StateAugmentation, node: Optional[int] = None) -> np.ndarray:
         """Compute the current value of a feature value at
         the current observation and specific node"""
         raise NotImplementedError
 
-    def pretty_print(self, v):
-        return v
+
+class NodeFeature(Feature):
+    """
+    Feature consisting of multiple discrete dimensions at a specific node.
+    """
+
+    @abstractmethod
+    def get_at(self, a: StateAugmentation, node: int) -> np.ndarray:
+        """Compute the current value of a feature value at
+        the current observation and specific node"""
+        raise NotImplementedError
+
+    def get(self, a: StateAugmentation, node: Optional[int] = None) -> np.ndarray:
+        assert node is not None, "feature only valid in the context of a node"
+        return self.get_at(a, node)
 
 
-class Feature_active_node_properties(Feature):
+class GlobalFeature(Feature):
+    """
+    Feature consisting of multiple discrete dimensions at the global level.
+    """
+
+    @abstractmethod
+    def get_global(self, a: StateAugmentation) -> np.ndarray:
+        """Compute the current value of a feature value at
+        the current observation"""
+        raise NotImplementedError
+
+    def get(self, a: StateAugmentation, node: Optional[int] = None) -> np.ndarray:
+        assert node is None, "feature only valid in the context of a node"
+        return self.get_global(a)
+
+    # @staticmethod
+    # def get_feature_value(
+    #     f: Union[NodeFeature, GlobalFeature], a: SA_T, node: Optional[int]
+    # ):
+    #     """Return the feature value at the current observation and specific node"""
+    #     if isinstance(f, NodeFeature):
+    #         assert node is not None, "feature only valid in the context of a node"
+    #         return f.get(a, node)
+    #     elif isinstance(f, GlobalFeature):
+    #         assert node is None, "feature only valid in the context of a node"
+    #         return f.get(a)
+
+
+class Feature_active_node_properties(NodeFeature):
     """Bitmask of all properties set for the active node"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [2] * p.property_count)
 
-    def get(self, a: StateAugmentation, node) -> ndarray:
+    def get_at(self, a: StateAugmentation, node) -> ndarray:
         assert node is not None, "feature only valid in the context of a node"
 
         node_prop = a.observation["discovered_nodes_properties"]
@@ -84,14 +131,14 @@ class Feature_active_node_properties(Feature):
         return remapped
 
 
-class Feature_active_node_age(Feature):
+class Feature_active_node_age(NodeFeature):
     """How recently was this node discovered?
     (measured by reverse position in the list of discovered nodes)"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_node_count])
 
-    def get(self, a: StateAugmentation, node) -> ndarray:
+    def get_at(self, a: StateAugmentation, node) -> ndarray:
         assert node is not None, "feature only valid in the context of a node"
 
         discovered_node_count = a.observation["discovered_node_count"]
@@ -103,17 +150,17 @@ class Feature_active_node_age(Feature):
         return np.array([discovered_node_count - node - 1], dtype=np.int_)
 
 
-class Feature_active_node_id(Feature):
+class Feature_active_node_id(NodeFeature):
     """Return the node id itself"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_node_count] * 1)
 
-    def get(self, a: StateAugmentation, node) -> ndarray:
+    def get_at(self, a: StateAugmentation, node) -> ndarray:
         return np.array([node], dtype=np.int_)
 
 
-class Feature_discovered_nodeproperties_sliding(Feature):
+class Feature_discovered_nodeproperties_sliding(GlobalFeature):
     """Bitmask indicating node properties seen in last few cache entries"""
 
     window_size = 3
@@ -121,12 +168,12 @@ class Feature_discovered_nodeproperties_sliding(Feature):
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [2] * p.property_count)
 
-    def get(self, a: StateAugmentation, node) -> ndarray:
+    def get_global(self, a: StateAugmentation) -> ndarray:
         n = a.observation["discovered_node_count"]
         node_prop = np.array(a.observation["discovered_nodes_properties"])[:n]
 
         # keep last window of entries
-        node_prop_window = node_prop[-self.window_size:, :]
+        node_prop_window = node_prop[-self.window_size :, :]
 
         # Remap to get rid of the unknown value (2)
         node_prop_window_remapped = np.int32(node_prop_window % 2)
@@ -137,13 +184,13 @@ class Feature_discovered_nodeproperties_sliding(Feature):
         return bitmask
 
 
-class Feature_discovered_ports(Feature):
+class Feature_discovered_ports(GlobalFeature):
     """Bitmask vector indicating each port seen so far in discovered credentials"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [2] * p.port_count)
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         n = a.observation["credential_cache_length"]
         known_credports = np.zeros(self.env_properties.port_count, dtype=np.int32)
         if n > 0:
@@ -152,7 +199,7 @@ class Feature_discovered_ports(Feature):
         return known_credports
 
 
-class Feature_discovered_ports_sliding(Feature):
+class Feature_discovered_ports_sliding(GlobalFeature):
     """Bitmask indicating port seen in last few cache entries"""
 
     window_size = 3
@@ -160,22 +207,22 @@ class Feature_discovered_ports_sliding(Feature):
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [2] * p.port_count)
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         known_credports = np.zeros(self.env_properties.port_count, dtype=np.int32)
         n = a.observation["credential_cache_length"]
         if n > 0:
             ccm = np.array(a.observation["credential_cache_matrix"])[:n]
-            known_credports[np.int32(ccm[-self.window_size:, 1])] = 1
+            known_credports[np.int32(ccm[-self.window_size :, 1])] = 1
         return known_credports
 
 
-class Feature_discovered_ports_counts(Feature):
+class Feature_discovered_ports_counts(GlobalFeature):
     """Count of each port seen so far in discovered credentials"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_total_credentials + 1] * p.port_count)
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         n = a.observation["credential_cache_length"]
         if n > 0:
             ccm = np.array(a.observation["credential_cache_matrix"])[:n]
@@ -185,35 +232,35 @@ class Feature_discovered_ports_counts(Feature):
         return np.bincount(ports, minlength=self.env_properties.port_count)
 
 
-class Feature_discovered_credential_count(Feature):
+class Feature_discovered_credential_count(GlobalFeature):
     """number of credentials discovered so far"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_total_credentials + 1])
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         n = a.observation["credential_cache_length"]
         return np.array([n], dtype=np.int_)
 
 
-class Feature_discovered_node_count(Feature):
+class Feature_discovered_node_count(GlobalFeature):
     """number of nodes discovered so far"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_node_count + 1])
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         return np.array([a.observation["discovered_node_count"]], dtype=np.int_)
 
 
-class Feature_discovered_notowned_node_count(Feature):
+class Feature_discovered_notowned_node_count(GlobalFeature):
     """number of nodes discovered that are not owned yet (optionally clipped)"""
 
     def __init__(self, p: EnvironmentBounds, clip: Optional[int]):
         self.clip = p.maximum_node_count if clip is None else clip
         super().__init__(p, [self.clip + 1])
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         discovered = a.observation["discovered_node_count"]
         node_props = np.array(a.observation["discovered_nodes_properties"][:discovered])
         # here we assume that a node is owned just if all its properties are known
@@ -222,13 +269,13 @@ class Feature_discovered_notowned_node_count(Feature):
         return np.array([min(diff, self.clip)], dtype=np.int_)
 
 
-class Feature_owned_node_count(Feature):
+class Feature_owned_node_count(GlobalFeature):
     """number of owned nodes so far"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [p.maximum_node_count + 1])
 
-    def get(self, a: StateAugmentation, node):
+    def get_global(self, a: StateAugmentation):
         levels = a.observation["nodes_privilegelevel"]
         owned_nodes_indices = np.where(levels > 0)[0]
         return np.array([len(owned_nodes_indices)], dtype=np.int_)
@@ -240,7 +287,11 @@ class ConcatFeatures(Feature):
         feature_selection - a selection of features to combine
     """
 
-    def __init__(self, p: EnvironmentBounds, feature_selection: List[Feature]):
+    def __init__(
+        self,
+        p: EnvironmentBounds,
+        feature_selection: List[Feature],
+    ):
         self.feature_selection = feature_selection
         self.dim_sizes = np.concatenate([f.nvec for f in feature_selection])
         super().__init__(p, [self.dim_sizes])
@@ -248,14 +299,15 @@ class ConcatFeatures(Feature):
     def pretty_print(self, v):
         return v
 
-    def get(self, a: StateAugmentation, node=None) -> np.ndarray:
+    def get(self, a: StateAugmentation, node: Optional[int] = None) -> np.ndarray:
         """Return the feature vector"""
         feature_vector = [f.get(a, node) for f in self.feature_selection]
+
         return np.concatenate(feature_vector)
 
 
 class FeatureEncoder(Feature):
-    """Encode a list of featues as a unique index"""
+    """Encode a list of features as a unique index"""
 
     feature_selection: List[Feature]
 
@@ -278,14 +330,10 @@ class FeatureEncoder(Feature):
         feature_vector_concat = self.feature_vector_of_observation_at(a, node)
         return self.vector_to_index(feature_vector_concat)
 
-    def encode_at(self, a: StateAugmentation, node) -> int:
+    def encode_at(self, a: StateAugmentation, node: int) -> int:
         """Return the current feature vector encoding with a node context"""
         feature_vector_concat = self.feature_vector_of_observation_at(a, node)
         return self.vector_to_index(feature_vector_concat)
-
-    def get(self, a: StateAugmentation, node=None) -> np.ndarray:
-        """Return the feature vector"""
-        return np.array([self.encode(a, node)])
 
     def name(self):
         """Return a name for the feature encoding"""
@@ -301,7 +349,10 @@ class HashEncoding(FeatureEncoder):
     """
 
     def __init__(
-        self, p: EnvironmentBounds, feature_selection: List[Feature], hash_size: int
+        self,
+        p: EnvironmentBounds,
+        feature_selection: List[Feature],
+        hash_size: int,
     ):
         self.feature_selection = feature_selection
         self.hash_size = hash_size
@@ -325,21 +376,24 @@ class RavelEncoding(FeatureEncoder):
         feature_selection - a selection of features to combine
     """
 
-    def __init__(self, p: EnvironmentBounds, feature_selection: List[Feature]):
+    def __init__(
+        self,
+        p: EnvironmentBounds,
+        feature_selection: List[Feature],
+    ):
         self.feature_selection = feature_selection
         self.dim_sizes = np.concatenate([f.nvec for f in feature_selection])
         self.ravelled_size: np.int64 = np.prod(self.dim_sizes)
         assert np.shape(self.ravelled_size) == (), f"! {np.shape(self.ravelled_size)}"
         super().__init__(p, [self.ravelled_size])
 
-    def vector_to_index(self, feature_vector):
+    def vector_to_index(self, feature_vector) -> int:
         assert len(self.dim_sizes) == len(feature_vector), (
             f"feature vector of size {len(feature_vector)}, "
             f"expecting {len(self.dim_sizes)}: {feature_vector} -- {self.dim_sizes}"
         )
-        index: np.int32 = np.ravel_multi_index(
-            list(feature_vector), list(self.dim_sizes)
-        )
+        index_intp = np.ravel_multi_index(list(feature_vector), list(self.dim_sizes))
+        index = index_intp.item()
         assert index < self.ravelled_size, (
             f"feature vector out of bound ({feature_vector}, dim={self.dim_sizes}) "
             f"-> index={index}, max_index={self.ravelled_size-1})"
@@ -522,14 +576,22 @@ class ActionTrackingStateAugmentation(StateAugmentation):
         super().on_reset(observation)
 
 
-class Feature_actions_tried_at_node(Feature):
+class Feature_actions_tried_at_node(NodeFeature):
     """A bit mask indicating which actions were already tried
     a the current node: 0 no tried, 1 tried"""
 
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [2] * AbstractAction(p).n_actions)
 
-    def get(self, a: ActionTrackingStateAugmentation, node: int):
+    @overload
+    def get_at(self, a: ActionTrackingStateAugmentation, node: int): ...
+
+    @overload
+    def get_at(self, a: StateAugmentation, node: int): ...
+
+    def get_at(self, a: StateAugmentation, node: int):
+        assert node is not None, "feature only valid in the context of a node"
+        assert isinstance(a, ActionTrackingStateAugmentation), "invalid state type"
         return np.array(
             ((a.failed_action_count[node, :] + a.success_action_count[node, :]) != 0)
             * 1,
@@ -537,7 +599,7 @@ class Feature_actions_tried_at_node(Feature):
         )
 
 
-class Feature_success_actions_at_node(Feature):
+class Feature_success_actions_at_node(NodeFeature):
     """number of time each action succeeded at a given node"""
 
     max_action_count = 100
@@ -545,11 +607,19 @@ class Feature_success_actions_at_node(Feature):
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [self.max_action_count] * AbstractAction(p).n_actions)
 
-    def get(self, a: ActionTrackingStateAugmentation, node: int):
+    @overload
+    def get_at(self, a: ActionTrackingStateAugmentation, node: int): ...
+
+    @overload
+    def get_at(self, a: StateAugmentation, node: int): ...
+
+    def get_at(self, a: StateAugmentation, node: int):
+        assert isinstance(a, ActionTrackingStateAugmentation), "invalid state type"
+
         return np.minimum(a.success_action_count[node, :], self.max_action_count - 1)
 
 
-class Feature_failed_actions_at_node(Feature):
+class Feature_failed_actions_at_node(NodeFeature):
     """number of time each action failed at a given node"""
 
     max_action_count = 100
@@ -557,7 +627,8 @@ class Feature_failed_actions_at_node(Feature):
     def __init__(self, p: EnvironmentBounds):
         super().__init__(p, [self.max_action_count] * AbstractAction(p).n_actions)
 
-    def get(self, a: ActionTrackingStateAugmentation, node: int):
+    def get_at(self, a: StateAugmentation, node: int):
+        assert isinstance(a, ActionTrackingStateAugmentation), "invalid state type"
         return np.minimum(a.failed_action_count[node, :], self.max_action_count - 1)
 
 
@@ -577,7 +648,7 @@ class AgentWrapper(Wrapper):
         self.env = env
         self.state = state
 
-    def step(self, action: cyberbattle_env.Action):
+    def step(self, action: cyberbattle_env.Action):  # type: ignore
         observation, reward, done, truncated, info = self.env.step(action)
         self.state.on_step(action, reward, done, truncated, observation)
         return observation, reward, done, truncated, info

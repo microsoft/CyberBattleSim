@@ -88,7 +88,7 @@ if debugging:
         ep, [w.Feature_active_node_properties(ep), w.Feature_discovered_node_count(ep)]
     )
     a = w.StateAugmentation(o0)
-    w.Feature_discovered_ports(ep).get(a, None)
+    w.Feature_discovered_ports(ep).get(a)
     fe_example.encode_at(a, 0)
 
 # %%
