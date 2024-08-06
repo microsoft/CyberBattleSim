@@ -1317,7 +1317,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
             ]
         )
 
-    def step(self, action: Action) -> Tuple[Observation, float, bool, bool, StepInfo]:
+    def step(self, action: Action) -> Tuple[Observation, float, bool, bool, StepInfo]:  # type: ignore
         if self.__done:
             raise RuntimeError("new episode must be started with env.reset()")
 
