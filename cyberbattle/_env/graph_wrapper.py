@@ -137,7 +137,8 @@ class CyberBattleGraph(gym.Wrapper):
 
 
     """
-    __kinds = ('local_vulnerability', 'remote_vulnerability', 'connect')
+
+    __kinds = ("local_vulnerability", "remote_vulnerability", "connect")
 
     def __init__(self, env, maximum_total_credentials=22, maximum_node_count=22):
         super().__init__(env)
@@ -145,12 +146,13 @@ class CyberBattleGraph(gym.Wrapper):
         self.__graph = nx.DiGraph()
         self.observation_space = DiGraph(self._bounds.maximum_node_count)
 
-    def reset(self):
-        observation = self.env.reset()
+    def reset(self, **kwargs):
+        observation = self.env.reset(**kwargs)
         self.__graph = nx.DiGraph()
         self.__add_node(observation)
         self.__update_nodes(observation)
-        return self.__graph
+        info = {}
+        return self.__graph, info
 
     def step(self, action: Action):
         """
@@ -168,8 +170,10 @@ class CyberBattleGraph(gym.Wrapper):
 
         """
         kind_id, *indicators = action
-        observation, reward, done, truncated, info = self.env.step({self.__kinds[kind_id]: indicators})
-        for _ in range(observation['newly_discovered_nodes_count']):
+        observation, reward, done, truncated, info = self.env.step(
+            {self.__kinds[kind_id]: indicators}
+        )
+        for _ in range(observation["newly_discovered_nodes_count"]):
             self.__add_node(observation)
         if True:  # TODO: do we need to update edges and nodes every time?
             self.__update_edges(observation)
@@ -177,38 +181,43 @@ class CyberBattleGraph(gym.Wrapper):
         return self.__graph, reward, done, truncated, info
 
     def __add_node(self, observation):
-        while self.__graph.number_of_nodes() < observation['discovered_node_count']:
+        while self.__graph.number_of_nodes() < observation["discovered_node_count"]:
             node_index = self.__graph.number_of_nodes()
             creds = onp.full(self._bounds.maximum_total_credentials, -1, dtype=onp.int8)
             self.__graph.add_node(
                 node_index,
-                name=observation['_discovered_nodes'][node_index],
-                privilege_level=None, flags=None,  # these are set by __update_nodes()
+                name=observation["_discovered_nodes"][node_index],
+                privilege_level=None,
+                flags=None,  # these are set by __update_nodes()
                 credentials=creds,
                 has_leaked_creds=False,
             )
 
     def __update_edges(self, observation):
-        g_orig = observation['_explored_network']
-        node_ids = {n: i for i, n in enumerate(observation['_discovered_nodes'])}
+        g_orig = observation["_explored_network"]
+        node_ids = {n: i for i, n in enumerate(observation["_discovered_nodes"])}
         for (from_name, to_name), edge_properties in g_orig.edges.items():
-            self.__graph.add_edge(node_ids[from_name], node_ids[to_name], **edge_properties)
+            self.__graph.add_edge(
+                node_ids[from_name], node_ids[to_name], **edge_properties
+            )
 
     def __update_nodes(self, observation):
         node_properties = zip(
-            observation['nodes_privilegelevel'],
-            observation['discovered_nodes_properties'],
+            observation["nodes_privilegelevel"],
+            observation["discovered_nodes_properties"],
         )
         for node_id, (privilege_level, flags) in enumerate(node_properties):
             # This value is already provided in self.__graph.nodes[node_id]['data'].privilege_level
-            self.__graph.nodes[node_id]['privilege_level'] = privilege_level
+            self.__graph.nodes[node_id]["privilege_level"] = privilege_level
             # This value is already provided in self.__graph.nodes[node_id]['data'].properties
-            self.__graph.nodes[node_id]['flags'] = flags
+            self.__graph.nodes[node_id]["flags"] = flags
 
-        for cred_id, (node_id, port_id) in enumerate(observation['credential_cache_matrix']):
+        for cred_id, (node_id, port_id) in enumerate(
+            observation["credential_cache_matrix"]
+        ):
             node_id, port_id = int(node_id), int(port_id)
             # NOTE: this code ignores situations where the same cred_id is
             # used for two different ports (This can be the case, even on the same node for two different ports.)
-            self.__graph.nodes[node_id]['credentials'][cred_id] = port_id
+            self.__graph.nodes[node_id]["credentials"][cred_id] = port_id
             # Mark the node has leaking credentials
-            self.__graph.nodes[node_id]['has_leaked_creds'] = True
+            self.__graph.nodes[node_id]["has_leaked_creds"] = True

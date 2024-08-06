@@ -10,6 +10,9 @@
         "cyberbattle/agents/__init__.py",
         "notebooks/stable-baselines-agent.py"
     ],
+    "typeshedPaths": [
+        "typings"
+    ],
     "reportMissingImports": true,
     "reportMissingTypeStubs": true,
     "enableTypeIgnoreComments": true,
@@ -18,6 +21,8 @@
     "reportDuplicateImport": "warning",
     "reportUnnecessaryCast": "warning",
     "reportUndefinedVariable": "error",
+    "reportIncompatibleMethodOverride": "information",
+    "reportIncompatibleVariableOverride": "information",
     "strictParameterNoneValue": true,
     "strict": []
 }

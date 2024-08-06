@@ -28,14 +28,10 @@ mkdir -p typings/
 
 createstub pandas
 createstub plotly
-createstub progressbar
-createstub pytest
-createstub setuptools
-createstub ordered_set
 createstub asciichartpy
-createstub networkx
 createstub boolean
-createstub IPython
+
+
 echo 'Typing stub generation completed'
 
 popd

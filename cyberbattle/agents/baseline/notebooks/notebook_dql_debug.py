@@ -27,14 +27,20 @@ import gym
 import cyberbattle.agents.baseline.learner as learner
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.agent_dql as dqla
-from cyberbattle.agents.baseline.agent_wrapper import ActionTrackingStateAugmentation, AgentWrapper, Verbosity
+from cyberbattle.agents.baseline.agent_wrapper import (
+    ActionTrackingStateAugmentation,
+    AgentWrapper,
+    Verbosity,
+)
 from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
-logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
+)
 
 # %% {"tags": ["parameters"]}
-gymid = 'CyberBattleTiny-v0'
+gymid = "CyberBattleTiny-v0"
 iteration_count = 150
 training_episode_count = 10
 
@@ -44,9 +50,7 @@ training_episode_count = 10
 ctf_env = cast(CyberBattleEnv, gym.make(gymid))
 
 ep = w.EnvironmentBounds.of_identifiers(
-    maximum_node_count=12,
-    maximum_total_credentials=10,
-    identifiers=ctf_env.identifiers
+    maximum_node_count=12, maximum_total_credentials=10, identifiers=ctf_env.identifiers
 )
 
 # %%
@@ -60,7 +64,7 @@ dqn_learning_run = learner.epsilon_greedy_search(
         replay_memory_size=10000,
         target_update=5,
         batch_size=512,
-        learning_rate=0.01  # torch default learning rate is 1e-2
+        learning_rate=0.01,  # torch default learning rate is 1e-2
     ),
     episode_count=training_episode_count,
     iteration_count=iteration_count,
@@ -70,15 +74,15 @@ dqn_learning_run = learner.epsilon_greedy_search(
     verbosity=Verbosity.Quiet,
     render=False,
     plot_episodes_length=False,
-    title="DQL"
+    title="DQL",
 )
 
 # %%
 # initialize the environment
 
-current_o = ctf_env.reset()
+current_o, info = ctf_env.reset()
 wrapped_env = AgentWrapper(ctf_env, ActionTrackingStateAugmentation(ep, current_o))
-l = dqn_learning_run['learner']
+l = dqn_learning_run["learner"]
 
 # %%
 # Use the trained agent to run the steps one by one
@@ -90,13 +94,18 @@ h = []
 for i in range(max_steps):
     # run the suggested action
     _, next_action, _ = l.exploit(wrapped_env, current_o)
-    h.append((ctf_env.get_explored_network_node_properties_bitmap_as_numpy(current_o), next_action))
+    h.append(
+        (
+            ctf_env.get_explored_network_node_properties_bitmap_as_numpy(current_o),
+            next_action,
+        )
+    )
     print(h[-1])
     if next_action is None:
         break
     current_o, _, _, _, _ = wrapped_env.step(next_action)
 
-print(f'len: {len(h)}')
+print(f"len: {len(h)}")
 
 # %%
 ctf_env.render()
