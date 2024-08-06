@@ -24,9 +24,7 @@ from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 # %%
-logging.basicConfig(
-    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
-)
+logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
 # %%

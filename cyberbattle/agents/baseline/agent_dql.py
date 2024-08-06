@@ -81,8 +81,7 @@ class CyberBattleStateActionModel:
 
         self.state_space = w.ConcatFeatures(
             ep,
-            self.global_features.feature_selection
-            + self.node_specific_features.feature_selection,
+            self.global_features.feature_selection + self.node_specific_features.feature_selection,
         )
 
         self.action_space = w.AbstractAction(ep)
@@ -110,28 +109,17 @@ class CyberBattleStateActionModel:
         observation = wrapped_env.state.observation
 
         # Pick source node at random (owned and with the desired feature encoding)
-        potential_source_nodes = [
-            from_node
-            for from_node in w.owned_nodes(observation)
-            if np.all(
-                actor_features
-                == self.node_specific_features.get(wrapped_env.state, from_node)
-            )
-        ]
+        potential_source_nodes = [from_node for from_node in w.owned_nodes(observation) if np.all(actor_features == self.node_specific_features.get(wrapped_env.state, from_node))]
 
         if len(potential_source_nodes) > 0:
             source_node = np.random.choice(potential_source_nodes)
 
-            gym_action = self.action_space.specialize_to_gymaction(
-                source_node, observation, np.int32(abstract_action)
-            )
+            gym_action = self.action_space.specialize_to_gymaction(source_node, observation, np.int32(abstract_action))
 
             if not gym_action:
                 return "exploit[undefined]->explore", None, None
 
-            elif wrapped_env.env.is_action_valid(
-                gym_action, observation["action_mask"]
-            ):
+            elif wrapped_env.env.is_action_valid(gym_action, observation["action_mask"]):
                 return "exploit", gym_action, source_node
             else:
                 return "exploit[invalid]->explore", None, None
@@ -278,10 +266,7 @@ class DeepQLearnerPolicy(Learner):
         self.credcache_policy = CredentialCacheExploiter()
 
     def parameters_as_string(self):
-        return (
-            f"γ={self.gamma}, lr={self.learning_rate}, replaymemory={self.memory.capacity},\n"
-            f"batch={self.batch_size}, target_update={self.target_update}"
-        )
+        return f"γ={self.gamma}, lr={self.learning_rate}, replaymemory={self.memory.capacity},\n" f"batch={self.batch_size}, target_update={self.target_update}"
 
     def all_parameters_as_string(self) -> str:
         model = self.stateaction_model
@@ -307,9 +292,7 @@ class DeepQLearnerPolicy(Learner):
             device=device,
             dtype=torch.bool,
         )
-        non_final_next_states = torch.cat(
-            [s for s in batch.next_state if s is not None]
-        )
+        non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
         state_batch = torch.cat(batch.state)
         action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
@@ -329,16 +312,12 @@ class DeepQLearnerPolicy(Learner):
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
         next_state_values = torch.zeros(self.batch_size, device=device)
-        next_state_values[non_final_mask] = (
-            self.target_net(non_final_next_states).max(1)[0].detach()
-        )
+        next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 
         # Compute Huber loss
-        loss = F.smooth_l1_loss(
-            state_action_values, expected_state_action_values.unsqueeze(1)
-        )
+        loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()
@@ -353,9 +332,7 @@ class DeepQLearnerPolicy(Learner):
                     param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
-    def get_actor_state_vector(
-        self, global_state: ndarray, actor_features: ndarray
-    ) -> ndarray:
+    def get_actor_state_vector(self, global_state: ndarray, actor_features: ndarray) -> ndarray:
         return np.concatenate(
             (
                 np.array(global_state, dtype=np.float32),
@@ -372,21 +349,13 @@ class DeepQLearnerPolicy(Learner):
     ):
         # store the transition in memory
         reward_tensor = torch.tensor([reward], device=device, dtype=torch.float)
-        action_tensor = torch.tensor(
-            [[np.int_(abstract_action)]], device=device, dtype=torch.long
-        )
-        current_state_tensor = torch.as_tensor(
-            actor_state, dtype=torch.float, device=device
-        ).unsqueeze(0)
+        action_tensor = torch.tensor([[np.int_(abstract_action)]], device=device, dtype=torch.long)
+        current_state_tensor = torch.as_tensor(actor_state, dtype=torch.float, device=device).unsqueeze(0)
         if next_actor_state is None:
             next_state_tensor = None
         else:
-            next_state_tensor = torch.as_tensor(
-                next_actor_state, dtype=torch.float, device=device
-            ).unsqueeze(0)
-        self.memory.push(
-            current_state_tensor, action_tensor, next_state_tensor, reward_tensor
-        )
+            next_state_tensor = torch.as_tensor(next_actor_state, dtype=torch.float, device=device).unsqueeze(0)
+        self.memory.push(current_state_tensor, action_tensor, next_state_tensor, reward_tensor)
 
         # optimize the target network
         self.optimize_model()
@@ -410,15 +379,9 @@ class DeepQLearnerPolicy(Learner):
                 next_actor_state=None,
             )
         else:
-            next_global_state = self.stateaction_model.global_features.get(
-                agent_state, node=None
-            )
-            next_actor_features = self.stateaction_model.node_specific_features.get(
-                agent_state, action_metadata.actor_node
-            )
-            next_actor_state = self.get_actor_state_vector(
-                next_global_state, next_actor_features
-            )
+            next_global_state = self.stateaction_model.global_features.get(agent_state, node=None)
+            next_actor_features = self.stateaction_model.node_specific_features.get(agent_state, action_metadata.actor_node)
+            next_actor_state = self.get_actor_state_vector(next_global_state, next_actor_features)
 
             self.update_q_function(
                 reward,
@@ -432,9 +395,7 @@ class DeepQLearnerPolicy(Learner):
         if i_episode % self.target_update == 0:
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
-    def lookup_dqn(
-        self, states_to_consider: List[ndarray]
-    ) -> Tuple[List[np.int32], List[np.int32]]:
+    def lookup_dqn(self, states_to_consider: List[ndarray]) -> Tuple[List[np.int32], List[np.int32]]:
         """Given a set of possible current states return:
         - index, in the provided list, of the state that would yield the best possible outcome
         - the best action to take in such a state"""
@@ -452,47 +413,31 @@ class DeepQLearnerPolicy(Learner):
         return action_lookups, expectedq_lookups
 
     def metadata_from_gymaction(self, wrapped_env, gym_action):
-        current_global_state = self.stateaction_model.global_features.get(
-            wrapped_env.state, node=None
-        )
+        current_global_state = self.stateaction_model.global_features.get(wrapped_env.state, node=None)
         actor_node = cyberbattle_env.sourcenode_of_action(gym_action)
-        actor_features = self.stateaction_model.node_specific_features.get(
-            wrapped_env.state, actor_node
-        )
-        abstract_action = self.stateaction_model.action_space.abstract_from_gymaction(
-            gym_action
-        )
+        actor_features = self.stateaction_model.node_specific_features.get(wrapped_env.state, actor_node)
+        abstract_action = self.stateaction_model.action_space.abstract_from_gymaction(gym_action)
         return ChosenActionMetadata(
             abstract_action=abstract_action,
             actor_node=actor_node,
             actor_features=actor_features,
-            actor_state=self.get_actor_state_vector(
-                current_global_state, actor_features
-            ),
+            actor_state=self.get_actor_state_vector(current_global_state, actor_features),
         )
 
-    def explore(
-        self, wrapped_env: w.AgentWrapper
-    ) -> Tuple[str, cyberbattle_env.Action, object]:
+    def explore(self, wrapped_env: w.AgentWrapper) -> Tuple[str, cyberbattle_env.Action, object]:
         """Random exploration that avoids repeating actions previously taken in the same state"""
         # sample local and remote actions only (excludes connect action)
         gym_action = wrapped_env.env.sample_valid_action(kinds=[0, 1, 2])
         metadata = self.metadata_from_gymaction(wrapped_env, gym_action)
         return "explore", gym_action, metadata
 
-    def try_exploit_at_candidate_actor_states(
-        self, wrapped_env, current_global_state, actor_features, abstract_action
-    ):
+    def try_exploit_at_candidate_actor_states(self, wrapped_env, current_global_state, actor_features, abstract_action):
         actor_state = self.get_actor_state_vector(current_global_state, actor_features)
 
-        action_style, gym_action, actor_node = self.stateaction_model.implement_action(
-            wrapped_env, actor_features, abstract_action
-        )
+        action_style, gym_action, actor_node = self.stateaction_model.implement_action(wrapped_env, actor_features, abstract_action)
 
         if gym_action:
-            assert (
-                actor_node is not None
-            ), "actor_node should be set together with gym_action"
+            assert actor_node is not None, "actor_node should be set together with gym_action"
 
             return (
                 action_style,
@@ -515,9 +460,7 @@ class DeepQLearnerPolicy(Learner):
 
             return "exploit[undefined]->explore", None, None
 
-    def exploit(
-        self, wrapped_env, observation
-    ) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
+    def exploit(self, wrapped_env, observation) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
         # first, attempt to exploit the credential cache
         # using the crecache_policy
         # action_style, gym_action, _ = self.credcache_policy.exploit(wrapped_env, observation)
@@ -526,31 +469,17 @@ class DeepQLearnerPolicy(Learner):
 
         # Otherwise on exploit learnt Q-function
 
-        current_global_state = self.stateaction_model.global_features.get(
-            wrapped_env.state, node=None
-        )
+        current_global_state = self.stateaction_model.global_features.get(wrapped_env.state, node=None)
 
         # Gather the features of all the current active actors (i.e. owned nodes)
-        active_actors_features: List[ndarray] = [
-            self.stateaction_model.node_specific_features.get(
-                wrapped_env.state, from_node
-            )
-            for from_node in w.owned_nodes(observation)
-        ]
+        active_actors_features: List[ndarray] = [self.stateaction_model.node_specific_features.get(wrapped_env.state, from_node) for from_node in w.owned_nodes(observation)]
 
-        unique_active_actors_features: List[ndarray] = list(
-            np.unique(active_actors_features, axis=0)
-        )
+        unique_active_actors_features: List[ndarray] = list(np.unique(active_actors_features, axis=0))
 
         # array of actor state vector for every possible set of node features
-        candidate_actor_state_vector: List[ndarray] = [
-            self.get_actor_state_vector(current_global_state, node_features)
-            for node_features in unique_active_actors_features
-        ]
+        candidate_actor_state_vector: List[ndarray] = [self.get_actor_state_vector(current_global_state, node_features) for node_features in unique_active_actors_features]
 
-        remaining_action_lookups, remaining_expectedq_lookups = self.lookup_dqn(
-            candidate_actor_state_vector
-        )
+        remaining_action_lookups, remaining_expectedq_lookups = self.lookup_dqn(candidate_actor_state_vector)
         remaining_candidate_indices = list(range(len(candidate_actor_state_vector)))
 
         while remaining_candidate_indices:
@@ -560,11 +489,7 @@ class DeepQLearnerPolicy(Learner):
 
             actor_features = unique_active_actors_features[actor_index]
 
-            action_style, gym_action, metadata = (
-                self.try_exploit_at_candidate_actor_states(
-                    wrapped_env, current_global_state, actor_features, abstract_action
-                )
-            )
+            action_style, gym_action, metadata = self.try_exploit_at_candidate_actor_states(wrapped_env, current_global_state, actor_features, abstract_action)
 
             if gym_action:
                 return action_style, gym_action, metadata

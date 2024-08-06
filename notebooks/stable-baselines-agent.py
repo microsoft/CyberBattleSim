@@ -12,8 +12,9 @@ from stable_baselines3.ppo.ppo import PPO
 from cyberbattle._env.flatten_wrapper import FlattenObservationWrapper, FlattenActionWrapper
 import os
 import numpy as np
-os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
-retrain = ['a2c']
+
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+retrain = ["a2c"]
 
 
 # %%
@@ -44,26 +45,26 @@ env1 = FlattenActionWrapper(env)
 
 ignore_fields = [
     # DummySpace
-    '_credential_cache',
-    '_discovered_nodes',
-    '_explored_network',
+    "_credential_cache",
+    "_discovered_nodes",
+    "_explored_network",
 ]
 env2 = FlattenObservationWrapper(cast(CyberBattleEnv, env1), ignore_fields=ignore_fields)
 
 # %%
-if 'a2c' in retrain:
-    model_a2c = A2C("MultiInputPolicy", env2).learn(10000)
-    model_a2c.save('a2c_trained_toyctf')
+if "a2c" in retrain:
+    model_a2c = A2C("MultiInputPolicy", env2).learn(10000) # type: ignore
+    model_a2c.save("a2c_trained_toyctf")
 
 
 # %%
-if 'ppo' in retrain:
-    model_ppo = PPO("MultiInputPolicy", env2).learn(100)
-    model_ppo.save('ppo_trained_toyctf')
+if "ppo" in retrain:
+    model_ppo = PPO("MultiInputPolicy", env2).learn(100) # type: ignore
+    model_ppo.save("ppo_trained_toyctf")
 
 
 # %%
-model = A2C("MultiInputPolicy", env2).load('a2c_trained_toyctf')
+model = A2C("MultiInputPolicy", env2).load("a2c_trained_toyctf") # type: ignore
 # model = PPO("MultiInputPolicy", env2).load('ppo_trained_toyctf')
 
 

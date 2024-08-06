@@ -30,26 +30,19 @@ importlib.reload(p)
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
-cyberbattlechain_defender = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0',
-                                                          size=10,
-                                                          attacker_goal=AttackerGoal(
-                                                              own_atleast=0,
-                                                              own_atleast_percent=1.0
-                                                          ),
-                                                          defender_constraint=DefenderConstraint(
-                                                              maintain_sla=0.80
-                                                          ),
-                                                          defender_agent=ScanAndReimageCompromisedMachines(
-                                                              probability=0.6,
-                                                              scan_capacity=2,
-                                                              scan_frequency=5)))
-
-
-ep = w.EnvironmentBounds.of_identifiers(
-    maximum_total_credentials=22,
-    maximum_node_count=22,
-    identifiers=cyberbattlechain_defender.identifiers
+cyberbattlechain_defender = cast(
+    CyberBattleEnv,
+    gym.make(
+        "CyberBattleChain-v0",
+        size=10,
+        attacker_goal=AttackerGoal(own_atleast=0, own_atleast_percent=1.0),
+        defender_constraint=DefenderConstraint(maintain_sla=0.80),
+        defender_agent=ScanAndReimageCompromisedMachines(probability=0.6, scan_capacity=2, scan_frequency=5),
+    ),
 )
+
+
+ep = w.EnvironmentBounds.of_identifiers(maximum_total_credentials=22, maximum_node_count=22, identifiers=cyberbattlechain_defender.identifiers)
 
 iteration_count = 600
 training_episode_count = 10
@@ -59,13 +52,7 @@ training_episode_count = 10
 dqn_with_defender = learner.epsilon_greedy_search(
     cyberbattle_gym_env=cyberbattlechain_defender,
     environment_properties=ep,
-    learner=dqla.DeepQLearnerPolicy(
-        ep=ep,
-        gamma=0.15,
-        replay_memory_size=10000,
-        target_update=5,
-        batch_size=256,
-        learning_rate=0.01),
+    learner=dqla.DeepQLearnerPolicy(ep=ep, gamma=0.15, replay_memory_size=10000, target_update=5, batch_size=256, learning_rate=0.01),
     episode_count=training_episode_count,
     iteration_count=iteration_count,
     epsilon=0.90,
@@ -73,7 +60,7 @@ dqn_with_defender = learner.epsilon_greedy_search(
     epsilon_exponential_decay=5000,
     epsilon_minimum=0.10,
     verbosity=Verbosity.Quiet,
-    title="DQL"
+    title="DQL",
 )
 
 
@@ -81,14 +68,14 @@ dqn_with_defender = learner.epsilon_greedy_search(
 dql_exploit_run = learner.epsilon_greedy_search(
     cyberbattlechain_defender,
     ep,
-    learner=dqn_with_defender['learner'],
+    learner=dqn_with_defender["learner"],
     episode_count=training_episode_count,
     iteration_count=iteration_count,
     epsilon=0.0,  # 0.35,
     render=False,
     # render_last_episode_rewards_to='images/chain10',
     verbosity=Verbosity.Quiet,
-    title="Exploiting DQL"
+    title="Exploiting DQL",
 )
 
 # %%
@@ -103,21 +90,14 @@ credlookup_run = learner.epsilon_greedy_search(
     epsilon_exponential_decay=10000,
     epsilon_minimum=0.10,
     verbosity=Verbosity.Quiet,
-    title="Credential lookups (ϵ-greedy)"
+    title="Credential lookups (ϵ-greedy)",
 )
 
 
 # %%
 # Plots
-all_runs = [
-    credlookup_run,
-    dqn_with_defender,
-    dql_exploit_run
-]
-p.plot_averaged_cummulative_rewards(
-    all_runs=all_runs,
-    title=f'Attacker agents vs Basic Defender -- rewards\n env={cyberbattlechain_defender.name}, episodes={training_episode_count}'
-)
+all_runs = [credlookup_run, dqn_with_defender, dql_exploit_run]
+p.plot_averaged_cummulative_rewards(all_runs=all_runs, title=f"Attacker agents vs Basic Defender -- rewards\n env={cyberbattlechain_defender.name}, episodes={training_episode_count}")
 
 # p.plot_episodes_length(all_runs)
 p.plot_averaged_availability(title=f"Attacker agents vs Basic Defender -- availability\n env={cyberbattlechain_defender.name}, episodes={training_episode_count}", all_runs=all_runs)

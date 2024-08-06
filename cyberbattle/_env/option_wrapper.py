@@ -23,12 +23,8 @@ def context_spaces(observation_space, action_space):
         "kind": Env(observation_space, Discrete(K)),
         "local_node_id": Env(Tuple((observation_space, Discrete(K))), Discrete(N)),
         "local_vuln_id": Env(Tuple((observation_space, Discrete(N))), Discrete(L)),
-        "remote_node_id": Env(
-            Tuple((observation_space, Discrete(K), Discrete(N))), Discrete(N)
-        ),
-        "remote_vuln_id": Env(
-            Tuple((observation_space, Discrete(N), Discrete(N))), Discrete(R)
-        ),
+        "remote_node_id": Env(Tuple((observation_space, Discrete(K), Discrete(N))), Discrete(N)),
+        "remote_vuln_id": Env(Tuple((observation_space, Discrete(N), Discrete(N))), Discrete(R)),
         "cred_id": Env(observation_space, Discrete(C)),
     }
 
@@ -62,26 +58,16 @@ class ContextWrapper(gym.Wrapper):
         local_node_id = self._options["local_node_id"]((obs, kind))
         if kind == 0:
             local_vuln_id = self._options["local_vuln_id"]((obs, local_node_id))
-            a: Action = {
-                "local_vulnerability": onp.array([local_node_id, local_vuln_id])
-            }
+            a: Action = {"local_vulnerability": onp.array([local_node_id, local_vuln_id])}
         else:
             remote_node_id = self._options["remote_node_id"]((obs, kind, local_node_id))
             if kind == 1:
-                remote_vuln_id = self._options["remote_vuln_id"](
-                    (obs, local_node_id, remote_node_id)
-                )
-                a = {
-                    "remote_vulnerability": onp.array(
-                        [local_node_id, remote_node_id, remote_vuln_id]
-                    )
-                }
+                remote_vuln_id = self._options["remote_vuln_id"]((obs, local_node_id, remote_node_id))
+                a = {"remote_vulnerability": onp.array([local_node_id, remote_node_id, remote_vuln_id])}
             else:
                 cred_id = self._options["cred_id"](obs)
                 assert cred_id < obs["credential_cache_length"]
-                node_id, port_id = obs["credential_cache_matrix"][cred_id].astype(
-                    "int32"
-                )
+                node_id, port_id = obs["credential_cache_matrix"][cred_id].astype("int32")
                 a = {"connect": onp.array([local_node_id, node_id, port_id, cred_id])}
 
         self._observation, reward, done, truncated, info = self.env.step(a)
@@ -110,9 +96,7 @@ def pi_local_node_id(s):
 
 def pi_local_vuln_id(s):
     s, local_node_id = s
-    local_node_ids, local_vuln_ids = onp.argwhere(
-        s["action_mask"]["local_vulnerability"]
-    ).T
+    local_node_ids, local_vuln_ids = onp.argwhere(s["action_mask"]["local_vulnerability"]).T
     masked = local_vuln_ids[local_node_ids == local_node_id]
     return onp.random.choice(masked)
 
@@ -121,21 +105,15 @@ def pi_remote_node_id(s):
     s, k, local_node_id = s
     assert k != 0
     if k == 1:
-        local_node_ids, remote_node_ids, _ = onp.argwhere(
-            s["action_mask"]["remote_vulnerability"]
-        ).T
+        local_node_ids, remote_node_ids, _ = onp.argwhere(s["action_mask"]["remote_vulnerability"]).T
     else:
-        local_node_ids, remote_node_ids, _, _ = onp.argwhere(
-            s["action_mask"]["connect"]
-        ).T
+        local_node_ids, remote_node_ids, _, _ = onp.argwhere(s["action_mask"]["connect"]).T
     return onp.random.choice(remote_node_ids[local_node_ids == local_node_id])
 
 
 def pi_remote_vuln_id(s):
     s, local_node_id, remote_node_id = s
-    local_node_ids, remote_node_ids, remote_vuln_ids = onp.argwhere(
-        s["action_mask"]["remote_vulnerability"]
-    ).T
+    local_node_ids, remote_node_ids, remote_vuln_ids = onp.argwhere(s["action_mask"]["remote_vulnerability"]).T
     mask = (local_node_ids == local_node_id) & (remote_node_ids == remote_node_id)
     return onp.random.choice(remote_vuln_ids[mask])
 

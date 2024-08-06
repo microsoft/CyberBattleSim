@@ -27,9 +27,7 @@ from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 
-logging.basicConfig(
-    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
-)
+logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 # %% {"tags": ["parameters"]}
 # Papermill notebook parameters
 
@@ -84,9 +82,7 @@ if debugging:
 
     o0.keys()
 
-    fe_example = w.RavelEncoding(
-        ep, [w.Feature_active_node_properties(ep), w.Feature_discovered_node_count(ep)]
-    )
+    fe_example = w.RavelEncoding(ep, [w.Feature_active_node_properties(ep), w.Feature_discovered_node_count(ep)])
     a = w.StateAugmentation(o0)
     w.Feature_discovered_ports(ep).get(a)
     fe_example.encode_at(a, 0)
@@ -113,9 +109,7 @@ credlookup_run = learner.epsilon_greedy_search(
 tabularq_run = learner.epsilon_greedy_search(
     gym_env,
     ep,
-    learner=tqa.QTabularLearner(
-        ep, gamma=0.015, learning_rate=0.01, exploit_percentile=100
-    ),
+    learner=tqa.QTabularLearner(ep, gamma=0.015, learning_rate=0.01, exploit_percentile=100),
     episode_count=training_episode_count,
     iteration_count=iteration_count,
     epsilon=0.90,

@@ -170,9 +170,7 @@ class CyberBattleGraph(gym.Wrapper):
 
         """
         kind_id, *indicators = action
-        observation, reward, done, truncated, info = self.env.step(
-            {self.__kinds[kind_id]: indicators}
-        )
+        observation, reward, done, truncated, info = self.env.step({self.__kinds[kind_id]: indicators})
         for _ in range(observation["newly_discovered_nodes_count"]):
             self.__add_node(observation)
         if True:  # TODO: do we need to update edges and nodes every time?
@@ -197,9 +195,7 @@ class CyberBattleGraph(gym.Wrapper):
         g_orig = observation["_explored_network"]
         node_ids = {n: i for i, n in enumerate(observation["_discovered_nodes"])}
         for (from_name, to_name), edge_properties in g_orig.edges.items():
-            self.__graph.add_edge(
-                node_ids[from_name], node_ids[to_name], **edge_properties
-            )
+            self.__graph.add_edge(node_ids[from_name], node_ids[to_name], **edge_properties)
 
     def __update_nodes(self, observation):
         node_properties = zip(
@@ -212,9 +208,7 @@ class CyberBattleGraph(gym.Wrapper):
             # This value is already provided in self.__graph.nodes[node_id]['data'].properties
             self.__graph.nodes[node_id]["flags"] = flags
 
-        for cred_id, (node_id, port_id) in enumerate(
-            observation["credential_cache_matrix"]
-        ):
+        for cred_id, (node_id, port_id) in enumerate(observation["credential_cache_matrix"]):
             node_id, port_id = int(node_id), int(port_id)
             # NOTE: this code ignores situations where the same cred_id is
             # used for two different ports (This can be the case, even on the same node for two different ports.)

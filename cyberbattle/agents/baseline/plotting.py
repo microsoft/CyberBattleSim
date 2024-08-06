@@ -32,9 +32,7 @@ def plot_episodes_rewards_averaged(results):
     """Plot cumulative rewards for a given set of specified episodes"""
     max_iteration_count = np.max([len(r) for r in results["all_episodes_rewards"]])
 
-    all_episodes_rewards_padded = [
-        pad(rewards, max_iteration_count) for rewards in results["all_episodes_rewards"]
-    ]
+    all_episodes_rewards_padded = [pad(rewards, max_iteration_count) for rewards in results["all_episodes_rewards"]]
     cumrewards = np.cumsum(all_episodes_rewards_padded, axis=1)
     avg = np.average(cumrewards, axis=0)
     std = np.std(cumrewards, axis=0)
@@ -56,9 +54,7 @@ def plot_episodes_availability_averaged(results):
     data = results["all_episodes_availability"]
     longest_episode_length = np.max([len(r) for r in data])
 
-    all_episodes_padded = [
-        fill_with_latest_value(av, longest_episode_length) for av in data
-    ]
+    all_episodes_padded = [fill_with_latest_value(av, longest_episode_length) for av in data]
     avg = np.average(all_episodes_padded, axis=0)
     std = np.std(all_episodes_padded, axis=0)
     x = [i for i in range(len(std))]
@@ -199,9 +195,7 @@ def reduce(x, desired_width):
 def episodes_rewards_averaged(run):
     """Plot cumulative rewards for a given set of specified episodes"""
     max_iteration_count = np.max([len(r) for r in run["all_episodes_rewards"]])
-    all_episodes_rewards_padded = [
-        pad(rewards, max_iteration_count) for rewards in run["all_episodes_rewards"]
-    ]
+    all_episodes_rewards_padded = [pad(rewards, max_iteration_count) for rewards in run["all_episodes_rewards"]]
     cumrewards = np.cumsum(all_episodes_rewards_padded, axis=1)
     avg = np.average(cumrewards, axis=0)
     return list(avg)

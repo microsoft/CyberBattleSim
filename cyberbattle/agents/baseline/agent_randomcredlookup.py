@@ -33,11 +33,7 @@ def exploit_credentialcache(observation) -> Optional[cyberbattle_env.Action]:
 
     nodes_not_owned = w.discovered_nodes_notowned(observation)
 
-    match_port__target_notowned = [
-        c
-        for c in range(n_discovered_creds)
-        if discovered_credentials[c, 0] in nodes_not_owned
-    ]
+    match_port__target_notowned = [c for c in range(n_discovered_creds) if discovered_credentials[c, 0] in nodes_not_owned]
 
     if match_port__target_notowned:
         logging.debug("found matching cred in the credential cache")

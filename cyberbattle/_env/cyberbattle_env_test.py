@@ -110,16 +110,12 @@ def test_step_after_done() -> None:
         observation, reward, done, truncated, info = env.step(a)
         print(f"{a}, # done={done} truncated={truncated} r={reward}")
 
-    with pytest.raises(
-        RuntimeError, match=r"new episode must be started with env\.reset\(\)"
-    ):
+    with pytest.raises(RuntimeError, match=r"new episode must be started with env\.reset\(\)"):
         env.step(actions[-1])
 
 
 def test_option_wrapper():
-    env = gym.make(
-        "CyberBattleChain-v0", size=10, attacker_goal=AttackerGoal(reward=4000)
-    )
+    env = gym.make("CyberBattleChain-v0", size=10, attacker_goal=AttackerGoal(reward=4000))
     env = ContextWrapper(cast(CyberBattleEnv, env), options=random_options)
 
     s, _ = env.reset()

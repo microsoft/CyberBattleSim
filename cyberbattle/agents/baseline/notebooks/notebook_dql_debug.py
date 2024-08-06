@@ -35,9 +35,7 @@ from cyberbattle.agents.baseline.agent_wrapper import (
 from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
-logging.basicConfig(
-    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
-)
+logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 # %% {"tags": ["parameters"]}
 gymid = "CyberBattleTiny-v0"
@@ -49,9 +47,7 @@ training_episode_count = 10
 
 ctf_env = cast(CyberBattleEnv, gym.make(gymid))
 
-ep = w.EnvironmentBounds.of_identifiers(
-    maximum_node_count=12, maximum_total_credentials=10, identifiers=ctf_env.identifiers
-)
+ep = w.EnvironmentBounds.of_identifiers(maximum_node_count=12, maximum_total_credentials=10, identifiers=ctf_env.identifiers)
 
 # %%
 # Evaluate the Deep Q-learning agent
@@ -82,7 +78,7 @@ dqn_learning_run = learner.epsilon_greedy_search(
 
 current_o, info = ctf_env.reset()
 wrapped_env = AgentWrapper(ctf_env, ActionTrackingStateAugmentation(ep, current_o))
-l = dqn_learning_run["learner"]
+_l = dqn_learning_run["learner"]
 
 # %%
 # Use the trained agent to run the steps one by one
@@ -93,7 +89,7 @@ max_steps = 10
 h = []
 for i in range(max_steps):
     # run the suggested action
-    _, next_action, _ = l.exploit(wrapped_env, current_o)
+    _, next_action, _ = _l.exploit(wrapped_env, current_o)
     h.append(
         (
             ctf_env.get_explored_network_node_properties_bitmap_as_numpy(current_o),

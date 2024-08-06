@@ -3,18 +3,12 @@
         "cyberbattle"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": true,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "extensions.ignoreRecommendations": true,
     "files.autoSave": "off",
     "debug.allowBreakpointsEverywhere": true,
-    "cSpell.enableFiletypes": [
-        "!yaml",
-        "!python",
-        "!json"
-    ],
     "python.languageServer": "Pylance",
     "python.analysis.typeCheckingMode": "basic",
     "search.useGlobalIgnoreFiles": true,
@@ -25,9 +19,7 @@
     "files.exclude": {
         "venv/": true
     },
-    "jupyter.jupyterServerType": "local",
     "jupyter.notebookFileRoot": "${workspaceFolder}",
     "files.trimFinalNewlines": true,
-    "editor.defaultFormatter": "ms-python.black-formatter",
     "files.trimTrailingWhitespace": true,
 }

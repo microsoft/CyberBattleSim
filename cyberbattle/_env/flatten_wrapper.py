@@ -1,6 +1,7 @@
 """Wrappers used to flatten action and observation spaces
 for CyberBattleEnv gym environment.
 """
+
 from collections import OrderedDict
 from sqlite3 import NotSupportedError
 from gym import spaces
@@ -21,15 +22,15 @@ class FlattenObservationWrapper(ObservationWrapper):
         if isinstance(space, spaces.MultiBinary):
             if type(space.n) in [tuple, list, np.ndarray]:
                 flatten_dim = np.multiply.reduce(space.n)
-                print(f'// MultiBinary flattened from {space.n} -> {flatten_dim}')
+                print(f"// MultiBinary flattened from {space.n} -> {flatten_dim}")
                 return spaces.MultiBinary(flatten_dim)
             else:
-                print(f'// MultiBinary already flat: {space.n}')
+                print(f"// MultiBinary already flat: {space.n}")
                 return space
         else:
             return space
 
-    def __init__(self, env: CyberBattleSpaceKind, ignore_fields=['action_mask']):
+    def __init__(self, env: CyberBattleSpaceKind, ignore_fields=["action_mask"]):
         ObservationWrapper.__init__(self, env)
         self.env = env
         self.ignore_fields = ignore_fields
@@ -37,7 +38,7 @@ class FlattenObservationWrapper(ObservationWrapper):
         space_dict = OrderedDict({})
         for key, space in env.observation_space.spaces.items():
             if key in ignore_fields:
-                print('Filtering out field', key)
+                print("Filtering out field", key)
             elif isinstance(space, spaces.Dict):
                 for k2, subspace in space.items():
                     space_dict[f"{key}_{k2}"] = self.flatten_multibinary_space(subspace)
@@ -49,16 +50,14 @@ class FlattenObservationWrapper(ObservationWrapper):
             elif isinstance(space, spaces.Discrete) or isinstance(space, spaces.MultiDiscrete):
                 space_dict[key] = space
             elif isinstance(space, DummySpace):
-                print(f'warning: unsupported observation space: {space} : {type(space)}')
+                print(f"warning: unsupported observation space: {space} : {type(space)}")
             else:
                 raise NotImplementedError(f"Case not handled: {key} - type {type(space)}")
 
         self.observation_space = spaces.Dict(space_dict)
 
     def flatten_multibinary_observation(self, space, o):
-        if isinstance(space, spaces.MultiBinary) and \
-                isinstance(space.n, tuple) and \
-                len(space.n) > 1:
+        if isinstance(space, spaces.MultiBinary) and isinstance(space.n, tuple) and len(space.n) > 1:
             flatten_dim = np.multiply.reduce(space.n)
             return tuple(o.reshape(flatten_dim))
         else:
@@ -105,38 +104,35 @@ class FlattenActionWrapper(ActionWrapper):
         ActionWrapper.__init__(self, env)
         self.env = env
 
-        self.action_space = spaces.MultiDiscrete([
-            # connect, local vulnerabilities, remote vulnerabilities
-            1 + env.bounds.local_attacks_count + env.bounds.remote_attacks_count,
-
-            # source node
-            env.bounds.maximum_node_count,
-
-            # target  node
-            env.bounds.maximum_node_count,
-
-            # target port (for connect action only)
-            env.bounds.port_count,
-
-            # target port (credentials used, for connect action only)
-            env.bounds.maximum_total_credentials
-        ]
+        self.action_space = spaces.MultiDiscrete(
+            [
+                # connect, local vulnerabilities, remote vulnerabilities
+                1 + env.bounds.local_attacks_count + env.bounds.remote_attacks_count,
+                # source node
+                env.bounds.maximum_node_count,
+                # target  node
+                env.bounds.maximum_node_count,
+                # target port (for connect action only)
+                env.bounds.port_count,
+                # target port (credentials used, for connect action only)
+                env.bounds.maximum_total_credentials,
+            ]
         )
 
     def action(self, action: np.ndarray) -> Action:
         action_type = action[0]
         if action_type == 0:
-            return {'connect': action[1:5]}
+            return {"connect": action[1:5]}
 
         action_type -= 1
         if action_type < self.env.bounds.local_attacks_count:
-            return {'local_vulnerability': np.array([action[1], action_type])}
+            return {"local_vulnerability": np.array([action[1], action_type])}
 
         action_type -= self.env.bounds.local_attacks_count
         if action_type < self.env.bounds.remote_attacks_count:
-            return {'remote_vulnerability': np.array([action[1], action[2], action_type])}
+            return {"remote_vulnerability": np.array([action[1], action[2], action_type])}
 
-        raise NotSupportedError(f'Unsupported action: {action}')
+        raise NotSupportedError(f"Unsupported action: {action}")
 
     def reverse_action(self, action):
         raise NotImplementedError

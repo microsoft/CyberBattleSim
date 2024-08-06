@@ -34,18 +34,14 @@ class Learner(abc.ABC):
         return None
 
     @abc.abstractmethod
-    def explore(
-        self, wrapped_env: AgentWrapper
-    ) -> Tuple[str, cyberbattle_env.Action, object]:
+    def explore(self, wrapped_env: AgentWrapper) -> Tuple[str, cyberbattle_env.Action, object]:
         """Exploration function.
         Returns (action_type, gym_action, action_metadata) where
         action_metadata is a custom object that gets passed to the on_step callback function"""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def exploit(
-        self, wrapped_env: AgentWrapper, observation
-    ) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
+    def exploit(self, wrapped_env: AgentWrapper, observation) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
         """Exploit function.
         Returns (action_type, gym_action, action_metadata) where
         action_metadata is a custom object that gets passed to the on_step callback function"""
@@ -80,15 +76,11 @@ class Learner(abc.ABC):
 class RandomPolicy(Learner):
     """A policy that does not learn and only explore"""
 
-    def explore(
-        self, wrapped_env: AgentWrapper
-    ) -> Tuple[str, cyberbattle_env.Action, object]:
+    def explore(self, wrapped_env: AgentWrapper) -> Tuple[str, cyberbattle_env.Action, object]:
         gym_action = wrapped_env.env.sample_valid_action()
         return "explore", gym_action, None
 
-    def exploit(
-        self, wrapped_env: AgentWrapper, observation
-    ) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
+    def exploit(self, wrapped_env: AgentWrapper, observation) -> Tuple[str, Optional[cyberbattle_env.Action], object]:
         raise NotImplementedError
 
     def on_step(
@@ -141,10 +133,7 @@ def print_stats(stats):
                 return f"{(x / sum):.2f}"
 
         def print_kind(kind: str):
-            print(
-                f"    {actiontype}-{kind}: {stats[actiontype]['reward'][kind]}/{stats[actiontype]['noreward'][kind]} "
-                f"({ratio(kind)})"
-            )
+            print(f"    {actiontype}-{kind}: {stats[actiontype]['reward'][kind]}/{stats[actiontype]['noreward'][kind]} " f"({ratio(kind)})")
 
         print_kind("local")
         print_kind("remote")
@@ -153,9 +142,7 @@ def print_stats(stats):
     print("  Breakdown [Reward/NoReward (Success rate)]")
     print_breakdown(stats, "explore")
     print_breakdown(stats, "exploit")
-    print(
-        f"  exploit deflected to exploration: {stats['exploit_deflected_to_explore']}"
-    )
+    print(f"  exploit deflected to exploration: {stats['exploit_deflected_to_explore']}")
 
 
 def epsilon_greedy_search(
@@ -229,11 +216,7 @@ def epsilon_greedy_search(
         f"ϵ={epsilon},"
         f"ϵ_min={epsilon_minimum}, "
         + (f"ϵ_multdecay={epsilon_multdecay}," if epsilon_multdecay else "")
-        + (
-            f"ϵ_expdecay={epsilon_exponential_decay},"
-            if epsilon_exponential_decay
-            else ""
-        )
+        + (f"ϵ_expdecay={epsilon_exponential_decay}," if epsilon_exponential_decay else "")
         + f"{learner.parameters_as_string()}"
     )
 
@@ -251,11 +234,7 @@ def epsilon_greedy_search(
     plot_title = (
         f"{title} (epochs={episode_count}, ϵ={initial_epsilon}, ϵ_min={epsilon_minimum},"
         + (f"ϵ_multdecay={epsilon_multdecay}," if epsilon_multdecay else "")
-        + (
-            f"ϵ_expdecay={epsilon_exponential_decay},"
-            if epsilon_exponential_decay
-            else ""
-        )
+        + (f"ϵ_expdecay={epsilon_exponential_decay}," if epsilon_exponential_decay else "")
         + learner.parameters_as_string()
     )
     plottraining = PlotTraining(title=plot_title, render_each_episode=render)
@@ -263,11 +242,7 @@ def epsilon_greedy_search(
     render_file_index = 1
 
     for i_episode in range(1, episode_count + 1):
-        print(
-            f"  ## Episode: {i_episode}/{episode_count} '{title}' "
-            f"ϵ={epsilon:.4f}, "
-            f"{learner.parameters_as_string()}"
-        )
+        print(f"  ## Episode: {i_episode}/{episode_count} '{title}' " f"ϵ={epsilon:.4f}, " f"{learner.parameters_as_string()}")
 
         observation, _ = wrapped_env.reset()
         total_reward = 0.0
@@ -309,9 +284,7 @@ def epsilon_greedy_search(
 
         for t in bar(range(1, 1 + iteration_count)):
             if epsilon_exponential_decay:
-                epsilon = epsilon_minimum + math.exp(
-                    -1.0 * steps_done / epsilon_exponential_decay
-                ) * (initial_epsilon - epsilon_minimum)
+                epsilon = epsilon_minimum + math.exp(-1.0 * steps_done / epsilon_exponential_decay) * (initial_epsilon - epsilon_minimum)
 
             steps_done += 1
 
@@ -319,9 +292,7 @@ def epsilon_greedy_search(
             if x <= epsilon:
                 action_style, gym_action, action_metadata = learner.explore(wrapped_env)
             else:
-                action_style, gym_action, action_metadata = learner.exploit(
-                    wrapped_env, observation
-                )
+                action_style, gym_action, action_metadata = learner.exploit(wrapped_env, observation)
                 if not gym_action:
                     stats["exploit_deflected_to_explore"] += 1
                     _, gym_action, action_metadata = learner.explore(wrapped_env)
@@ -339,9 +310,7 @@ def epsilon_greedy_search(
             else:
                 stats[action_type][outcome]["connect"] += 1
 
-            learner.on_step(
-                wrapped_env, observation, reward, done, truncated, info, action_metadata
-            )
+            learner.on_step(wrapped_env, observation, reward, done, truncated, info, action_metadata)
             assert np.shape(reward) == ()
 
             all_rewards.append(reward)
@@ -351,9 +320,7 @@ def epsilon_greedy_search(
             if reward > 0:
                 bar.update(t, last_reward_at=t)
 
-            if verbosity == Verbosity.Verbose or (
-                verbosity == Verbosity.Normal and reward > 0
-            ):
+            if verbosity == Verbosity.Verbose or (verbosity == Verbosity.Normal and reward > 0):
                 sign = ["-", "+"][reward > 0]
 
                 print(
@@ -363,15 +330,9 @@ def epsilon_greedy_search(
                     f" {learner.stateaction_as_string(action_metadata)}"
                 )
 
-            if (
-                i_episode == episode_count
-                and render_last_episode_rewards_to is not None
-                and reward > 0
-            ):
+            if i_episode == episode_count and render_last_episode_rewards_to is not None and reward > 0:
                 fig = cyberbattle_gym_env.render_as_fig()
-                fig.write_image(
-                    f"{render_last_episode_rewards_to}-e{i_episode}-{render_file_index}.png"
-                )
+                fig.write_image(f"{render_last_episode_rewards_to}-e{i_episode}-{render_file_index}.png")
                 render_file_index += 1
 
             learner.end_of_iteration(t, done)

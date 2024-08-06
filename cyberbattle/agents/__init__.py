@@ -8,8 +8,4 @@ This module contains all the agents to be used as baselines on the CyberBattle e
 
 from .baseline.learner import Learner, AgentWrapper, EnvironmentBounds
 
-__all__ = (
-    'Learner',
-    'AgentWrapper',
-    'EnvironmentBounds'
-)
+__all__ = ("Learner", "AgentWrapper", "EnvironmentBounds")
