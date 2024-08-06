@@ -52,8 +52,8 @@ jobs:
           pip install flake8
           flake8 --benchmark
 
-      - name: Initialize build environment
-        run: conda env create -f ./env.yml
+      # - name: Initialize build environment
+      #   run: conda env create -f ./env.yml
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
