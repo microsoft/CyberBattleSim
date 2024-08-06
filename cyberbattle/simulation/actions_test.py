@@ -119,9 +119,7 @@ SINGLE_NODE = {
             model.ListeningService("HTTPS"),
         ],
         value=70,
-        properties=list(
-            ["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]
-        ),
+        properties=list(["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]),
         firewall=sample_random_firwall_configuration(),
         agent_installed=False,
     )
@@ -138,9 +136,7 @@ NODES = {
             model.ListeningService("HTTPS"),
         ],
         value=70,
-        properties=list(
-            ["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]
-        ),
+        properties=list(["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]),
         vulnerabilities=dict(
             ListNeighbors=model.VulnerabilityInfo(
                 description="reveal other nodes",
@@ -152,9 +148,7 @@ NODES = {
                 type=model.VulnerabilityType.LOCAL,
                 outcome=model.LeakedCredentials(
                     [
-                        model.CachedCredential(
-                            "Sharepoint", "HTTPS", "ADPrincipalCreds"
-                        ),
+                        model.CachedCredential("Sharepoint", "HTTPS", "ADPrincipalCreds"),
                         model.CachedCredential("Sharepoint", "HTTPS", "cred"),
                     ]
                 ),
@@ -175,9 +169,7 @@ NODES = {
             model.ListeningService("HTTPS"),
         ],
         value=40,
-        properties=list(
-            ["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]
-        ),
+        properties=list(["Windows", "Win10", "PortRDPOpen", "PortHTTPOpen", "PortHTTPsOpen"]),
         agent_installed=True,
     ),
     "dc": model.NodeInfo(
@@ -187,9 +179,7 @@ NODES = {
         agent_installed=False,
     ),
     "Sharepoint": model.NodeInfo(
-        services=[
-            model.ListeningService("HTTPS", allowedCredentials=["ADPrincipalCreds"])
-        ],
+        services=[model.ListeningService("HTTPS", allowedCredentials=["ADPrincipalCreds"])],
         value=100,
         properties=["SharepointLeakingPassword"],
         firewall=model.FirewallConfiguration(
@@ -283,24 +273,18 @@ def actions_on_simple_environment() -> actions.AgentActions:
     return actions.AgentActions(env)
 
 
-def test_list_vulnerabilities_function(
-    actions_on_single_node_environment: Fixture, actions_on_simple_environment: Fixture
-) -> None:
+def test_list_vulnerabilities_function(actions_on_single_node_environment: Fixture, actions_on_simple_environment: Fixture) -> None:
     """
     This function will test the list_vulnerabilities function from the
     AgentActions class in actions.py
     """
     # test on an environment with a single node
     single_node_results: List[model.VulnerabilityID] = []
-    single_node_results = (
-        actions_on_single_node_environment.list_vulnerabilities_in_target("a")
-    )
+    single_node_results = actions_on_single_node_environment.list_vulnerabilities_in_target("a")
     assert len(single_node_results) == 3
 
     simple_graph_results: List[model.VulnerabilityID] = []
-    simple_graph_results = actions_on_simple_environment.list_vulnerabilities_in_target(
-        "dc"
-    )
+    simple_graph_results = actions_on_simple_environment.list_vulnerabilities_in_target("dc")
     assert len(simple_graph_results) == 3
 
 
@@ -321,17 +305,11 @@ def test_exploit_remote_vulnerability(actions_on_simple_environment: Fixture) ->
         actions_on_simple_environment.exploit_remote_vulnerability("a", "z", "RDPBF")
 
     # test with a local vulnerability
-    with pytest.raises(
-        ValueError, match=r"vulnerability id '.*' is for an attack of type .*"
-    ):
-        actions_on_simple_environment.exploit_remote_vulnerability(
-            "a", "c", "MimikatzLogonpasswords"
-        )
+    with pytest.raises(ValueError, match=r"vulnerability id '.*' is for an attack of type .*"):
+        actions_on_simple_environment.exploit_remote_vulnerability("a", "c", "MimikatzLogonpasswords")
 
     # test with an invalid vulnerability (one not there)
-    result = actions_on_simple_environment.exploit_remote_vulnerability(
-        "a", "c", "HackTheGibson"
-    )
+    result = actions_on_simple_environment.exploit_remote_vulnerability("a", "c", "HackTheGibson")
     assert result.outcome is None and result.reward <= 0
 
     # add RDP brute force to the target node
@@ -341,9 +319,7 @@ def test_exploit_remote_vulnerability(actions_on_simple_environment: Fixture) ->
     node.vulnerabilities = SAMPLE_VULNERABILITIES
 
     # test a valid and functional one.
-    result = actions_on_simple_environment.exploit_remote_vulnerability(
-        "a", "c", "RDPBF"
-    )
+    result = actions_on_simple_environment.exploit_remote_vulnerability("a", "c", "RDPBF")
     assert isinstance(result.outcome, model.LateralMove)
     assert result.reward < node.value
 
@@ -355,20 +331,14 @@ def test_exploit_local_vulnerability(actions_on_simple_environment: Fixture) -> 
     """
 
     # check one with invalid prerequisites
-    result: actions.ActionResult = (
-        actions_on_simple_environment.exploit_local_vulnerability(
-            "a", "MimikatzLogonpasswords"
-        )
-    )
+    result: actions.ActionResult = actions_on_simple_environment.exploit_local_vulnerability("a", "MimikatzLogonpasswords")
     assert isinstance(result.outcome, model.ExploitFailed)
 
     # test admin privilege escalation
     # exploit_local_vulnerability(node_id, vulnerability_id)
     result = actions_on_simple_environment.exploit_local_vulnerability("a", "UACME61")
     assert isinstance(result.outcome, model.AdminEscalation)
-    node: model.NodeInfo = actions_on_simple_environment._environment.network.nodes[
-        "a"
-    ]["data"]
+    node: model.NodeInfo = actions_on_simple_environment._environment.network.nodes["a"]["data"]
     assert model.AdminEscalation().tag in node.properties
 
     # test system privilege escalation
@@ -378,9 +348,7 @@ def test_exploit_local_vulnerability(actions_on_simple_environment: Fixture) -> 
     assert model.SystemEscalation().tag in node.properties
 
     # test dump credentials
-    result = actions_on_simple_environment.exploit_local_vulnerability(
-        "a", "MimikatzLogonpasswords"
-    )
+    result = actions_on_simple_environment.exploit_local_vulnerability("a", "MimikatzLogonpasswords")
     assert isinstance(result.outcome, model.LeakedCredentials)
 
 
@@ -402,9 +370,7 @@ def test_connect_to_remote_machine(
 
     # test connect to remote machine on an environment with 1 node
     with pytest.raises(ValueError, match=r"invalid node id '.*'"):
-        actions_on_single_node_environment.connect_to_remote_machine(
-            "a", "b", "RDP", "cred"
-        )
+        actions_on_single_node_environment.connect_to_remote_machine("a", "b", "RDP", "cred")
 
     graph: nx.graph.Graph = actions_on_simple_environment._environment.network
 
@@ -415,36 +381,26 @@ def test_connect_to_remote_machine(
 
     # test with an invalid source node and valid destination node
     with pytest.raises(ValueError, match=r"invalid node id '.*'"):
-        actions_on_simple_environment.connect_to_remote_machine(
-            "f", "dc", "RDP", "cred"
-        )
+        actions_on_simple_environment.connect_to_remote_machine("f", "dc", "RDP", "cred")
 
     # test with both nodes invalid
     with pytest.raises(ValueError, match=r"invalid node id '.*'"):
         actions_on_simple_environment.connect_to_remote_machine("f", "z", "RDP", "cred")
 
     # test with invalid protocol
-    result = actions_on_simple_environment.connect_to_remote_machine(
-        "a", "dc", "TCPIP", "cred"
-    )
+    result = actions_on_simple_environment.connect_to_remote_machine("a", "dc", "TCPIP", "cred")
     assert result.reward <= 0 and result.outcome is None
 
     # test with invalid credentials
-    result2 = actions_on_simple_environment.connect_to_remote_machine(
-        "a", "dc", "RDP", "cred"
-    )
+    result2 = actions_on_simple_environment.connect_to_remote_machine("a", "dc", "RDP", "cred")
     assert result2.outcome is None and result2.reward <= 0
 
     # test blocking firewall rule
-    ret_val = actions_on_simple_environment.connect_to_remote_machine(
-        "a", "Sharepoint", "RDP", "ADPrincipalCreds"
-    )
+    ret_val = actions_on_simple_environment.connect_to_remote_machine("a", "Sharepoint", "RDP", "ADPrincipalCreds")
     assert ret_val.reward < 0
 
     # test with valid nodes
-    ret_val = actions_on_simple_environment.connect_to_remote_machine(
-        "a", "Sharepoint", "HTTPS", "ADPrincipalCreds"
-    )
+    ret_val = actions_on_simple_environment.connect_to_remote_machine("a", "Sharepoint", "HTTPS", "ADPrincipalCreds")
 
     assert ret_val.reward == 100
 
@@ -458,13 +414,9 @@ def test_check_prerequisites(actions_on_simple_environment: Fixture) -> None:
 
     """
     # testing on a node/vuln combo  which should give us a negative result
-    result = actions_on_simple_environment._check_prerequisites(
-        "dc", SAMPLE_VULNERABILITIES["MimikatzLogonpasswords"]
-    )
+    result = actions_on_simple_environment._check_prerequisites("dc", SAMPLE_VULNERABILITIES["MimikatzLogonpasswords"])
     assert not result
 
     # testing on a node/vuln combo which should give us a positive reuslt.
-    result = actions_on_simple_environment._check_prerequisites(
-        "dc", SAMPLE_VULNERABILITIES["UACME61"]
-    )
+    result = actions_on_simple_environment._check_prerequisites("dc", SAMPLE_VULNERABILITIES["UACME61"])
     assert result

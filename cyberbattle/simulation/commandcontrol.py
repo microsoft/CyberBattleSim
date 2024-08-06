@@ -7,6 +7,7 @@ This includes commands to visualize the part of the environment
 that were explored so far, and for each node where the attacker client
 is installed, execute actions on the machine.
 """
+
 import networkx as nx
 from typing import List, Optional, Dict, Union, Tuple, Set
 from plotly.graph_objects import Scatter, Figure, layout  # type: ignore
@@ -27,21 +28,15 @@ class CommandControl:
     __environment: model.Environment
     __total_reward: float
 
-    def __init__(
-        self, environment_or_actuator: Union[model.Environment, actions.AgentActions]
-    ):
+    def __init__(self, environment_or_actuator: Union[model.Environment, actions.AgentActions]):
         if isinstance(environment_or_actuator, model.Environment):
             self.__environment = environment_or_actuator
-            self._actuator = actions.AgentActions(
-                self.__environment, throws_on_invalid_actions=True
-            )
+            self._actuator = actions.AgentActions(self.__environment, throws_on_invalid_actions=True)
         elif isinstance(environment_or_actuator, actions.AgentActions):
             self.__environment = environment_or_actuator._environment
             self._actuator = environment_or_actuator
         else:
-            raise ValueError(
-                "Invalid type: expecting Union[model.Environment, actions.AgentActions])"
-            )
+            raise ValueError("Invalid type: expecting Union[model.Environment, actions.AgentActions])")
 
         self.__gathered_credentials = set()
         self.__total_reward = 0
@@ -79,10 +74,7 @@ class CommandControl:
         nx.draw(
             sub_graph,
             with_labels=True,
-            node_color=[
-                self.get_node_color(self.__environment.get_node(i))
-                for i in sub_graph.nodes
-            ],
+            node_color=[self.get_node_color(self.__environment.get_node(i)) for i in sub_graph.nodes],
         )
 
     def known_vulnerabilities(self) -> model.VulnerabilityLibrary:
@@ -112,9 +104,7 @@ class CommandControl:
         """Pretty print list of all possible attacks from all the nodes currently owned by the attacker"""
         return self._actuator.print_all_attacks()
 
-    def run_attack(
-        self, node_id: model.NodeID, vulnerability_id: model.VulnerabilityID
-    ) -> Optional[model.VulnerabilityOutcome]:
+    def run_attack(self, node_id: model.NodeID, vulnerability_id: model.VulnerabilityID) -> Optional[model.VulnerabilityOutcome]:
         """Run an attack and attempt to exploit a vulnerability on the specified node."""
         result = self._actuator.exploit_local_vulnerability(node_id, vulnerability_id)
         if result.outcome is not None:
@@ -131,9 +121,7 @@ class CommandControl:
         """Run a remote attack from the specified node to exploit a remote vulnerability
         in the specified target node"""
 
-        result = self._actuator.exploit_remote_vulnerability(
-            node_id, target_node_id, vulnerability_id
-        )
+        result = self._actuator.exploit_remote_vulnerability(node_id, target_node_id, vulnerability_id)
         if result.outcome is not None:
             self.__save_credentials(result.outcome)
         self.__accumulate_reward(result.reward)
@@ -148,9 +136,7 @@ class CommandControl:
     ) -> bool:
         """Install the agent on a remote machine using the
         provided credentials"""
-        result = self._actuator.connect_to_remote_machine(
-            source_node_id, target_node_id, port_name, credentials
-        )
+        result = self._actuator.connect_to_remote_machine(source_node_id, target_node_id, port_name, credentials)
         self.__accumulate_reward(result.reward)
         return result.outcome is not None
 
@@ -186,15 +172,11 @@ class EnvironmentDebugging:
         elif isinstance(actuator_or_c2, CommandControl):
             self.__actuator = actuator_or_c2._actuator
         else:
-            raise ValueError(
-                "Invalid type: expecting Union[actions.AgentActions, CommandControl])"
-            )
+            raise ValueError("Invalid type: expecting Union[actions.AgentActions, CommandControl])")
 
         self.__environment = self.__actuator._environment
 
-    def network_as_plotly_traces(
-        self, xref: str = "x", yref: str = "y"
-    ) -> Tuple[List[Scatter], dict]:
+    def network_as_plotly_traces(self, xref: str = "x", yref: str = "y") -> Tuple[List[Scatter], dict]:
         known_nodes = [node_id for node_id, _ in self.__actuator.discovered_nodes()]
 
         subgraph = self.__environment.network.subgraph(known_nodes)
@@ -253,16 +235,8 @@ class EnvironmentDebugging:
             ],
         )
 
-        owned_nodes_coordinates = [
-            (i, c)
-            for i, c in pos.items()
-            if self.get_node_information(i).agent_installed
-        ]
-        discovered_nodes_coordinates = [
-            (i, c)
-            for i, c in pos.items()
-            if not self.get_node_information(i).agent_installed
-        ]
+        owned_nodes_coordinates = [(i, c) for i, c in pos.items() if self.get_node_information(i).agent_installed]
+        discovered_nodes_coordinates = [(i, c) for i, c in pos.items() if not self.get_node_information(i).agent_installed]
 
         trace_owned_nodes = Scatter(
             x=[c[0] for i, c in owned_nodes_coordinates],
@@ -297,12 +271,7 @@ class EnvironmentDebugging:
             textposition="bottom center",
         )
 
-        dummy_scatter_for_edge_legend = [
-            Scatter(
-                x=[0], y=[0], mode="lines", line=dict(color=color_map[a]), name=a.name
-            )
-            for a in actions.EdgeAnnotation
-        ]
+        dummy_scatter_for_edge_legend = [Scatter(x=[0], y=[0], mode="lines", line=dict(color=color_map[a]), name=a.name) for a in actions.EdgeAnnotation]
 
         all_scatters = dummy_scatter_for_edge_legend + [
             trace_owned_nodes,

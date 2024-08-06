@@ -9,6 +9,4 @@ class CyberBattleToyCtf(cyberbattle_env.CyberBattleEnv):
     """CyberBattle simulation based on a toy CTF exercise"""
 
     def __init__(self, **kwargs):
-        super().__init__(
-            initial_environment=toy_ctf.new_environment(),
-            **kwargs)
+        super().__init__(initial_environment=toy_ctf.new_environment(), **kwargs)

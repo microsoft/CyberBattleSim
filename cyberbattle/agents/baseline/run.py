@@ -13,6 +13,7 @@ Example usage:
     python -m run --training_episode_count 50  --iteration_count 9000 --rewardplot_width 80  --chain_size=20 --ownership_goal 1.0
 
 """
+
 import torch
 import gym
 import logging
@@ -28,31 +29,24 @@ import cyberbattle.agents.baseline.learner as learner
 from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
-parser = argparse.ArgumentParser(description='Run simulation with DQL baseline agent.')
+parser = argparse.ArgumentParser(description="Run simulation with DQL baseline agent.")
 
-parser.add_argument('--training_episode_count', default=50, type=int,
-                    help='number of training epochs')
+parser.add_argument("--training_episode_count", default=50, type=int, help="number of training epochs")
 
-parser.add_argument('--eval_episode_count', default=10, type=int,
-                    help='number of evaluation epochs')
+parser.add_argument("--eval_episode_count", default=10, type=int, help="number of evaluation epochs")
 
-parser.add_argument('--iteration_count', default=9000, type=int,
-                    help='number of simulation iterations for each epoch')
+parser.add_argument("--iteration_count", default=9000, type=int, help="number of simulation iterations for each epoch")
 
-parser.add_argument('--reward_goal', default=2180, type=int,
-                    help='minimum target rewards to reach for the attacker to reach its goal')
+parser.add_argument("--reward_goal", default=2180, type=int, help="minimum target rewards to reach for the attacker to reach its goal")
 
-parser.add_argument('--ownership_goal', default=1.0, type=float,
-                    help='percentage of network nodes to own for the attacker to reach its goal')
+parser.add_argument("--ownership_goal", default=1.0, type=float, help="percentage of network nodes to own for the attacker to reach its goal")
 
-parser.add_argument('--rewardplot_width', default=80, type=int,
-                    help='width of the reward plot (values are averaged across iterations to fit in the desired width)')
+parser.add_argument("--rewardplot_width", default=80, type=int, help="width of the reward plot (values are averaged across iterations to fit in the desired width)")
 
-parser.add_argument('--chain_size', default=4, type=int,
-                    help='size of the chain of the CyberBattleChain sample environment')
+parser.add_argument("--chain_size", default=4, type=int, help="size of the chain of the CyberBattleChain sample environment")
 
-parser.add_argument('--random_agent', dest='run_random_agent', action='store_true', help='run the random agent as a baseline for comparison')
-parser.add_argument('--no-random_agent', dest='run_random_agent', action='store_false', help='do not run the random agent as a baseline for comparison')
+parser.add_argument("--random_agent", dest="run_random_agent", action="store_true", help="run the random agent as a baseline for comparison")
+parser.add_argument("--no-random_agent", dest="run_random_agent", action="store_false", help="do not run the random agent as a baseline for comparison")
 parser.set_defaults(run_random_agent=True)
 
 args = parser.parse_args()
@@ -61,17 +55,11 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 
 print(f"torch cuda available={torch.cuda.is_available()}")
 
-cyberbattlechain = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0',
-                                                 size=args.chain_size,
-                                                 attacker_goal=cyberbattle_env.AttackerGoal(
-                                                     own_atleast_percent=args.ownership_goal,
-                                                     reward=args.reward_goal)))
-
-ep = w.EnvironmentBounds.of_identifiers(
-    maximum_total_credentials=22,
-    maximum_node_count=22,
-    identifiers=cyberbattlechain.identifiers
+cyberbattlechain = cast(
+    CyberBattleEnv, gym.make("CyberBattleChain-v0", size=args.chain_size, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=args.ownership_goal, reward=args.reward_goal))
 )
+
+ep = w.EnvironmentBounds.of_identifiers(maximum_total_credentials=22, maximum_node_count=22, identifiers=cyberbattlechain.identifiers)
 
 all_runs = []
 
@@ -79,13 +67,7 @@ all_runs = []
 dqn_learning_run = learner.epsilon_greedy_search(
     cyberbattle_gym_env=cyberbattlechain,
     environment_properties=ep,
-    learner=dqla.DeepQLearnerPolicy(
-        ep=ep,
-        gamma=0.015,
-        replay_memory_size=10000,
-        target_update=10,
-        batch_size=512,
-        learning_rate=0.01),  # torch default is 1e-2
+    learner=dqla.DeepQLearnerPolicy(ep=ep, gamma=0.015, replay_memory_size=10000, target_update=10, batch_size=512, learning_rate=0.01),  # torch default is 1e-2
     episode_count=args.training_episode_count,
     iteration_count=args.iteration_count,
     epsilon=0.90,
@@ -94,7 +76,7 @@ dqn_learning_run = learner.epsilon_greedy_search(
     epsilon_exponential_decay=5000,  # 10000
     epsilon_minimum=0.10,
     verbosity=Verbosity.Quiet,
-    title="DQL"
+    title="DQL",
 )
 
 all_runs.append(dqn_learning_run)
@@ -109,15 +91,15 @@ if args.run_random_agent:
         epsilon=1.0,  # purely random
         render=False,
         verbosity=Verbosity.Quiet,
-        title="Random search"
+        title="Random search",
     )
     all_runs.append(random_run)
 
 colors = [asciichartpy.red, asciichartpy.green, asciichartpy.yellow, asciichartpy.blue]
 
 print("Episode duration -- DQN=Red, Random=Green")
-print(asciichartpy.plot(p.episodes_lengths_for_all_runs(all_runs), {'height': 30, 'colors': colors}))
+print(asciichartpy.plot(p.episodes_lengths_for_all_runs(all_runs), {"height": 30, "colors": colors}))
 
 print("Cumulative rewards -- DQN=Red, Random=Green")
 c = p.averaged_cummulative_rewards(all_runs, args.rewardplot_width)
-print(asciichartpy.plot(c, {'height': 10, 'colors': colors}))
+print(asciichartpy.plot(c, {"height": 10, "colors": colors}))

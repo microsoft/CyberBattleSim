@@ -4,6 +4,7 @@
 """
 Defines stock defender agents for the CyberBattle simulation.
 """
+
 import random
 import numpy
 from abc import abstractmethod
@@ -44,8 +45,7 @@ class ScanAndReimageCompromisedMachines(DefenderAgent):
             scanned_nodes = random.choices(list(environment.network.nodes), k=self.scan_capacity)
             for node_id in scanned_nodes:
                 node_info = environment.get_node(node_id)
-                if node_info.status == model.MachineStatus.Running and \
-                        node_info.agent_installed:
+                if node_info.status == model.MachineStatus.Running and node_info.agent_installed:
                     is_malware_detected = numpy.random.random() <= self.probability
                     if is_malware_detected:
                         if node_info.reimagable:
@@ -85,14 +85,12 @@ class ExternalRandomEvents(DefenderAgent):
         for node_id, node_data in environment.nodes():
             add_vulnerability = numpy.random.random() <= probability
             # See all differences between current node vulnerabilities and global ones.
-            new_vulnerabilities = numpy.setdiff1d(
-                list(environment.vulnerability_library.keys()), list(node_data.vulnerabilities.keys()))
+            new_vulnerabilities = numpy.setdiff1d(list(environment.vulnerability_library.keys()), list(node_data.vulnerabilities.keys()))
             # If we have decided that we will add a vulnerability and there are new vulnerabilities not already
             # on the node, then add them.
             if add_vulnerability and len(new_vulnerabilities) > 0:
                 new_vulnerability = random.choice(new_vulnerabilities)
-                node_data.vulnerabilities[new_vulnerability] = \
-                    environment.vulnerability_library[new_vulnerability]
+                node_data.vulnerabilities[new_vulnerability] = environment.vulnerability_library[new_vulnerability]
 
     """
     TODO: Not sure how to access global (environment) services.
@@ -141,8 +139,7 @@ class ExternalRandomEvents(DefenderAgent):
             add_rule = numpy.random.random() <= probability
             if add_rule:
                 # 0 For allow, 1 for block.
-                rule_to_add = model.FirewallRule(port=random.choice(model.SAMPLE_IDENTIFIERS.ports),
-                                                 permission=model.RulePermission.ALLOW)
+                rule_to_add = model.FirewallRule(port=random.choice(model.SAMPLE_IDENTIFIERS.ports), permission=model.RulePermission.ALLOW)
                 # Randomly decide if we will add an incoming or outgoing rule.
                 incoming = numpy.random.random() <= 0.5
                 if incoming and rule_to_add not in node_data.firewall.incoming:

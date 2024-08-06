@@ -35,9 +35,7 @@ from cyberbattle.agents.baseline.agent_wrapper import (
 from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
-logging.basicConfig(
-    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
-)
+logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 # %% {"tags": ["parameters"]}
 gymid = "CyberBattleTiny-v0"
@@ -49,9 +47,7 @@ training_episode_count = 10
 
 ctf_env = cast(CyberBattleEnv, gym.make(gymid))
 
-ep = w.EnvironmentBounds.of_identifiers(
-    maximum_node_count=12, maximum_total_credentials=10, identifiers=ctf_env.identifiers
-)
+ep = w.EnvironmentBounds.of_identifiers(maximum_node_count=12, maximum_total_credentials=10, identifiers=ctf_env.identifiers)
 
 # %%
 # Evaluate the Deep Q-learning agent

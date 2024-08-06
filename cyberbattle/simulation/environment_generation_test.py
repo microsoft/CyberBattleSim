@@ -2,8 +2,9 @@
 # Licensed under the MIT License.
 
 """
-    The unit tests for the environment_generation functions
+The unit tests for the environment_generation functions
 """
+
 from collections import Counter
 from cyberbattle.simulation import commandcontrol
 from typing import List, Dict
@@ -22,32 +23,30 @@ potential_ports: List[model.PortName] = environment_generation.potential_ports
 
 def test_create_random_environment() -> None:
     """
-        The unit tests for create_random_environment function
+    The unit tests for create_random_environment function
     """
     with pytest.raises(ValueError, match=r"Please supply a non empty string for the name"):
         environment_generation.create_random_environment("", 2)
 
-    with pytest.raises(ValueError, match=r"Please supply a positive non zero positive"
-                                         r"integer for the size of the environment"):
+    with pytest.raises(ValueError, match=r"Please supply a positive non zero positive" r"integer for the size of the environment"):
         environment_generation.create_random_environment("Test_environment", -5)
 
-    result: model.Environment = environment_generation.\
-        create_random_environment("Test_environment 2", 4)
+    result: model.Environment = environment_generation.create_random_environment("Test_environment 2", 4)
     assert isinstance(result, model.Environment)
 
 
 def test_random_environment_list_attacks() -> None:
     """
-        Unit tests for #23 caused by bug https://github.com/bastikr/boolean.py/issues/82 in boolean.py
+    Unit tests for #23 caused by bug https://github.com/bastikr/boolean.py/issues/82 in boolean.py
     """
-    env = environment_generation.create_random_environment('test', 10)
+    env = environment_generation.create_random_environment("test", 10)
     c2 = commandcontrol.CommandControl(env)
     c2.print_all_attacks()
 
 
 def test_create_random_node() -> None:
     """
-        The unit tests for create_random_node() function
+    The unit tests for create_random_node() function
     """
 
     # check that the correct exceptions are generated
@@ -64,19 +63,17 @@ def test_create_random_node() -> None:
 
 def test_get_properties_from_vulnerabilities() -> None:
     """
-        This function tests the get_properties_from_vulnerabilities function
-        It takes nothing and returns nothing.
+    This function tests the get_properties_from_vulnerabilities function
+    It takes nothing and returns nothing.
     """
     # testing on linux vulns
-    props: List[model.PropertyName] = environment_generation.\
-        get_properties_from_vulnerabilities("Linux", linux_vulns)
+    props: List[model.PropertyName] = environment_generation.get_properties_from_vulnerabilities("Linux", linux_vulns)
     assert "Linux" in props
     assert "PortSSHOpen" in props
     assert "PortSMBOpen" in props
 
     # testing on Windows vulns
-    windows_props: List[model.PropertyName] = environment_generation.get_properties_from_vulnerabilities(
-        "Windows", windows_vulns)
+    windows_props: List[model.PropertyName] = environment_generation.get_properties_from_vulnerabilities("Windows", windows_vulns)
     assert "Windows" in windows_props
     assert "PortRDPOpen" in windows_props
     assert "PortSMBOpen" in windows_props
@@ -87,21 +84,17 @@ def test_get_properties_from_vulnerabilities() -> None:
 
 def test_create_firewall_rules() -> None:
     """
-        This function tests the create_firewall_rules function.
-        It takes nothing and returns nothing.
+    This function tests the create_firewall_rules function.
+    It takes nothing and returns nothing.
     """
     empty_ports: List[model.PortName] = []
-    potential_port_list: List[model.PortName] = ["RDP", "SSH", "HTTP", "HTTPs",
-                                                 "SMB", "SQL", "FTP", "WMI"]
+    potential_port_list: List[model.PortName] = ["RDP", "SSH", "HTTP", "HTTPs", "SMB", "SQL", "FTP", "WMI"]
     half_ports: List[model.PortName] = ["SSH", "HTTPs", "SQL", "FTP", "WMI"]
-    all_blocked: List[model.FirewallRule] = [model.FirewallRule(
-        port, model.RulePermission.BLOCK) for port in potential_port_list]
-    all_allowed: List[model.FirewallRule] = [model.FirewallRule(
-        port, model.RulePermission.ALLOW) for port in potential_port_list]
-    half_allowed: List[model.FirewallRule] = [model.FirewallRule(port, model.RulePermission.ALLOW)
-                                              if port in half_ports else model.FirewallRule(
-                                                  port, model.RulePermission.BLOCK) for
-                                              port in potential_port_list]
+    all_blocked: List[model.FirewallRule] = [model.FirewallRule(port, model.RulePermission.BLOCK) for port in potential_port_list]
+    all_allowed: List[model.FirewallRule] = [model.FirewallRule(port, model.RulePermission.ALLOW) for port in potential_port_list]
+    half_allowed: List[model.FirewallRule] = [
+        model.FirewallRule(port, model.RulePermission.ALLOW) if port in half_ports else model.FirewallRule(port, model.RulePermission.BLOCK) for port in potential_port_list
+    ]
 
     # testing on an empty list should lead to
     results: model.FirewallConfiguration = environment_generation.create_firewall_rules(empty_ports)

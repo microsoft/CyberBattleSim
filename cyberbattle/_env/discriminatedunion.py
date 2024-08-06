@@ -50,7 +50,7 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):
     def seed(self, seed: Union[dict, None, int] = None):
         return super().seed(seed)
 
-    def sample(self, mask=None) -> T_cov:   # type: ignore
+    def sample(self, mask=None) -> T_cov:  # type: ignore
         space_count = len(self.spaces.items())
         index_k = self.union_np_random.integers(0, space_count)
         kth_key, kth_space = list(self.spaces.items())[index_k]
@@ -78,12 +78,7 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):
         return self.spaces[key]
 
     def __repr__(self) -> str:
-        return (
-            self.__class__.__name__
-            + "("
-            + ", ".join([str(k) + ":" + str(s) for k, s in self.spaces.items()])
-            + ")"
-        )
+        return self.__class__.__name__ + "(" + ", ".join([str(k) + ":" + str(s) for k, s in self.spaces.items()]) + ")"
 
     def to_jsonable(self, sample_n: list) -> dict:
         return super().to_jsonable(sample_n)
@@ -99,7 +94,5 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):
 
 def test_sampling() -> None:
     """Simple sampling test"""
-    union = DiscriminatedUnion(
-        spaces={"foo": spaces.Discrete(8), "Bar": spaces.Discrete(3)}
-    )
+    union = DiscriminatedUnion(spaces={"foo": spaces.Discrete(8), "Bar": spaces.Discrete(3)})
     [union.sample() for i in range(100)]

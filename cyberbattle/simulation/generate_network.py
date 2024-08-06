@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-""" Generating random graphs"""
+"""Generating random graphs"""
+
 from cyberbattle.simulation.model import Identifiers, NodeID, CredentialID, PortName, FirewallConfiguration, FirewallRule, RulePermission
 import numpy as np
 import networkx as nx
@@ -12,18 +13,10 @@ from typing import List, Optional, Tuple, DefaultDict
 from collections import defaultdict
 
 ENV_IDENTIFIERS = Identifiers(
-    properties=[
-        'breach_node'
-    ],
-    ports=['SMB', 'HTTP', 'RDP'],
-    local_vulnerabilities=[
-        'ScanWindowsCredentialManagerForRDP',
-        'ScanWindowsExplorerRecentFiles',
-        'ScanWindowsCredentialManagerForSMB'
-    ],
-    remote_vulnerabilities=[
-        'Traceroute'
-    ]
+    properties=["breach_node"],
+    ports=["SMB", "HTTP", "RDP"],
+    local_vulnerabilities=["ScanWindowsCredentialManagerForRDP", "ScanWindowsExplorerRecentFiles", "ScanWindowsCredentialManagerForSMB"],
+    remote_vulnerabilities=["Traceroute"],
 )
 
 
@@ -72,8 +65,7 @@ def generate_random_traffic_network(
         probs = np.clip(probs, a_min=tolerance, a_max=np.float32(1.0 - tolerance))
 
         # sample edges using block models given edge probabilities
-        di_graph_for_protocol = nx.stochastic_block_model(
-            sizes=sizes, p=probs, directed=True, seed=seed)
+        di_graph_for_protocol = nx.stochastic_block_model(sizes=sizes, p=probs, directed=True, seed=seed)
 
         for edge in di_graph_for_protocol.edges:
             edges_labels[edge].add(protocol)
@@ -91,7 +83,7 @@ def cyberbattle_model_from_traffic_graph(
     cached_accessed_network_shares_probability=0.6,
     cached_password_has_changed_probability=0.1,
     traceroute_discovery_probability=0.5,
-    probability_two_nodes_use_same_password_to_access_given_resource=0.8
+    probability_two_nodes_use_same_password_to_access_given_resource=0.8,
 ) -> nx.DiGraph:
     """Generate a random CyberBattle network model from a specified traffic (directed multi) graph.
 
@@ -124,16 +116,14 @@ def cyberbattle_model_from_traffic_graph(
     def generate_password() -> CredentialID:
         nonlocal password_counter
         password_counter = password_counter + 1
-        return f'unique_pwd{password_counter}'
+        return f"unique_pwd{password_counter}"
 
     def traffic_targets(source_node: NodeID, protocol: str) -> List[NodeID]:
-        neighbors = [t for (s, t) in graph.edges()
-                     if s == source_node and protocol in graph.edges[(s, t)]['protocol']]
+        neighbors = [t for (s, t) in graph.edges() if s == source_node and protocol in graph.edges[(s, t)]["protocol"]]
         return neighbors
 
     # Map (node, port name) -> assigned pwd
-    assigned_passwords: DefaultDict[Tuple[NodeID, PortName],
-                                    List[CredentialID]] = defaultdict(list)
+    assigned_passwords: DefaultDict[Tuple[NodeID, PortName], List[CredentialID]] = defaultdict(list)
 
     def assign_new_valid_password(node: NodeID, port: PortName) -> CredentialID:
         pwd = generate_password()
@@ -142,7 +132,7 @@ def cyberbattle_model_from_traffic_graph(
 
     def reuse_valid_password(node: NodeID, port: PortName) -> CredentialID:
         """Reuse a password already assigned to that node an port, if none is already
-         assigned create and assign a new valid password"""
+        assigned create and assign a new valid password"""
         if (node, port) not in assigned_passwords:
             return assign_new_valid_password(node, port)
 
@@ -159,72 +149,62 @@ def cyberbattle_model_from_traffic_graph(
             else:
                 return assign_new_valid_password(node, port)
 
-    def add_leak_neighbors_vulnerability(
-            node_id: m.NodeID,
-            library: Optional[m.VulnerabilityLibrary] = None) -> m.VulnerabilityLibrary:
+    def add_leak_neighbors_vulnerability(node_id: m.NodeID, library: Optional[m.VulnerabilityLibrary] = None) -> m.VulnerabilityLibrary:
         """Create random vulnerabilities
         that reveals immediate traffic neighbors from a given node"""
 
         if not library:
             library = {}
 
-        rdp_neighbors = traffic_targets(node_id, 'RDP')
+        rdp_neighbors = traffic_targets(node_id, "RDP")
 
         if len(rdp_neighbors) > 0:
-            library['ScanWindowsCredentialManagerForRDP'] = m.VulnerabilityInfo(
+            library["ScanWindowsCredentialManagerForRDP"] = m.VulnerabilityInfo(
                 description="Look for RDP credentials in the Windows Credential Manager",
                 type=m.VulnerabilityType.LOCAL,
-                outcome=m.LeakedCredentials(credentials=[
-                    m.CachedCredential(node=target_node, port='RDP',
-                                       credential=create_cached_credential(target_node, 'RDP'))
-                    for target_node in rdp_neighbors
-                    if random.random() < cached_rdp_password_probability
-                ]),
+                outcome=m.LeakedCredentials(
+                    credentials=[
+                        m.CachedCredential(node=target_node, port="RDP", credential=create_cached_credential(target_node, "RDP"))
+                        for target_node in rdp_neighbors
+                        if random.random() < cached_rdp_password_probability
+                    ]
+                ),
                 reward_string="Discovered creds in the Windows Credential Manager",
-                cost=2.0
+                cost=2.0,
             )
 
-        smb_neighbors = traffic_targets(node_id, 'SMB')
+        smb_neighbors = traffic_targets(node_id, "SMB")
 
         if len(smb_neighbors) > 0:
-            library['ScanWindowsExplorerRecentFiles'] = m.VulnerabilityInfo(
+            library["ScanWindowsExplorerRecentFiles"] = m.VulnerabilityInfo(
                 description="Look for network shares in the Windows Explorer Recent files",
                 type=m.VulnerabilityType.LOCAL,
-                outcome=m.LeakedNodesId(
-                    [target_node
-                     for target_node in smb_neighbors
-                     if random.random() < cached_accessed_network_shares_probability
-                     ]
-                ),
+                outcome=m.LeakedNodesId([target_node for target_node in smb_neighbors if random.random() < cached_accessed_network_shares_probability]),
                 reward_string="Windows Explorer Recent Files revealed network shares",
-                cost=1.0
+                cost=1.0,
             )
 
-            library['ScanWindowsCredentialManagerForSMB'] = m.VulnerabilityInfo(
+            library["ScanWindowsCredentialManagerForSMB"] = m.VulnerabilityInfo(
                 description="Look for network credentials in the Windows Credential Manager",
                 type=m.VulnerabilityType.LOCAL,
-                outcome=m.LeakedCredentials(credentials=[
-                    m.CachedCredential(node=target_node, port='SMB',
-                                       credential=create_cached_credential(target_node, 'SMB'))
-                    for target_node in smb_neighbors
-                    if random.random() < cached_smb_password_probability
-                ]),
+                outcome=m.LeakedCredentials(
+                    credentials=[
+                        m.CachedCredential(node=target_node, port="SMB", credential=create_cached_credential(target_node, "SMB"))
+                        for target_node in smb_neighbors
+                        if random.random() < cached_smb_password_probability
+                    ]
+                ),
                 reward_string="Discovered SMB creds in the Windows Credential Manager",
-                cost=2.0
+                cost=2.0,
             )
 
         if len(smb_neighbors) > 0 and len(rdp_neighbors) > 0:
-            library['Traceroute'] = m.VulnerabilityInfo(
+            library["Traceroute"] = m.VulnerabilityInfo(
                 description="Attempt to discvover network nodes using Traceroute",
                 type=m.VulnerabilityType.REMOTE,
-                outcome=m.LeakedNodesId(
-                    [target_node
-                     for target_node in smb_neighbors or rdp_neighbors
-                     if random.random() < traceroute_discovery_probability
-                     ]
-                ),
+                outcome=m.LeakedNodesId([target_node for target_node in smb_neighbors or rdp_neighbors if random.random() < traceroute_discovery_probability]),
                 reward_string="Discovered new network nodes via traceroute",
-                cost=5.0
+                cost=5.0,
             )
 
         return library
@@ -233,47 +213,49 @@ def cyberbattle_model_from_traffic_graph(
         return add_leak_neighbors_vulnerability(node_id=node_id)
 
     firewall_conf = FirewallConfiguration(
-        [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)],
-        [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)])
+        [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)], [FirewallRule("RDP", RulePermission.ALLOW), FirewallRule("SMB", RulePermission.ALLOW)]
+    )
 
     # Pick a random node as the agent entry node
     entry_node_index = random.randrange(len(graph.nodes))
     entry_node_id, entry_node_data = list(graph.nodes(data=True))[entry_node_index]
     graph.nodes[entry_node_id].clear()
     graph.nodes[entry_node_id].update(
-        {'data': m.NodeInfo(services=[],
-                            value=0,
-                            properties=["breach_node"],
-                            vulnerabilities=create_vulnerabilities_from_traffic_data(entry_node_id),
-                            agent_installed=True,
-                            firewall=firewall_conf,
-                            reimagable=False)})
+        {
+            "data": m.NodeInfo(
+                services=[],
+                value=0,
+                properties=["breach_node"],
+                vulnerabilities=create_vulnerabilities_from_traffic_data(entry_node_id),
+                agent_installed=True,
+                firewall=firewall_conf,
+                reimagable=False,
+            )
+        }
+    )
 
     def create_node_data_without_vulnerabilities(node_id: m.NodeID):
         return m.NodeInfo(
-            services=[m.ListeningService(name=port, allowedCredentials=assigned_passwords[(target_node, port)])
-                      for (target_node, port) in assigned_passwords.keys()
-                      if target_node == node_id
-                      ],
+            services=[m.ListeningService(name=port, allowedCredentials=assigned_passwords[(target_node, port)]) for (target_node, port) in assigned_passwords.keys() if target_node == node_id],
             value=random.randint(0, 100),
             agent_installed=False,
-            firewall=firewall_conf
+            firewall=firewall_conf,
         )
 
     # Step 1: Create all the nodes with associated services and firewall configuration
     for node in list(graph.nodes):
         if node != entry_node_id:
             graph.nodes[node].clear()
-            graph.nodes[node].update({'data': create_node_data_without_vulnerabilities(node)})
+            graph.nodes[node].update({"data": create_node_data_without_vulnerabilities(node)})
 
     # Step 2: Assign vulnerabilities to each node.
     # This must be a separate step because vulnerabilities definitions
     # may depend on the passwords assigned to the nodes in Step 1.
     for node in list(graph.nodes):
         if node != entry_node_id:
-            node_data = graph.nodes[node]['data']
+            node_data = graph.nodes[node]["data"]
             node_data.vulnerabilities = create_vulnerabilities_from_traffic_data(node)
-            graph.nodes[node].update({'data': node_data})
+            graph.nodes[node].update({"data": node_data})
 
     # remove all the edges inherited from the network graph
     graph.clear_edges()
@@ -289,15 +271,17 @@ def new_environment(n_servers_per_protocol: int):
     here for the statistical generative model
     were arbirarily picked. We recommend exploring different values for those parameters.
     """
-    traffic = generate_random_traffic_network(seed=None,
-                                              n_clients=50,
-                                              n_servers={
-                                                  "SMB": n_servers_per_protocol,
-                                                  "HTTP": n_servers_per_protocol,
-                                                  "RDP": n_servers_per_protocol,
-                                              },
-                                              alpha=np.array([(1, 1), (0.2, 0.5)], dtype=float),
-                                              beta=np.array([(1000, 10), (10, 100)], dtype=float))
+    traffic = generate_random_traffic_network(
+        seed=None,
+        n_clients=50,
+        n_servers={
+            "SMB": n_servers_per_protocol,
+            "HTTP": n_servers_per_protocol,
+            "RDP": n_servers_per_protocol,
+        },
+        alpha=np.array([(1, 1), (0.2, 0.5)], dtype=float),
+        beta=np.array([(1000, 10), (10, 100)], dtype=float),
+    )
 
     network = cyberbattle_model_from_traffic_graph(
         traffic,
@@ -305,7 +289,6 @@ def new_environment(n_servers_per_protocol: int):
         cached_smb_password_probability=0.7,
         cached_accessed_network_shares_probability=0.8,
         cached_password_has_changed_probability=0.01,
-        probability_two_nodes_use_same_password_to_access_given_resource=0.9)
-    return m.Environment(network=network,
-                         vulnerability_library=dict([]),
-                         identifiers=ENV_IDENTIFIERS)
+        probability_two_nodes_use_same_password_to_access_given_resource=0.9,
+    )
+    return m.Environment(network=network, vulnerability_library=dict([]), identifiers=ENV_IDENTIFIERS)

@@ -143,9 +143,7 @@ class Feature_active_node_age(NodeFeature):
 
         discovered_node_count = a.observation["discovered_node_count"]
 
-        assert (
-            node < discovered_node_count
-        ), f"invalid node index {node} (not discovered yet)"
+        assert node < discovered_node_count, f"invalid node index {node} (not discovered yet)"
 
         return np.array([discovered_node_count - node - 1], dtype=np.int_)
 
@@ -314,9 +312,7 @@ class FeatureEncoder(Feature):
     def vector_to_index(self, feature_vector: np.ndarray) -> int:
         raise NotImplementedError
 
-    def feature_vector_of_observation_at(
-        self, a: StateAugmentation, node: Optional[int]
-    ) -> np.ndarray:
+    def feature_vector_of_observation_at(self, a: StateAugmentation, node: Optional[int]) -> np.ndarray:
         """Return the current feature vector"""
         feature_vector = [f.get(a, node) for f in self.feature_selection]
         # print(f'feature_vector={feature_vector}  self.feature_selection={self.feature_selection}')
@@ -388,16 +384,10 @@ class RavelEncoding(FeatureEncoder):
         super().__init__(p, [self.ravelled_size])
 
     def vector_to_index(self, feature_vector) -> int:
-        assert len(self.dim_sizes) == len(feature_vector), (
-            f"feature vector of size {len(feature_vector)}, "
-            f"expecting {len(self.dim_sizes)}: {feature_vector} -- {self.dim_sizes}"
-        )
+        assert len(self.dim_sizes) == len(feature_vector), f"feature vector of size {len(feature_vector)}, " f"expecting {len(self.dim_sizes)}: {feature_vector} -- {self.dim_sizes}"
         index_intp = np.ravel_multi_index(list(feature_vector), list(self.dim_sizes))
         index = index_intp.item()
-        assert index < self.ravelled_size, (
-            f"feature vector out of bound ({feature_vector}, dim={self.dim_sizes}) "
-            f"-> index={index}, max_index={self.ravelled_size-1})"
-        )
+        assert index < self.ravelled_size, f"feature vector out of bound ({feature_vector}, dim={self.dim_sizes}) " f"-> index={index}, max_index={self.ravelled_size-1})"
         return index
 
     def unravel_index(self, index) -> Tuple:
@@ -429,14 +419,10 @@ class AbstractAction(Feature):
         self.n_local_actions = p.local_attacks_count
         self.n_remote_actions = p.remote_attacks_count
         self.n_connect_actions = p.port_count
-        self.n_actions = (
-            self.n_local_actions + self.n_remote_actions + self.n_connect_actions
-        )
+        self.n_actions = self.n_local_actions + self.n_remote_actions + self.n_connect_actions
         super().__init__(p, [self.n_actions])
 
-    def specialize_to_gymaction(
-        self, source_node: np.int32, observation, abstract_action_index: np.int32
-    ) -> Optional[cyberbattle_env.Action]:
+    def specialize_to_gymaction(self, source_node: np.int32, observation, abstract_action_index: np.int32) -> Optional[cyberbattle_env.Action]:
         """Specialize an abstract "q"-action into a gym action.
         Return an adjustement weight (1.0 if the choice was deterministic, 1/n if a choice was made out of n)
         and the gym action"""
@@ -461,9 +447,7 @@ class AbstractAction(Feature):
 
             # pick any node from the discovered ones
             # excluding the source node itself
-            target = (
-                source_node + 1 + np.random.choice(discovered_nodes_count - 1)
-            ) % discovered_nodes_count
+            target = (source_node + 1 + np.random.choice(discovered_nodes_count - 1)) % discovered_nodes_count
 
             return {"remote_vulnerability": np.array([source_node, target, vuln])}
 
@@ -474,9 +458,7 @@ class AbstractAction(Feature):
         if n_discovered_creds <= 0:
             # no credential available in the cache: cannot poduce a valid connect action
             return None
-        discovered_credentials = np.array(observation["credential_cache_matrix"])[
-            :n_discovered_creds
-        ]
+        discovered_credentials = np.array(observation["credential_cache_matrix"])[:n_discovered_creds]
 
         nodes_not_owned = discovered_nodes_notowned(observation)
 
@@ -485,28 +467,16 @@ class AbstractAction(Feature):
         match_port = discovered_credentials[:, 1] == port
         match_port_indices = np.where(match_port)[0]
 
-        credential_indices_choices = [
-            c
-            for c in match_port_indices
-            if discovered_credentials[c, 0] in nodes_not_owned
-        ]
+        credential_indices_choices = [c for c in match_port_indices if discovered_credentials[c, 0] in nodes_not_owned]
 
         if credential_indices_choices:
             logging.debug("found matching cred in the credential cache")
         else:
-            logging.debug(
-                "no cred matching requested port, trying instead creds used to access other ports"
-            )
-            credential_indices_choices = [
-                i
-                for (i, n) in enumerate(discovered_credentials[:, 0])
-                if n in nodes_not_owned
-            ]
+            logging.debug("no cred matching requested port, trying instead creds used to access other ports")
+            credential_indices_choices = [i for (i, n) in enumerate(discovered_credentials[:, 0]) if n in nodes_not_owned]
 
             if credential_indices_choices:
-                logging.debug(
-                    "found cred in the credential cache without matching port name"
-                )
+                logging.debug("found cred in the credential cache without matching port name")
             else:
                 logging.debug("no cred to use from the credential cache")
                 return None
@@ -540,12 +510,8 @@ class ActionTrackingStateAugmentation(StateAugmentation):
 
     def __init__(self, p: EnvironmentBounds, observation: cyberbattle_env.Observation):
         self.aa = AbstractAction(p)
-        self.success_action_count = np.zeros(
-            shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32
-        )
-        self.failed_action_count = np.zeros(
-            shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32
-        )
+        self.success_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
+        self.failed_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
         self.env_properties = p
         super().__init__(observation)
 
@@ -567,12 +533,8 @@ class ActionTrackingStateAugmentation(StateAugmentation):
 
     def on_reset(self, observation: cyberbattle_env.Observation):
         p = self.env_properties
-        self.success_action_count = np.zeros(
-            shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32
-        )
-        self.failed_action_count = np.zeros(
-            shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32
-        )
+        self.success_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
+        self.failed_action_count = np.zeros(shape=(p.maximum_node_count, self.aa.n_actions), dtype=np.int32)
         super().on_reset(observation)
 
 
@@ -593,8 +555,7 @@ class Feature_actions_tried_at_node(NodeFeature):
         assert node is not None, "feature only valid in the context of a node"
         assert isinstance(a, ActionTrackingStateAugmentation), "invalid state type"
         return np.array(
-            ((a.failed_action_count[node, :] + a.success_action_count[node, :]) != 0)
-            * 1,
+            ((a.failed_action_count[node, :] + a.success_action_count[node, :]) != 0) * 1,
             dtype=np.int_,
         )
 

@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 
 # -*- coding: utf-8 -*-
-"""Test training of baseline agents. """
+"""Test training of baseline agents."""
+
 import torch
 import gym
 import logging
@@ -19,17 +20,9 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 
 print(f"torch cuda available={torch.cuda.is_available()}")
 
-cyberbattlechain = cast(cyberbattle_env.CyberBattleEnv, gym.make('CyberBattleChain-v0',
-                                                                 size=4,
-                                                                 attacker_goal=cyberbattle_env.AttackerGoal(
-                                                                     own_atleast_percent=1.0,
-                                                                     reward=100)))
+cyberbattlechain = cast(cyberbattle_env.CyberBattleEnv, gym.make("CyberBattleChain-v0", size=4, attacker_goal=cyberbattle_env.AttackerGoal(own_atleast_percent=1.0, reward=100)))
 
-ep = w.EnvironmentBounds.of_identifiers(
-    maximum_total_credentials=10,
-    maximum_node_count=10,
-    identifiers=cyberbattlechain.identifiers
-)
+ep = w.EnvironmentBounds.of_identifiers(maximum_total_credentials=10, maximum_node_count=10, identifiers=cyberbattlechain.identifiers)
 
 training_episode_count = 2
 iteration_count = 5
@@ -39,13 +32,7 @@ def test_agent_training() -> None:
     dqn_learning_run = learner.epsilon_greedy_search(
         cyberbattle_gym_env=cyberbattlechain,
         environment_properties=ep,
-        learner=dqla.DeepQLearnerPolicy(
-            ep=ep,
-            gamma=0.015,
-            replay_memory_size=10000,
-            target_update=10,
-            batch_size=512,
-            learning_rate=0.01),  # torch default is 1e-2
+        learner=dqla.DeepQLearnerPolicy(ep=ep, gamma=0.015, replay_memory_size=10000, target_update=10, batch_size=512, learning_rate=0.01),  # torch default is 1e-2
         episode_count=training_episode_count,
         iteration_count=iteration_count,
         epsilon=0.90,
@@ -54,7 +41,7 @@ def test_agent_training() -> None:
         epsilon_exponential_decay=5000,  # 10000
         epsilon_minimum=0.10,
         verbosity=Verbosity.Quiet,
-        title="DQL"
+        title="DQL",
     )
     assert dqn_learning_run
 
@@ -67,7 +54,7 @@ def test_agent_training() -> None:
         epsilon=1.0,  # purely random
         render=False,
         verbosity=Verbosity.Quiet,
-        title="Random search"
+        title="Random search",
     )
 
     assert random_run
@@ -77,9 +64,7 @@ def test_tabularq_agent_training() -> None:
     tabularq_run = learner.epsilon_greedy_search(
         cyberbattlechain,
         ep,
-        learner=tqa.QTabularLearner(
-            ep,
-            gamma=0.015, learning_rate=0.01, exploit_percentile=100),
+        learner=tqa.QTabularLearner(ep, gamma=0.015, learning_rate=0.01, exploit_percentile=100),
         episode_count=training_episode_count,
         iteration_count=iteration_count,
         epsilon=0.90,
@@ -88,7 +73,7 @@ def test_tabularq_agent_training() -> None:
         verbosity=Verbosity.Quiet,
         render=False,
         plot_episodes_length=False,
-        title="Tabular Q-learning"
+        title="Tabular Q-learning",
     )
 
     assert tabularq_run
