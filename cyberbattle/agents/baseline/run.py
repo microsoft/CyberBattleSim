@@ -25,6 +25,8 @@ import cyberbattle.agents.baseline.agent_dql as dqla
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.plotting as p
 import cyberbattle.agents.baseline.learner as learner
+from typing import cast
+from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 parser = argparse.ArgumentParser(description='Run simulation with DQL baseline agent.')
 
@@ -59,11 +61,11 @@ logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)
 
 print(f"torch cuda available={torch.cuda.is_available()}")
 
-cyberbattlechain = gym.make('CyberBattleChain-v0',
-                            size=args.chain_size,
-                            attacker_goal=cyberbattle_env.AttackerGoal(
-                                own_atleast_percent=args.ownership_goal,
-                                reward=args.reward_goal))
+cyberbattlechain = cast(CyberBattleEnv, gym.make('CyberBattleChain-v0',
+                                                 size=args.chain_size,
+                                                 attacker_goal=cyberbattle_env.AttackerGoal(
+                                                     own_atleast_percent=args.ownership_goal,
+                                                     reward=args.reward_goal)))
 
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_total_credentials=22,

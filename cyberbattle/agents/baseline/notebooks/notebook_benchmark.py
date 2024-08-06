@@ -23,6 +23,9 @@ import cyberbattle.agents.baseline.agent_randomcredlookup as rca
 import cyberbattle.agents.baseline.agent_tabularqlearning as tqa
 import cyberbattle.agents.baseline.agent_dql as dqla
 from cyberbattle.agents.baseline.agent_wrapper import Verbosity
+from typing import cast
+from cyberbattle._env.cyberbattle_env import CyberBattleEnv
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
 # %% {"tags": ["parameters"]}
@@ -54,6 +57,8 @@ if env_size:
 else:
     gym_env = gym.make(gymid)
 
+gym_env = cast(CyberBattleEnv, gym_env)
+
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_node_count=maximum_node_count,
     maximum_total_credentials=maximum_total_credentials,
@@ -72,7 +77,7 @@ if debugging:
     gym_env.action_space.sample()
     gym_env.observation_space.sample()
     o0 = gym_env.reset()
-    o_test, r, d, i = gym_env.step(gym_env.sample_valid_action())
+    o_test, r, d, _, i = gym_env.step(gym_env.sample_valid_action())
     o0 = gym_env.reset()
 
     o0.keys()

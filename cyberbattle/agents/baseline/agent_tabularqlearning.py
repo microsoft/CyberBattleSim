@@ -255,7 +255,7 @@ class QTabularLearner(learner.Learner):
         self.exploit_percentile = exploit_percentile
         self.credcache_policy = CredentialCacheExploiter()
 
-    def on_step(self, wrapped_env: w.AgentWrapper, observation, reward, done, info, action_metadata: ChosenActionMetadata):
+    def on_step(self, wrapped_env: w.AgentWrapper, observation, reward, done, truncated, info, action_metadata: ChosenActionMetadata):
 
         agent_state = wrapped_env.state
 

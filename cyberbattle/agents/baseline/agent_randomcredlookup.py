@@ -70,7 +70,7 @@ class CredentialCacheExploiter(Learner):
     def stateaction_as_string(self, actionmetadata):
         return ''
 
-    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, info, action_metadata):
+    def on_step(self, wrapped_env: AgentWrapper, observation, reward, done, truncated, info, action_metadata):
         return None
 
     def end_of_iteration(self, t, done):
