@@ -321,8 +321,8 @@ class ObservationSpaceType(spaces.Dict):
 
 
 class CyberBattleSpaceKind(Env[Observation, Action]):
-    action_space: DiscriminatedUnion
-    observation_space: ObservationSpaceType
+    action_space: DiscriminatedUnion # type: ignore
+    observation_space: ObservationSpaceType # type: ignore
 
 
 class CyberBattleEnv(CyberBattleSpaceKind):
