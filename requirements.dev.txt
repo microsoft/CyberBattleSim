@@ -1,7 +1,6 @@
 # for vscode intellisense
 jedi==0.19.1
 
-
 # notebooks
 jupyter>=1.0.0
 jupytext~=1.15.2
@@ -17,13 +16,17 @@ flake8
 pep8-naming
 autopep8
 
+# testing
 pytest~=8.3.2
+
+# code hygene
+pre-commit==3.5.0
+
+# console-based training
+asciichartpy==1.5.25
 
 psutil==5.7.2
 
-asciichartpy==1.5.25
-
-pre-commit==3.5.0
 
 ############
 # pinning dependencies to avoid dependency changes breaking `pip install`
