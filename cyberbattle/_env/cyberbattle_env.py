@@ -8,7 +8,7 @@ import copy
 import logging
 import networkx
 from networkx import convert_matrix
-from typing import NamedTuple, Optional, Tuple, List, Dict, TypeVar, TypedDict, cast
+from typing import NamedTuple, Optional, Tuple, List, Dict, TypeVar, TypedDict
 
 from gym import spaces, Env
 from gym.utils import seeding
@@ -321,8 +321,8 @@ class ObservationSpaceType(spaces.Dict):
 
 
 class CyberBattleSpaceKind(Env[Observation, Action]):
-    action_space: DiscriminatedUnion # type: ignore
-    observation_space: ObservationSpaceType # type: ignore
+    action_space: DiscriminatedUnion  # type: ignore
+    observation_space: ObservationSpaceType  # type: ignore
 
 
 class CyberBattleEnv(CyberBattleSpaceKind):
@@ -526,7 +526,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         maximum_node_count = self.__bounds.maximum_node_count
         port_count = self.__bounds.port_count
 
-        action_spaces = {
+        action_spaces_dict: dict[str, spaces.Space] = {
             "local_vulnerability": spaces.MultiDiscrete(
                 # source_node_id, vulnerability_id
                 [maximum_node_count, local_vulnerabilities_count]
@@ -547,7 +547,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
             ),
         }
 
-        self.action_space = DiscriminatedUnion[Action](cast(dict, action_spaces))  # type: ignore
+        self.action_space = DiscriminatedUnion[Action](spaces=action_spaces_dict)
 
         self.observation_space = ObservationSpaceType(self.__bounds)
 
