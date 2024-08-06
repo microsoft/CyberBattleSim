@@ -21,6 +21,5 @@
     },
     "jupyter.notebookFileRoot": "${workspaceFolder}",
     "files.trimFinalNewlines": true,
-    "editor.defaultFormatter": "",
     "files.trimTrailingWhitespace": true,
 }
