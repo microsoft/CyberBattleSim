@@ -27,5 +27,10 @@
     },
     "jupyter.jupyterServerType": "local",
     "jupyter.notebookFileRoot": "${workspaceFolder}",
-    "files.trimFinalNewlines": true
+    "files.trimFinalNewlines": true,
+    "editor.defaultFormatter": "ms-python.flake8",
+    "flake8.args": [
+    ],
+    "files.trimTrailingWhitespace": true,
+
 }

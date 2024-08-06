@@ -6,14 +6,14 @@
     "configurations": [
         {
             "name": "Python: cyberbattle_gym",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "src/cyberbattle_gym/samples/run.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"

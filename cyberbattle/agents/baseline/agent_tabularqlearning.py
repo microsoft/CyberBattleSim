@@ -52,17 +52,21 @@ def random_argtop_percentile(array: np.ndarray, percentile: float):
 
 class QMatrix:
     """Q-Learning matrix for a given state and action space
-        state_space  - Features defining the state space
-        action_space - Features defining the action space
-        qm           - Optional: initialization values for the Q matrix
+    state_space  - Features defining the state space
+    action_space - Features defining the action space
+    qm           - Optional: initialization values for the Q matrix
     """
+
     # The Quality matrix
     qm: np.ndarray
 
-    def __init__(self, name,
-                 state_space: w.Feature,
-                 action_space: w.Feature,
-                 qm: Optional[np.ndarray] = None):
+    def __init__(
+        self,
+        name,
+        state_space: w.Feature,
+        action_space: w.Feature,
+        qm: Optional[np.ndarray] = None,
+    ):
         """Initialize the Q-matrix"""
 
         self.name = name
@@ -85,19 +89,31 @@ class QMatrix:
         return self.qm
 
     def print(self):
-        print(f"[{self.name}]\n"
-              f"state: {self.state_space}\n"
-              f"action: {self.action_space}\n"
-              f"shape = {self.shape()}")
+        print(
+            f"[{self.name}]\n"
+            f"state: {self.state_space}\n"
+            f"action: {self.action_space}\n"
+            f"shape = {self.shape()}"
+        )
 
-    def update(self, current_state: int, action: int, next_state: int, reward, gamma, learning_rate):
+    def update(
+        self,
+        current_state: int,
+        action: int,
+        next_state: int,
+        reward,
+        gamma,
+        learning_rate,
+    ):
         """Update the Q matrix after taking `action` in state 'current_State'
         and obtaining reward=R[current_state, action]"""
 
-        maxq_atnext, max_index = random_argmax(self.qm[next_state, ])
+        maxq_atnext, max_index = random_argmax(self.qm[next_state,])
 
         # bellman equation for Q-learning
-        temporal_difference = reward + gamma * maxq_atnext - self.qm[current_state, action]
+        temporal_difference = (
+            reward + gamma * maxq_atnext - self.qm[current_state, action]
+        )
         self.qm[current_state, action] += learning_rate * temporal_difference
 
         # The loss is calculated using the squared difference between
@@ -115,54 +131,67 @@ class QMatrix:
 
 
 class QLearnAttackSource(QMatrix):
-    """ Top-level Q matrix to pick the attack
-        State space: global state info
-        Action space: feature encodings of suggested nodes
+    """Top-level Q matrix to pick the attack
+    State space: global state info
+    Action space: feature encodings of suggested nodes
     """
 
     def __init__(self, ep: EnvironmentBounds, qm: Optional[np.ndarray] = None):
         self.ep = ep
 
-        self.state_space = w.HashEncoding(ep, [
-            # Feature_discovered_node_count(),
-            # Feature_discovered_credential_count(),
-            w.Feature_discovered_ports_sliding(ep),
-            w.Feature_discovered_nodeproperties_sliding(ep),
-            w.Feature_discovered_notowned_node_count(ep, 3)
-        ], 5000)  # should not be too small, pick something big to avoid collision
-
-        self.action_space = w.RavelEncoding(ep, [
-            w.Feature_active_node_properties(ep)])
-
-        super().__init__("attack_source", self.state_space, self.action_space, qm)
-
-
-class QLearnBestAttackAtSource(QMatrix):
-    """ Top-level Q matrix to pick the attack from a pre-chosen source node
-        State space: feature encodings of suggested node states
-        Action space: a SimpleAbstract action
-    """
-
-    def __init__(self, ep: EnvironmentBounds, qm: Optional[np.ndarray] = None) -> None:
-
-        self.state_space = w.HashEncoding(ep, [
-            w.Feature_active_node_properties(ep),
-            w.Feature_active_node_age(ep)
-            # w.Feature_actions_tried_at_node(ep)
-        ], 7000)
-
-        # NOTE: For debugging purpose it's convenient instead to use
-        # Ravel encoding for node properties
-        self.state_space_debugging = w.RavelEncoding(ep, [
-            w.HashEncoding(ep, [
+        self.state_space = w.HashEncoding(
+            ep,
+            [
                 # Feature_discovered_node_count(),
                 # Feature_discovered_credential_count(),
                 w.Feature_discovered_ports_sliding(ep),
                 w.Feature_discovered_nodeproperties_sliding(ep),
                 w.Feature_discovered_notowned_node_count(ep, 3),
-            ], 100),
-            w.Feature_active_node_properties(ep)
-        ])
+            ],
+            5000,
+        )  # should not be too small, pick something big to avoid collision
+
+        self.action_space = w.RavelEncoding(ep, [w.Feature_active_node_properties(ep)])
+
+        super().__init__("attack_source", self.state_space, self.action_space, qm)
+
+
+class QLearnBestAttackAtSource(QMatrix):
+    """Top-level Q matrix to pick the attack from a pre-chosen source node
+    State space: feature encodings of suggested node states
+    Action space: a SimpleAbstract action
+    """
+
+    def __init__(self, ep: EnvironmentBounds, qm: Optional[np.ndarray] = None) -> None:
+        self.state_space = w.HashEncoding(
+            ep,
+            [
+                w.Feature_active_node_properties(ep),
+                w.Feature_active_node_age(ep),
+                # w.Feature_actions_tried_at_node(ep)
+            ],
+            7000,
+        )
+
+        # NOTE: For debugging purpose it's convenient instead to use
+        # Ravel encoding for node properties
+        self.state_space_debugging = w.RavelEncoding(
+            ep,
+            [
+                w.HashEncoding(
+                    ep,
+                    [
+                        # Feature_discovered_node_count(),
+                        # Feature_discovered_credential_count(),
+                        w.Feature_discovered_ports_sliding(ep),
+                        w.Feature_discovered_nodeproperties_sliding(ep),
+                        w.Feature_discovered_notowned_node_count(ep, 3),
+                    ],
+                    100,
+                ),
+                w.Feature_active_node_properties(ep),
+            ],
+        )
 
         self.action_space = w.AbstractAction(ep)
 
@@ -170,6 +199,7 @@ class QLearnBestAttackAtSource(QMatrix):
 
 
 # TODO: We should try scipy for sparse matrices and OpenBLAS (MKL Intel version of BLAS, faster than openBLAS) for numpy
+
 
 # %%
 class LossEval:
@@ -198,6 +228,7 @@ class LossEval:
 
 class ChosenActionMetadata(NamedTuple):
     """Additional information associated with the action chosen by the agent"""
+
     Q_source_state: int
     Q_source_expectedq: float
     Q_attack_expectedq: float
@@ -234,13 +265,14 @@ class QTabularLearner(learner.Learner):
 
     """
 
-    def __init__(self,
-                 ep: EnvironmentBounds,
-                 gamma: float,
-                 learning_rate: float,
-                 exploit_percentile: float,
-                 trained=None,  # : Optional[QTabularLearner]
-                 ):
+    def __init__(
+        self,
+        ep: EnvironmentBounds,
+        gamma: float,
+        learning_rate: float,
+        exploit_percentile: float,
+        trained=None,  # : Optional[QTabularLearner]
+    ):
         if trained:
             self.qsource = trained.qsource
             self.qattack = trained.qattack
@@ -255,23 +287,41 @@ class QTabularLearner(learner.Learner):
         self.exploit_percentile = exploit_percentile
         self.credcache_policy = CredentialCacheExploiter()
 
-    def on_step(self, wrapped_env: w.AgentWrapper, observation, reward, done, truncated, info, action_metadata: ChosenActionMetadata):
-
+    def on_step(
+        self,
+        wrapped_env: w.AgentWrapper,
+        observation,
+        reward,
+        done,
+        truncated,
+        info,
+        action_metadata: ChosenActionMetadata,
+    ):
         agent_state = wrapped_env.state
 
         # Update the top-level Q matrix for the state of the selected source node
         after_toplevel_state = self.qsource.state_space.encode(agent_state)
-        self.qsource.update(action_metadata.Q_source_state,
-                            action_metadata.source_node_encoding,
-                            after_toplevel_state,
-                            reward, self.gamma, self.learning_rate)
+        self.qsource.update(
+            action_metadata.Q_source_state,
+            action_metadata.source_node_encoding,
+            after_toplevel_state,
+            reward,
+            self.gamma,
+            self.learning_rate,
+        )
 
         # Update the second Q matrix for the abstract action chosen
-        qattack_state_after = self.qattack.state_space.encode_at(agent_state, action_metadata.source_node)
-        self.qattack.update(action_metadata.Q_attack_state,
-                            int(action_metadata.abstract_action),
-                            qattack_state_after,
-                            reward, self.gamma, self.learning_rate)
+        qattack_state_after = self.qattack.state_space.encode_at(
+            agent_state, action_metadata.source_node
+        )
+        self.qattack.update(
+            action_metadata.Q_attack_state,
+            int(action_metadata.abstract_action),
+            qattack_state_after,
+            reward,
+            self.gamma,
+            self.learning_rate,
+        )
 
     def end_of_iteration(self, t, done):
         self.loss_qsource.end_of_iteration(t, done)
@@ -282,15 +332,16 @@ class QTabularLearner(learner.Learner):
         self.loss_qattack.end_of_episode(i_episode, t)
 
     def loss_as_string(self):
-        return f"[loss_source={self.loss_qsource.current_episode_loss():0.3f}" \
-               f" loss_attack={self.loss_qattack.current_episode_loss():0.3f}]"
+        return (
+            f"[loss_source={self.loss_qsource.current_episode_loss():0.3f}"
+            f" loss_attack={self.loss_qattack.current_episode_loss():0.3f}]"
+        )
 
     def new_episode(self):
         self.loss_qsource.new_episode()
         self.loss_qattack.new_episode()
 
     def exploit(self, wrapped_env: w.AgentWrapper, observation):
-
         agent_state = wrapped_env.state
 
         qsource_state = self.qsource.state_space.encode(agent_state)
@@ -298,44 +349,63 @@ class QTabularLearner(learner.Learner):
         #############
         # first, attempt to exploit the credential cache
         # using the crecache_policy
-        action_style, gym_action, _ = self.credcache_policy.exploit(wrapped_env, observation)
+        action_style, gym_action, _ = self.credcache_policy.exploit(
+            wrapped_env, observation
+        )
         if gym_action:
             source_node = cyberbattle_env.sourcenode_of_action(gym_action)
-            return action_style, gym_action, ChosenActionMetadata(
-                Q_source_state=qsource_state,
-                Q_source_expectedq=-1,
-                Q_attack_expectedq=-1,
-                source_node=source_node,
-                source_node_encoding=self.qsource.action_space.encode_at(
-                    agent_state, source_node),
-                abstract_action=np.int32(self.qattack.action_space.abstract_from_gymaction(gym_action)),
-                Q_attack_state=self.qattack.state_space.encode_at(agent_state, source_node)
+            return (
+                action_style,
+                gym_action,
+                ChosenActionMetadata(
+                    Q_source_state=qsource_state,
+                    Q_source_expectedq=-1,
+                    Q_attack_expectedq=-1,
+                    source_node=source_node,
+                    source_node_encoding=self.qsource.action_space.encode_at(
+                        agent_state, source_node
+                    ),
+                    abstract_action=np.int32(
+                        self.qattack.action_space.abstract_from_gymaction(gym_action)
+                    ),
+                    Q_attack_state=self.qattack.state_space.encode_at(
+                        agent_state, source_node
+                    ),
+                ),
             )
         #############
 
         # Pick action: pick random source state among the ones with the maximum Q-value
         action_style = "exploit"
         source_node_encoding, qsource_expectedq = self.qsource.exploit(
-            qsource_state, percentile=100)
+            qsource_state, percentile=100
+        )
 
         # Pick source node at random (owned and with the desired feature encoding)
         potential_source_nodes = [
             from_node
             for from_node in w.owned_nodes(observation)
-            if source_node_encoding == self.qsource.action_space.encode_at(agent_state, from_node)
+            if source_node_encoding
+            == self.qsource.action_space.encode_at(agent_state, from_node)
         ]
 
         if len(potential_source_nodes) == 0:
-            logging.debug(f'No node with encoding {source_node_encoding}, fallback on explore')
+            logging.debug(
+                f"No node with encoding {source_node_encoding}, fallback on explore"
+            )
             # NOTE: we should make sure that it does not happen too often,
             # the penalty should be much smaller than typical rewards, small nudge
             # not a new feedback signal.
 
             # Learn the lack of node availability
-            self.qsource.update(qsource_state,
-                                source_node_encoding,
-                                qsource_state,
-                                reward=0, gamma=self.gamma, learning_rate=self.learning_rate)
+            self.qsource.update(
+                qsource_state,
+                source_node_encoding,
+                qsource_state,
+                reward=0,
+                gamma=self.gamma,
+                learning_rate=self.learning_rate,
+            )
 
             return "exploit-1->explore", None, None
         else:
@@ -344,24 +414,35 @@ class QTabularLearner(learner.Learner):
             qattack_state = self.qattack.state_space.encode_at(agent_state, source_node)
 
             abstract_action, qattack_expectedq = self.qattack.exploit(
-                qattack_state, percentile=self.exploit_percentile)
+                qattack_state, percentile=self.exploit_percentile
+            )
 
             gym_action = self.qattack.action_space.specialize_to_gymaction(
-                source_node, observation, np.int32(abstract_action))
+                source_node, observation, np.int32(abstract_action)
+            )
 
-            assert int(abstract_action) < self.qattack.action_space.flat_size(), \
-                f'abstract_action={abstract_action} gym_action={gym_action}'
+            assert (
+                int(abstract_action) < self.qattack.action_space.flat_size()
+            ), f"abstract_action={abstract_action} gym_action={gym_action}"
 
-            if gym_action and wrapped_env.env.is_action_valid(gym_action, observation['action_mask']):
-                logging.debug(f'  exploit gym_action={gym_action} source_node_encoding={source_node_encoding}')
-                return action_style, gym_action, ChosenActionMetadata(
-                    Q_source_state=qsource_state,
-                    Q_source_expectedq=qsource_expectedq,
-                    Q_attack_expectedq=qsource_expectedq,
-                    source_node=source_node,
-                    source_node_encoding=source_node_encoding,
-                    abstract_action=np.int32(abstract_action),
-                    Q_attack_state=qattack_state
+            if gym_action and wrapped_env.env.is_action_valid(
+                gym_action, observation["action_mask"]
+            ):
+                logging.debug(
+                    f"  exploit gym_action={gym_action} source_node_encoding={source_node_encoding}"
+                )
+                return (
+                    action_style,
+                    gym_action,
+                    ChosenActionMetadata(
+                        Q_source_state=qsource_state,
+                        Q_source_expectedq=qsource_expectedq,
+                        Q_attack_expectedq=qsource_expectedq,
+                        source_node=source_node,
+                        source_node_encoding=source_node_encoding,
+                        abstract_action=np.int32(abstract_action),
+                        Q_attack_state=qattack_state,
+                    ),
                 )
             else:
                 # NOTE: We should make the penalty reward smaller than
@@ -370,53 +451,84 @@ class QTabularLearner(learner.Learner):
                 # related to "Inverse propensity weighting"
 
                 # Learn the non-validity of the action
-                self.qsource.update(qsource_state,
-                                    source_node_encoding,
-                                    qsource_state,
-                                    reward=0, gamma=self.gamma, learning_rate=self.learning_rate)
+                self.qsource.update(
+                    qsource_state,
+                    source_node_encoding,
+                    qsource_state,
+                    reward=0,
+                    gamma=self.gamma,
+                    learning_rate=self.learning_rate,
+                )
 
-                self.qattack.update(qattack_state,
-                                    int(abstract_action),
-                                    qattack_state,
-                                    reward=0, gamma=self.gamma, learning_rate=self.learning_rate)
+                self.qattack.update(
+                    qattack_state,
+                    int(abstract_action),
+                    qattack_state,
+                    reward=0,
+                    gamma=self.gamma,
+                    learning_rate=self.learning_rate,
+                )
 
                 # fallback on random exploration
-                return ('exploit[invalid]->explore' if gym_action else 'exploit[undefined]->explore'), None, None
+                return (
+                    (
+                        "exploit[invalid]->explore"
+                        if gym_action
+                        else "exploit[undefined]->explore"
+                    ),
+                    None,
+                    None,
+                )
 
     def explore(self, wrapped_env: w.AgentWrapper):
         agent_state = wrapped_env.state
         gym_action = wrapped_env.env.sample_valid_action(kinds=[0, 1, 2])
         abstract_action = self.qattack.action_space.abstract_from_gymaction(gym_action)
 
-        assert int(abstract_action) < self.qattack.action_space.flat_size(
-        ), f'Q_attack_action={abstract_action} gym_action={gym_action}'
+        assert (
+            int(abstract_action) < self.qattack.action_space.flat_size()
+        ), f"Q_attack_action={abstract_action} gym_action={gym_action}"
 
         source_node = cyberbattle_env.sourcenode_of_action(gym_action)
 
-        return "explore", gym_action, ChosenActionMetadata(
-            Q_source_state=self.qsource.state_space.encode(agent_state),
-            Q_source_expectedq=-1,
-            Q_attack_expectedq=-1,
-            source_node=source_node,
-            source_node_encoding=self.qsource.action_space.encode_at(agent_state, source_node),
-            abstract_action=abstract_action,
-            Q_attack_state=self.qattack.state_space.encode_at(agent_state, source_node)
+        return (
+            "explore",
+            gym_action,
+            ChosenActionMetadata(
+                Q_source_state=self.qsource.state_space.encode(agent_state),
+                Q_source_expectedq=-1,
+                Q_attack_expectedq=-1,
+                source_node=source_node,
+                source_node_encoding=self.qsource.action_space.encode_at(
+                    agent_state, source_node
+                ),
+                abstract_action=abstract_action,
+                Q_attack_state=self.qattack.state_space.encode_at(
+                    agent_state, source_node
+                ),
+            ),
         )
 
-    def stateaction_as_string(self, actionmetadata) -> str:
-        return f"Qsource[state={actionmetadata.Q_source_state} err={self.qsource.last_error:0.2f}"\
-            f"Q={actionmetadata.Q_source_expectedq:.2f}] " \
-            f"Qattack[state={actionmetadata.Q_attack_state} err={self.qattack.last_error:0.2f} "\
-            f"Q={actionmetadata.Q_attack_expectedq:.2f}] "
+    def stateaction_as_string(self, action_metadata) -> str:
+        return (
+            f"Qsource[state={action_metadata.Q_source_state} err={self.qsource.last_error:0.2f}"
+            f"Q={action_metadata.Q_source_expectedq:.2f}] "
+            f"Qattack[state={action_metadata.Q_attack_state} err={self.qattack.last_error:0.2f} "
+            f"Q={action_metadata.Q_attack_expectedq:.2f}] "
+        )
 
     def parameters_as_string(self) -> str:
-        return f"γ={self.gamma}," \
-               f"learning_rate={self.learning_rate},"\
-               f"Q%={self.exploit_percentile}"
+        return (
+            f"γ={self.gamma},"
+            f"learning_rate={self.learning_rate},"
+            f"Q%={self.exploit_percentile}"
+        )
 
     def all_parameters_as_string(self) -> str:
-        return f' dimension={self.qsource.state_space.flat_size()}x{self.qsource.action_space.flat_size()},' \
-            f'{self.qattack.state_space.flat_size()}x{self.qattack.action_space.flat_size()}\n' \
-            f'Q1={[f.name() for f in self.qsource.state_space.feature_selection]}' \
-            f' -> {[f.name() for f in self.qsource.action_space.feature_selection]}\n' \
+        return (
+            f" dimension={self.qsource.state_space.flat_size()}x{self.qsource.action_space.flat_size()},"
+            f"{self.qattack.state_space.flat_size()}x{self.qattack.action_space.flat_size()}\n"
+            f"Q1={[f.name() for f in self.qsource.state_space.feature_selection]}"
+            f" -> {[f.name() for f in self.qsource.action_space.feature_selection]}\n"
             f"Q2={[f.name() for f in self.qattack.state_space.feature_selection]} -> 'action'"
+        )

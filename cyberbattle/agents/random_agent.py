@@ -9,13 +9,15 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-def run_random_agent(episode_count: int, iteration_count: int, gym_env: cyberbattle_env.CyberBattleEnv):
+def run_random_agent(
+    episode_count: int, iteration_count: int, gym_env: cyberbattle_env.CyberBattleEnv
+):
     """Run a simple random agent on the specified gym environment and
     plot exploration graph and reward function
     """
 
     for i_episode in range(episode_count):
-        observation = gym_env.reset()
+        observation, _ = gym_env.reset()
 
         total_reward = 0.0
 
@@ -29,7 +31,9 @@ def run_random_agent(episode_count: int, iteration_count: int, gym_env: cyberbat
 
             if reward > 0:
                 prettry_printed = gym_env.pretty_print_internal_action(action)
-                print(f'+ rewarded action: {action} total_reward={total_reward} reward={reward} @t={t}\n  {prettry_printed}')
+                print(
+                    f"+ rewarded action: {action} total_reward={total_reward} reward={reward} @t={t}\n  {prettry_printed}"
+                )
                 gym_env.render()
 
             if truncated:

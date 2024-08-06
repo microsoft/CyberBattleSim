@@ -27,7 +27,9 @@ from typing import cast
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 
-logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.ERROR, format="%(levelname)s: %(message)s"
+)
 # %% {"tags": ["parameters"]}
 # Papermill notebook parameters
 
@@ -62,7 +64,7 @@ gym_env = cast(CyberBattleEnv, gym_env)
 ep = w.EnvironmentBounds.of_identifiers(
     maximum_node_count=maximum_node_count,
     maximum_total_credentials=maximum_total_credentials,
-    identifiers=gym_env.identifiers
+    identifiers=gym_env.identifiers,
 )
 
 # %%
@@ -76,13 +78,15 @@ if debugging:
     gym_env.action_space
     gym_env.action_space.sample()
     gym_env.observation_space.sample()
-    o0 = gym_env.reset()
+    o0, _ = gym_env.reset()
     o_test, r, d, _, i = gym_env.step(gym_env.sample_valid_action())
-    o0 = gym_env.reset()
+    o0, _ = gym_env.reset()
 
     o0.keys()
 
-    fe_example = w.RavelEncoding(ep, [w.Feature_active_node_properties(ep), w.Feature_discovered_node_count(ep)])
+    fe_example = w.RavelEncoding(
+        ep, [w.Feature_active_node_properties(ep), w.Feature_discovered_node_count(ep)]
+    )
     a = w.StateAugmentation(o0)
     w.Feature_discovered_ports(ep).get(a, None)
     fe_example.encode_at(a, 0)
@@ -101,7 +105,7 @@ credlookup_run = learner.epsilon_greedy_search(
     epsilon_exponential_decay=10000,
     epsilon_minimum=0.10,
     verbosity=Verbosity.Quiet,
-    title="Credential lookups (ϵ-greedy)"
+    title="Credential lookups (ϵ-greedy)",
 )
 
 # %%
@@ -110,8 +114,8 @@ tabularq_run = learner.epsilon_greedy_search(
     gym_env,
     ep,
     learner=tqa.QTabularLearner(
-        ep,
-        gamma=0.015, learning_rate=0.01, exploit_percentile=100),
+        ep, gamma=0.015, learning_rate=0.01, exploit_percentile=100
+    ),
     episode_count=training_episode_count,
     iteration_count=iteration_count,
     epsilon=0.90,
@@ -120,7 +124,7 @@ tabularq_run = learner.epsilon_greedy_search(
     verbosity=Verbosity.Quiet,
     render=False,
     plot_episodes_length=False,
-    title="Tabular Q-learning"
+    title="Tabular Q-learning",
 )
 
 # %%
@@ -130,16 +134,17 @@ tabularq_exploit_run = learner.epsilon_greedy_search(
     ep,
     learner=tqa.QTabularLearner(
         ep,
-        trained=tabularq_run['learner'],
+        trained=tabularq_run["learner"],
         gamma=0.0,
         learning_rate=0.0,
-        exploit_percentile=90),
+        exploit_percentile=90,
+    ),
     episode_count=eval_episode_count,
     iteration_count=iteration_count,
     epsilon=0.0,
     render=False,
     verbosity=Verbosity.Quiet,
-    title="Exploiting Q-matrix"
+    title="Exploiting Q-matrix",
 )
 
 # %%
@@ -155,7 +160,7 @@ dql_run = learner.epsilon_greedy_search(
         batch_size=512,
         # torch default learning rate is 1e-2
         # a large value helps converge in less episodes
-        learning_rate=0.01
+        learning_rate=0.01,
     ),
     episode_count=training_episode_count,
     iteration_count=iteration_count,
@@ -165,7 +170,7 @@ dql_run = learner.epsilon_greedy_search(
     verbosity=Verbosity.Quiet,
     render=False,
     plot_episodes_length=False,
-    title="DQL"
+    title="DQL",
 )
 
 # %%
@@ -173,7 +178,7 @@ dql_run = learner.epsilon_greedy_search(
 dql_exploit_run = learner.epsilon_greedy_search(
     gym_env,
     ep,
-    learner=dql_run['learner'],
+    learner=dql_run["learner"],
     episode_count=eval_episode_count,
     iteration_count=iteration_count,
     epsilon=0.0,
@@ -181,7 +186,7 @@ dql_exploit_run = learner.epsilon_greedy_search(
     render=False,
     plot_episodes_length=False,
     verbosity=Verbosity.Quiet,
-    title="Exploiting DQL"
+    title="Exploiting DQL",
 )
 
 
@@ -197,7 +202,7 @@ random_run = learner.epsilon_greedy_search(
     render=False,
     verbosity=Verbosity.Quiet,
     plot_episodes_length=False,
-    title="Random search"
+    title="Random search",
 )
 
 # %%
@@ -208,30 +213,26 @@ all_runs = [
     tabularq_run,
     tabularq_exploit_run,
     dql_run,
-    dql_exploit_run
+    dql_exploit_run,
 ]
 
 # Plot averaged cumulative rewards for DQL vs Random vs DQL-Exploit
 themodel = dqla.CyberBattleStateActionModel(ep)
 p.plot_averaged_cummulative_rewards(
     all_runs=all_runs,
-    title=f'Benchmark -- max_nodes={ep.maximum_node_count}, episodes={eval_episode_count},\n'
-    f'State: {[f.name() for f in themodel.state_space.feature_selection]} '
-    f'({len(themodel.state_space.feature_selection)}\n'
-    f"Action: abstract_action ({themodel.action_space.flat_size()})")
+    title=f"Benchmark -- max_nodes={ep.maximum_node_count}, episodes={eval_episode_count},\n"
+    f"State: {[f.name() for f in themodel.state_space.feature_selection]} "
+    f"({len(themodel.state_space.feature_selection)}\n"
+    f"Action: abstract_action ({themodel.action_space.flat_size()})",
+)
 
 # %%
-contenders = [
-    credlookup_run,
-    tabularq_run,
-    dql_run,
-    dql_exploit_run
-]
+contenders = [credlookup_run, tabularq_run, dql_run, dql_exploit_run]
 p.plot_episodes_length(contenders)
 p.plot_averaged_cummulative_rewards(
-    title=f'Agent Benchmark top contenders\n'
-    f'max_nodes:{ep.maximum_node_count}\n',
-    all_runs=contenders)
+    title=f"Agent Benchmark top contenders\n" f"max_nodes:{ep.maximum_node_count}\n",
+    all_runs=contenders,
+)
 
 
 # %%

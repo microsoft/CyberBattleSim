@@ -27,11 +27,6 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
-      # - name: Use node tools
-      #   uses: actions/setup-node@v2
-      #   with:
-      #     node-version: 16.x
-
       - name: Pull pip packages from cache
         uses: actions/cache@v3
         with:
@@ -51,9 +46,6 @@ jobs:
         run: |
           pip install flake8
           flake8 --benchmark
-
-      # - name: Initialize build environment
-      #   run: conda env create -f ./env.yml
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
