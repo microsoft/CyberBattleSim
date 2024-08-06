@@ -15,8 +15,8 @@ from gym.utils import seeding
 
 import numpy
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from plotly.graph_objects import Scatter  # type: ignore
+from plotly.subplots import make_subplots  # type: ignore
 
 from cyberbattle._env.defender import DefenderAgent
 from cyberbattle.simulation.model import PortName, PrivilegeLevel
@@ -1385,7 +1385,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         # plot the cumulative reward and network side by side using plotly
         fig = make_subplots(rows=1, cols=2)
         fig.add_trace(
-            go.Scatter(
+            Scatter(
                 y=numpy.array(self.__episode_rewards).cumsum(), name="cumulative reward"
             ),
             row=1,
