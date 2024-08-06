@@ -6,8 +6,8 @@ pandas==2.1.1
 jupyter>=1.0.0
 
 # training
-torch==1.13.1
-stable-baselines3==2.3.2
+torch==2.2.0
+stable-baselines3==1.6.0
 
 # linter and formatter
 flake8
