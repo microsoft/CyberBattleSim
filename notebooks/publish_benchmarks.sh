@@ -6,7 +6,10 @@ THIS_DIR=$(dirname "$0")
 
 BENCHMARK_DIR=$THIS_DIR/benchmarks
 
-cp -r $THIS_DIR/output/benchmark $BENCHMARK_DIR
+
+mkdir -p $BENCHMARK_DIR
+
+cp -r $THIS_DIR/output/benchmark/* $BENCHMARK_DIR/
 
 git add $BENCHMARK_DIR
 
