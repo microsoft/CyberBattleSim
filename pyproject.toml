@@ -4,3 +4,4 @@ exclude = [
     "typings",
     "venv"
 ]
+extend-include = ["*.ipynb"]

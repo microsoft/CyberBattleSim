@@ -9,9 +9,13 @@ import logging
 import sys
 from stable_baselines3.a2c.a2c import A2C
 from stable_baselines3.ppo.ppo import PPO
-from cyberbattle._env.flatten_wrapper import FlattenObservationWrapper, FlattenActionWrapper
+from cyberbattle._env.flatten_wrapper import (
+    FlattenObservationWrapper,
+    FlattenActionWrapper,
+)
 import os
 import numpy as np
+from stable_baselines3.common.type_aliases import GymEnv
 
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 retrain = ["a2c"]
@@ -51,20 +55,22 @@ ignore_fields = [
 ]
 env2 = FlattenObservationWrapper(cast(CyberBattleEnv, env1), ignore_fields=ignore_fields)
 
+env_as_gym = cast(GymEnv, env2)
+
 # %%
 if "a2c" in retrain:
-    model_a2c = A2C("MultiInputPolicy", env2).learn(10000) # type: ignore
+    model_a2c = A2C("MultiInputPolicy", env_as_gym).learn(10000)
     model_a2c.save("a2c_trained_toyctf")
 
 
 # %%
 if "ppo" in retrain:
-    model_ppo = PPO("MultiInputPolicy", env2).learn(100) # type: ignore
+    model_ppo = PPO("MultiInputPolicy", env_as_gym).learn(100)
     model_ppo.save("ppo_trained_toyctf")
 
 
 # %%
-model = A2C("MultiInputPolicy", env2).load("a2c_trained_toyctf") # type: ignore
+model = A2C("MultiInputPolicy", env_as_gym).load("a2c_trained_toyctf")
 # model = PPO("MultiInputPolicy", env2).load('ppo_trained_toyctf')
 
 
