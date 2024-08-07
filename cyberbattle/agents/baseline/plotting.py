@@ -96,12 +96,14 @@ def plot_all_episodes(r):
     plt.show()
 
 
-def plot_averaged_cummulative_rewards(title, all_runs, show=True):
+def plot_averaged_cummulative_rewards(title, all_runs, show=True, save_at=None):
     """Plot averaged cumulative rewards"""
     new_plot(title)
     for r in all_runs:
         plot_episodes_rewards_averaged(r)
     plt.legend(loc="lower right")
+    if save_at:
+        plt.savefig(save_at)
     if show:
         plt.show()
 
