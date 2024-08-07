@@ -32,6 +32,16 @@ class FlattenObservationWrapper(ObservationWrapper):
         else:
             return space
 
+    def flatten_multidiscrete_space(self, space: spaces.Space):
+        if isinstance(space, spaces.MultiDiscrete):
+            if type(space.nvec) in [tuple, list, np.ndarray]:
+                flatten_space = spaces.MultiDiscrete(space.nvec.flatten())
+                print(f"// MultiDiscrete flattened from {space.nvec} -> {flatten_space.nvec}")
+                return flatten_space
+            else:
+                print(f"// MultiDiscrete already flat: {space.nvec}")
+                return space
+
     def __init__(self, env: Env, ignore_fields=["action_mask"]):
         ObservationWrapper.__init__(self, env)
         self.env = env
@@ -42,15 +52,17 @@ class FlattenObservationWrapper(ObservationWrapper):
                 if key in ignore_fields:
                     print("Filtering out field", key)
                 elif isinstance(space, spaces.Dict):
-                    for k2, subspace in space.items():
-                        space_dict[f"{key}_{k2}"] = self.flatten_multibinary_space(subspace)
+                    for subkey, subspace in space.items():
+                        space_dict[f"{key}_{subkey}"] = self.flatten_multibinary_space(subspace)
                 elif isinstance(space, spaces.Tuple):
                     for i, subspace in enumerate(space.spaces):
                         space_dict[f"{key}_{i}"] = self.flatten_multibinary_space(subspace)
                 elif isinstance(space, spaces.MultiBinary):
                     space_dict[key] = self.flatten_multibinary_space(space)
-                elif isinstance(space, spaces.Discrete) or isinstance(space, spaces.MultiDiscrete):
+                elif isinstance(space, spaces.Discrete):
                     space_dict[key] = space
+                elif isinstance(space, spaces.MultiDiscrete):
+                    space_dict[key] = self.flatten_multidiscrete_space(space)
                 else:
                     raise NotImplementedError(f"Case not handled: {key} - type {type(space)}")
 
@@ -63,6 +75,12 @@ class FlattenObservationWrapper(ObservationWrapper):
             reshaped = o.reshape(flatten_dim)
             # print(f"reshaped: {reshaped.dtype} shape: {reshaped.shape}")
             return reshaped
+        else:
+            return o
+
+    def flatten_multidiscrete_observation(self, space, o):
+        if isinstance(space, spaces.MultiDiscrete):
+            return o.flatten()
         else:
             return o
 
@@ -81,8 +99,10 @@ class FlattenObservationWrapper(ObservationWrapper):
                         o[f"{key}_{i}"] = self.flatten_multibinary_observation(subspace, value[i])
                 elif isinstance(space, spaces.MultiBinary):
                     o[key] = self.flatten_multibinary_observation(space, value)
-                elif isinstance(space, spaces.Discrete) or isinstance(space, spaces.MultiDiscrete):
+                elif isinstance(space, spaces.Discrete):
                     o[key] = value
+                elif isinstance(space, spaces.MultiDiscrete):
+                    o[key] = self.flatten_multidiscrete_observation(space, value)
                 else:
                     raise NotImplementedError(f"Case not handled: {key} - type {type(space)}")
 

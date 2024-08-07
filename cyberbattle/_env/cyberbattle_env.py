@@ -309,7 +309,7 @@ class ObservationSpaceType(spaces.Dict):
                 "discovered_node_count": spaces.Discrete(bounds.maximum_node_count),
                 # Matrix of properties for all the discovered nodes
                 # 3 values for each matrix cell: set, unset, unknown
-                "discovered_nodes_properties": spaces.MultiDiscrete([3] * bounds.maximum_node_count * bounds.property_count),
+                "discovered_nodes_properties": spaces.MultiDiscrete(np.full(shape=(bounds.maximum_node_count, bounds.property_count), fill_value=3)),
                 # Escalation level on every discovered node (e.g., 0 if not owned, 1 for admin, 2 for system)
                 "nodes_privilegelevel": spaces.MultiDiscrete([CyberBattleEnv.privilege_levels] * bounds.maximum_node_count),
                 # Encoding of the credential cache of shape: (credential_cache_length, 2)
@@ -762,7 +762,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
             credential_cache_matrix=tuple([numpy.zeros((2), dtype=numpy.int64)] * self.__bounds.maximum_total_credentials),
             credential_cache_length=0,
             discovered_node_count=len(self.__discovered_nodes),
-            discovered_nodes_properties=numpy.full((self.__bounds.property_count * self.__bounds.maximum_node_count,), 2, dtype=numpy.int32),
+            discovered_nodes_properties=numpy.full((self.__bounds.maximum_node_count, self.__bounds.property_count,), 2, dtype=numpy.int32),
             nodes_privilegelevel=numpy.zeros((self.bounds.maximum_node_count,), dtype=numpy.int32),
             # raw data not actually encoded as a proper gym numeric space
             # (were previously returned in the 'info' dict)
@@ -808,7 +808,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         vector[properties_indices] = 1
         return vector
 
-    def __get_property_matrix(self) ->numpy.ndarray:
+    def __get_property_matrix(self) -> numpy.ndarray:
         """Return the Node-Property matrix,
         where  0 means the property is not set for that node
                1 means the property is set for that node
@@ -826,8 +826,8 @@ class CyberBattleEnv(CyberBattleSpaceKind):
             self.__bounds.property_count,
             self.__bounds.maximum_node_count,
         ))
-        # flatten the numpy array to a 1D array
-        return as_numpy.flatten()
+        assert as_numpy.shape == (self.__bounds.maximum_node_count, self.__bounds.property_count)
+        return as_numpy
 
     def __get__owned_nodes_indices(self) -> List[int]:
         """Get list of indices of all owned nodes"""
