@@ -15,7 +15,7 @@ Example usage:
 """
 
 import torch
-import gym
+import gymnasium as gym
 import logging
 import sys
 import asciichartpy

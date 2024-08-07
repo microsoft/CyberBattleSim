@@ -11,7 +11,7 @@ traditional Jupyter Notebook to open in your browser
 # %%
 import sys
 import logging
-import gym
+import gymnasium as gym
 import importlib
 
 import cyberbattle.agents.baseline.learner as learner

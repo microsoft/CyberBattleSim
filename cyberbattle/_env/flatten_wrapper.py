@@ -4,10 +4,10 @@ for CyberBattleEnv gym environment.
 
 from collections import OrderedDict
 from sqlite3 import NotSupportedError
-from gym import spaces
+from gymnasium import spaces
 import numpy as np
 from cyberbattle._env.cyberbattle_env import DummySpace, CyberBattleEnv, Action, CyberBattleSpaceKind
-from gym.core import ObservationWrapper, ActionWrapper
+from gymnasium.core import ObservationWrapper, ActionWrapper
 
 
 class FlattenObservationWrapper(ObservationWrapper):

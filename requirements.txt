@@ -1,6 +1,6 @@
 setuptools~=70.0.0
 wheel===0.44.0
-gym~=0.26.2
+gymnasium==0.29.1
 numpy==1.23.0
 boolean.py==4.0
 networkx==3.2.1

@@ -5,7 +5,7 @@
 """Test training of baseline agents."""
 
 import torch
-import gym
+import gymnasium as gym
 import logging
 import sys
 import cyberbattle._env.cyberbattle_env as cyberbattle_env

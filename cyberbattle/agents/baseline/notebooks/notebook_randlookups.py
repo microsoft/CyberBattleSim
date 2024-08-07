@@ -14,7 +14,7 @@ traditional Jupyter Notebook to open in your browser
 from cyberbattle._env.cyberbattle_env import AttackerGoal
 from cyberbattle.agents.baseline.agent_randomcredlookup import CredentialCacheExploiter
 import cyberbattle.agents.baseline.learner as learner
-import gym
+import gymnasium as gym
 import logging
 import sys
 import cyberbattle.agents.baseline.plotting as p

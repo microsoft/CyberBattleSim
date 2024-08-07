@@ -9,7 +9,7 @@ from cyberbattle._env.cyberbattle_env import EnvironmentBounds
 from typing import Optional, List, Tuple, overload
 import enum
 import numpy as np
-from gym import spaces, Wrapper
+from gymnasium import spaces, Wrapper
 from numpy import ndarray
 import cyberbattle._env.cyberbattle_env as cyberbattle_env
 import logging

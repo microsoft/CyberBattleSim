@@ -23,7 +23,7 @@ the DQL agent and then run it one step at a time.
 # %%
 import sys
 import logging
-import gym
+import gymnasium as gym
 import cyberbattle.agents.baseline.learner as learner
 import cyberbattle.agents.baseline.agent_wrapper as w
 import cyberbattle.agents.baseline.agent_dql as dqla
