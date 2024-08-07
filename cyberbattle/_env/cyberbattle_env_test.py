@@ -6,7 +6,7 @@
 from cyberbattle._env.option_wrapper import ContextWrapper, random_options
 from cyberbattle._env.cyberbattle_env import AttackerGoal, CyberBattleEnv
 import pytest
-import gym
+import gymnasium as gym
 import numpy as np
 from typing import cast
 

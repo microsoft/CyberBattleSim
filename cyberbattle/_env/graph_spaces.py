@@ -4,7 +4,7 @@
 from typing import Optional
 
 import networkx as nx
-from gym.spaces import Space, Dict
+from gymnasium.spaces import Space, Dict
 
 
 class BaseGraph(Space):
@@ -82,7 +82,7 @@ class MultiDiGraph(BaseGraph):
 
 
 if __name__ == "__main__":
-    from gym.spaces import Box, Discrete
+    from gymnasium.spaces import Box, Discrete
     import matplotlib.pyplot as plt  # type:ignore
 
     space = DiGraph(

@@ -4,12 +4,12 @@
 """A discriminated union space for Gym"""
 
 from collections import OrderedDict
-from typing import Mapping, Optional, TypeVar, Union
+from typing import Any, Mapping, Optional, Sequence, TypeVar, Union
 from typing import Dict as TypingDict, Generic, cast
 import numpy as np
 
-from gym import spaces
-from gym.utils import seeding
+from gymnasium import spaces
+from gymnasium.utils import seeding
 
 T_cov = TypeVar("T_cov", covariant=True)
 
@@ -80,10 +80,10 @@ class DiscriminatedUnion(spaces.Dict, Generic[T_cov]):
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + ", ".join([str(k) + ":" + str(s) for k, s in self.spaces.items()]) + ")"
 
-    def to_jsonable(self, sample_n: list) -> dict:
+    def to_jsonable(self, sample_n: Sequence[dict[str, Any]]) -> dict[str, list[Any]]:
         return super().to_jsonable(sample_n)
 
-    def from_jsonable(self, sample_n: TypingDict[str, list]) -> list[dict]:
+    def from_jsonable(self, sample_n: TypingDict[str, list]) ->  list[OrderedDict[str, Any]]:
         ret = super().from_jsonable(sample_n)
         assert len(ret) == 1
         return ret

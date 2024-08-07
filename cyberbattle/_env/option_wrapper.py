@@ -3,8 +3,8 @@
 
 from typing import NamedTuple
 
-import gym
-from gym.spaces import Space, Discrete, Tuple
+import gymnasium as gym
+from gymnasium.spaces import Space, Discrete, Tuple
 import numpy as onp
 from cyberbattle._env.cyberbattle_env import Action, CyberBattleEnv
 

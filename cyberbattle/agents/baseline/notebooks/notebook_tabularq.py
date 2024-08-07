@@ -14,7 +14,7 @@ traditional Jupyter Notebook to open in your browser
 import sys
 import logging
 from typing import cast
-import gym
+import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt  # type:ignore
 from cyberbattle.agents.baseline.learner import TrainedLearner

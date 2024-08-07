@@ -10,8 +10,8 @@ import networkx
 from networkx import convert_matrix
 from typing import NamedTuple, Optional, Tuple, List, Dict, TypeVar, TypedDict, cast
 
-from gym import spaces, Env
-from gym.utils import seeding
+from gymnasium import spaces, Env
+from gymnasium.utils import seeding
 
 import numpy
 
@@ -146,7 +146,7 @@ def inverse_dict(self: Dict[Key, Value]) -> Dict[Value, Key]:
 
 
 class DummySpace(spaces.Space):
-    """This class ensures that the values in the gym.spaces.Dict space are derived from gym.Space"""
+    """This class ensures that the values in the gym.spaces.Dict space are derived from gymnasium.Space"""
 
     def __init__(self, sample: object):
         self._sample = sample

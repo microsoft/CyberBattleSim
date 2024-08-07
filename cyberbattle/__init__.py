@@ -3,8 +3,8 @@
 
 """Initialize CyberBattleSim module"""
 
-from gym.envs.registration import registry, EnvSpec
-from gym.error import Error
+from gymnasium.envs.registration import registry, EnvSpec
+from gymnasium.error import Error
 
 from . import simulation
 from . import agents

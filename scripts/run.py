@@ -4,7 +4,7 @@
 """A sample run of the CyberBattle simulation"""
 
 from typing import cast
-import gym
+import gymnasium as gym
 import logging
 import sys
 from cyberbattle._env.cyberbattle_env import CyberBattleEnv

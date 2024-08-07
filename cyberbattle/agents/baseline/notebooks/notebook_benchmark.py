@@ -15,7 +15,7 @@ using the VSCode command `Export Currenty Python File As Jupyter Notebook`.
 # %%
 import sys
 import logging
-import gym
+import gymnasium as gym
 import cyberbattle.agents.baseline.learner as learner
 import cyberbattle.agents.baseline.plotting as p
 import cyberbattle.agents.baseline.agent_wrapper as w
