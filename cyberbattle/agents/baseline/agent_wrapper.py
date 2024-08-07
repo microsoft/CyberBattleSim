@@ -168,7 +168,7 @@ class Feature_discovered_nodeproperties_sliding(GlobalFeature):
 
     def get_global(self, a: StateAugmentation) -> ndarray:
         n = a.observation["discovered_node_count"]
-        node_prop = np.array(a.observation["discovered_nodes_properties"])[:n]
+        node_prop = a.observation["discovered_nodes_properties"][:n]
 
         # keep last window of entries
         node_prop_window = node_prop[-self.window_size :, :]
@@ -255,7 +255,7 @@ class Feature_discovered_notowned_node_count(GlobalFeature):
     """number of nodes discovered that are not owned yet (optionally clipped)"""
 
     def __init__(self, p: EnvironmentBounds, clip: Optional[int]):
-        self.clip = p.maximum_node_count if clip is None else clip
+        self.clip = np.int32(clip or p.maximum_node_count)
         super().__init__(p, [self.clip + 1])
 
     def get_global(self, a: StateAugmentation):
@@ -263,8 +263,8 @@ class Feature_discovered_notowned_node_count(GlobalFeature):
         node_props = np.array(a.observation["discovered_nodes_properties"][:discovered])
         # here we assume that a node is owned just if all its properties are known
         owned = np.count_nonzero(np.all(node_props != 2, axis=1))
-        diff = discovered - owned
-        return np.array([min(diff, self.clip)], dtype=np.int_)
+        diff = np.int32(discovered - owned)
+        return np.array( [np.min((diff, self.clip))], dtype=np.int32)
 
 
 class Feature_owned_node_count(GlobalFeature):

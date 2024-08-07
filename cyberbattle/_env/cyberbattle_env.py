@@ -22,7 +22,7 @@ from cyberbattle._env.defender import DefenderAgent
 from cyberbattle.simulation.model import PortName, PrivilegeLevel
 from ..simulation import commandcontrol, model, actions
 from .discriminatedunion import DiscriminatedUnion
-
+import numpy as np
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ Observation = TypedDict(
         # whether a lateral move was just performed
         "lateral_move": numpy.int32,
         # whether customer data were just discovered
-        "customer_data_found": Tuple[numpy.int32],
+        "customer_data_found": numpy.int32,
         # 0 if there were no probing attempt
         # 1 if an attempted probing failed
         # 2 if an attempted probing succeeded
@@ -90,7 +90,7 @@ Observation = TypedDict(
         # total nodes discovered so far
         "discovered_node_count": int,
         # Matrix of properties for all the discovered nodes
-        "discovered_nodes_properties": Tuple[numpy.ndarray, ...],
+        "discovered_nodes_properties": numpy.ndarray,
         # Node privilege level on every discovered node (e.g., 0 if not owned, 1 owned, 2  admin, 3 for system)
         "nodes_privilegelevel": numpy.ndarray,
         # Tuple encoding of the credential cache matrix.
@@ -183,14 +183,14 @@ class EnvironmentBounds(NamedTuple):
     remote_attacks_count  - Unique remote vulnerabilities
     """
 
-    maximum_total_credentials: int
-    maximum_node_count: int
-    maximum_discoverable_credentials_per_action: int
+    maximum_total_credentials: np.int32
+    maximum_node_count: np.int32
+    maximum_discoverable_credentials_per_action: np.int32
 
-    port_count: int
-    property_count: int
-    local_attacks_count: int
-    remote_attacks_count: int
+    port_count: np.int32
+    property_count: np.int32
+    local_attacks_count: np.int32
+    remote_attacks_count: np.int32
 
     @classmethod
     def of_identifiers(
@@ -200,16 +200,27 @@ class EnvironmentBounds(NamedTuple):
         maximum_node_count: int,
         maximum_discoverable_credentials_per_action: Optional[int] = None,
     ):
-        if not maximum_discoverable_credentials_per_action:
-            maximum_discoverable_credentials_per_action = maximum_total_credentials
+
+        maximum_discoverable_credentials_per_action = maximum_discoverable_credentials_per_action or maximum_total_credentials
+
+        assert np.can_cast(maximum_total_credentials, np.int32), "maximum_total_credentials must be a 32-bit integer"
+        assert np.can_cast(maximum_node_count, np.int32), "maximum_node_count must be a 32-bit integer"
+        assert maximum_total_credentials > 0, "maximum_total_credentials must be positive"
+        assert maximum_node_count > 0, "maximum_node_count must be positive"
+        assert np.can_cast(len(identifiers.ports), np.int32), "port_count must be a 32-bit integer"
+        assert np.can_cast(len(identifiers.properties), np.int32), "property_count must be a 32-bit integer"
+        assert np.can_cast(len(identifiers.local_vulnerabilities), np.int32), "local_attacks_count must be a 32-bit integer"
+        assert np.can_cast(len(identifiers.remote_vulnerabilities), np.int32), "remote_attacks_count must be a 32-bit integer"
+        assert np.can_cast(maximum_discoverable_credentials_per_action, np.int32), "maximum_discoverable_credentials_per_action must be a 32-bit integer"
+
         return EnvironmentBounds(
-            maximum_total_credentials=maximum_total_credentials,
-            maximum_node_count=maximum_node_count,
-            maximum_discoverable_credentials_per_action=maximum_discoverable_credentials_per_action,
-            port_count=len(identifiers.ports),
-            property_count=len(identifiers.properties),
-            local_attacks_count=len(identifiers.local_vulnerabilities),
-            remote_attacks_count=len(identifiers.remote_vulnerabilities),
+            maximum_total_credentials=np.int32(maximum_total_credentials),
+            maximum_node_count=np.int32(maximum_node_count),
+            maximum_discoverable_credentials_per_action=np.int32(maximum_discoverable_credentials_per_action),
+            port_count=np.int32(len(identifiers.ports)),
+            property_count=np.int32(len(identifiers.properties)),
+            local_attacks_count=np.int32(len(identifiers.local_vulnerabilities)),
+            remote_attacks_count=np.int32(len(identifiers.remote_vulnerabilities)),
         )
 
 
@@ -252,7 +263,7 @@ class ObservationSpaceType(spaces.Dict):
                 # successuflly moved to the target node (1) or not (0)
                 "lateral_move": spaces.Discrete(2),
                 # boolean: 1 if customer secret data were discovered, 0 otherwise
-                "customer_data_found": spaces.MultiBinary(2),
+                "customer_data_found": spaces.Discrete(2),
                 # whether an attempted probing succeeded or not
                 "probe_result": spaces.Discrete(3),
                 # Esclation result
@@ -271,12 +282,12 @@ class ObservationSpaceType(spaces.Dict):
                     #          that was used to authenticat to target node 56 on port number 22 (e.g. SSH)
                     [
                         spaces.MultiDiscrete(
-                            [
+                            np.array([
                                 NA + 1,
                                 bounds.maximum_total_credentials,
                                 bounds.maximum_node_count,
                                 bounds.port_count,
-                            ]
+                            ], dtype=np.int32)
                         )
                     ]
                     * bounds.maximum_discoverable_credentials_per_action
@@ -287,9 +298,9 @@ class ObservationSpaceType(spaces.Dict):
                 # even though such action would 'fail' and potentially yield a negative reward.
                 "action_mask": spaces.Dict(
                     {
-                        "local_vulnerability": spaces.MultiBinary(bounds.maximum_node_count * bounds.local_attacks_count),
-                        "remote_vulnerability": spaces.MultiBinary(bounds.maximum_node_count * bounds.maximum_node_count * bounds.remote_attacks_count),
-                        "connect": spaces.MultiBinary(bounds.maximum_node_count * bounds.maximum_node_count * bounds.port_count * bounds.maximum_total_credentials),
+                        "local_vulnerability": spaces.MultiBinary(np.array([bounds.maximum_node_count,  bounds.local_attacks_count])),
+                        "remote_vulnerability": spaces.MultiBinary(np.array([bounds.maximum_node_count, bounds.maximum_node_count, bounds.remote_attacks_count])),
+                        "connect": spaces.MultiBinary(np.array([bounds.maximum_node_count, bounds.maximum_node_count, bounds.port_count, bounds.maximum_total_credentials], dtype=np.int32))
                     }
                 ),
                 # size of the credential stack
@@ -298,7 +309,7 @@ class ObservationSpaceType(spaces.Dict):
                 "discovered_node_count": spaces.Discrete(bounds.maximum_node_count),
                 # Matrix of properties for all the discovered nodes
                 # 3 values for each matrix cell: set, unset, unknown
-                "discovered_nodes_properties": spaces.MultiDiscrete([3] * bounds.maximum_node_count * bounds.property_count),
+                "discovered_nodes_properties": spaces.MultiDiscrete(np.full(shape=(bounds.maximum_node_count, bounds.property_count), fill_value=3)),
                 # Escalation level on every discovered node (e.g., 0 if not owned, 1 for admin, 2 for system)
                 "nodes_privilegelevel": spaces.MultiDiscrete([CyberBattleEnv.privilege_levels] * bounds.maximum_node_count),
                 # Encoding of the credential cache of shape: (credential_cache_length, 2)
@@ -306,7 +317,7 @@ class ObservationSpaceType(spaces.Dict):
                 # Each row represent a discovered credential,
                 # the credential index is given by the row index (i.e. order of discovery)
                 # A row is of the form: (target_node_discover_index, port_index)
-                "credential_cache_matrix": spaces.Tuple([spaces.MultiDiscrete([bounds.maximum_node_count, bounds.port_count])] * bounds.maximum_total_credentials),
+                "credential_cache_matrix": spaces.Tuple([spaces.MultiDiscrete(np.array([bounds.maximum_node_count, bounds.port_count],dtype=np.int32))] * bounds.maximum_total_credentials),
                 # ---------------------------------------------------------
                 # Fields that were previously in the 'info' dict:
                 # ---------------------------------------------------------
@@ -460,7 +471,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         self,
         initial_environment: model.Environment,
         maximum_total_credentials: int = 1000,
-        maximum_node_count: int = 100,
+        maximum_node_count: int =  100,
         maximum_discoverable_credentials_per_action: int = 5,
         defender_agent: Optional[DefenderAgent] = None,
         attacker_goal: Optional[AttackerGoal] = AttackerGoal(own_atleast_percent=1.0),
@@ -523,27 +534,27 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         # The Space object defining the valid actions of an attacker.
         local_vulnerabilities_count = self.__bounds.local_attacks_count
         remote_vulnerabilities_count = self.__bounds.remote_attacks_count
-        maximum_node_count = self.__bounds.maximum_node_count
+        maximum_node_count_int32 = self.__bounds.maximum_node_count
         port_count = self.__bounds.port_count
 
         action_spaces = {
             "local_vulnerability": spaces.MultiDiscrete(
                 # source_node_id, vulnerability_id
-                [maximum_node_count, local_vulnerabilities_count]
+                np.array([maximum_node_count_int32, local_vulnerabilities_count], dtype=np.int32)
             ),
             "remote_vulnerability": spaces.MultiDiscrete(
                 # source_node_id, target_node_id, vulnerability_id
-                [maximum_node_count, maximum_node_count, remote_vulnerabilities_count]
+                np.array([maximum_node_count_int32, maximum_node_count_int32, remote_vulnerabilities_count], dtype=np.int32)
             ),
             "connect": spaces.MultiDiscrete(
                 # source_node_id, target_node_id, target_port, credential_id
                 # (by index of discovery: 0 for initial node, 1 for first discovered node, ...)
-                [
-                    maximum_node_count,
-                    maximum_node_count,
+                np.array([
+                    maximum_node_count_int32,
+                    maximum_node_count_int32,
                     port_count,
                     maximum_total_credentials,
-                ]
+                ], dtype=np.int32)
             ),
         }
 
@@ -613,10 +624,10 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         local_vulnerabilities_count = self.__bounds.local_attacks_count
         remote_vulnerabilities_count = self.__bounds.remote_attacks_count
         port_count = self.__bounds.port_count
-        local = numpy.zeros(shape=(max_node_count, local_vulnerabilities_count), dtype=numpy.int32)
+        local = numpy.zeros(shape=(max_node_count, local_vulnerabilities_count), dtype=numpy.int8)
         remote = numpy.zeros(
             shape=(max_node_count, max_node_count, remote_vulnerabilities_count),
-            dtype=numpy.int32,
+            dtype=numpy.int8,
         )
         connect = numpy.zeros(
             shape=(
@@ -625,7 +636,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
                 port_count,
                 self.__bounds.maximum_total_credentials,
             ),
-            dtype=numpy.int32,
+            dtype=numpy.int8,
         )
         return ActionMask(local_vulnerability=local, remote_vulnerability=remote, connect=connect)
 
@@ -744,14 +755,14 @@ class CyberBattleEnv(CyberBattleSpaceKind):
             newly_discovered_nodes_count=numpy.int32(0),
             leaked_credentials=tuple([numpy.array([UNUSED_SLOT, 0, 0, 0], dtype=numpy.int32)] * self.__bounds.maximum_discoverable_credentials_per_action),
             lateral_move=numpy.int32(0),
-            customer_data_found=(numpy.int32(0),),
+            customer_data_found=numpy.int32(0),
             escalation=numpy.int32(PrivilegeLevel.NoAccess),
             action_mask=self.__get_blank_action_mask(),
             probe_result=numpy.int32(0),
-            credential_cache_matrix=tuple([numpy.zeros((2))] * self.__bounds.maximum_total_credentials),
+            credential_cache_matrix=tuple([numpy.zeros((2), dtype=numpy.int64)] * self.__bounds.maximum_total_credentials),
             credential_cache_length=0,
             discovered_node_count=len(self.__discovered_nodes),
-            discovered_nodes_properties=tuple([numpy.full((self.__bounds.property_count,), 2, dtype=numpy.int32)] * self.__bounds.maximum_node_count),
+            discovered_nodes_properties=numpy.full((self.__bounds.maximum_node_count, self.__bounds.property_count,), 2, dtype=numpy.int32),
             nodes_privilegelevel=numpy.zeros((self.bounds.maximum_node_count,), dtype=numpy.int32),
             # raw data not actually encoded as a proper gym numeric space
             # (were previously returned in the 'info' dict)
@@ -797,7 +808,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         vector[properties_indices] = 1
         return vector
 
-    def __get_property_matrix(self) -> Tuple[numpy.ndarray, ...]:
+    def __get_property_matrix(self) -> numpy.ndarray:
         """Return the Node-Property matrix,
         where  0 means the property is not set for that node
                1 means the property is set for that node
@@ -810,11 +821,13 @@ class CyberBattleEnv(CyberBattleSpaceKind):
          2nd row: no known properties for the 2nd discovered node
          3rd row: properties of 3rd discovered and owned node"""
         property_discovered = [self.__property_vector(node_id, node_info) for node_id, node_info in self._actuator.discovered_nodes()]
-        return self.__pad_tuple_if_requested(
+        as_numpy = numpy.array(self.__pad_tuple_if_requested(
             property_discovered,
             self.__bounds.property_count,
             self.__bounds.maximum_node_count,
-        )
+        ))
+        assert as_numpy.shape == (self.__bounds.maximum_node_count, self.__bounds.property_count)
+        return as_numpy
 
     def __get__owned_nodes_indices(self) -> List[int]:
         """Get list of indices of all owned nodes"""
@@ -896,7 +909,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         elif isinstance(outcome, model.LateralMove):
             obs["lateral_move"] = numpy.int32(1)
         elif isinstance(outcome, model.CustomerData):
-            obs["customer_data_found"] = (numpy.int32(1),)
+            obs["customer_data_found"] = numpy.int32(1)
         elif isinstance(outcome, model.ProbeSucceeded):
             obs["probe_result"] = numpy.int32(2)
         elif isinstance(outcome, model.ProbeFailed):
@@ -1179,7 +1192,8 @@ class CyberBattleEnv(CyberBattleSpaceKind):
     ) -> Tuple[Observation, dict]:
         LOGGER.info("Resetting the CyberBattle environment")
         self.__reset_environment()
-        self.seed(seed)
+        self.np_random, seed = seeding.np_random(seed)
+
         observation = self.__get_blank_observation()
         observation["action_mask"] = self.compute_action_mask()
         observation["discovered_nodes_properties"] = self.__get_property_matrix()
@@ -1208,13 +1222,6 @@ class CyberBattleEnv(CyberBattleSpaceKind):
     def render(self, mode: str = "human") -> None:
         fig = self.render_as_fig()
         fig.show(renderer=self.__renderer)
-
-    def seed(self, seed: Optional[int] = None) -> None:
-        if seed is None:
-            self._seed = seed
-            return
-
-        self.np_random, seed = seeding.np_random(seed)
 
     def close(self) -> None:
         return None
