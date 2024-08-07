@@ -59,7 +59,8 @@ Read the [Quick introduction](/docs/quickintro.md) to the project.
 
 ## Benchmark
 
-See [Benchmark](/docs/benchmark.md).
+See [Benchmark documentation](/docs/benchmark.md).
+Jupyter notebooks with the latest runs are checked-in under a dedicated tag at [/notebooks/benchmarks (latest_benchmark)](https://github.com/microsoft/CyberBattleSim/tree/latest_benchmark/notebooks/benchmarks).
 
 ## Setting up a dev environment
 

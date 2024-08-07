@@ -36,5 +36,36 @@ run notebook_benchmark-chain -y "
     plots_dir: $output_plot_dir
 "
 
+run notebook_benchmark-toyctf -y "
+    plots_dir: $output_plot_dir
+"
+
+run notebook_benchmark-chain -y "
+    plots_dir: $output_plot_dir
+"
+
+run notebook_benchmark-tiny -y "
+  plots_dir: $output_plot_dir
+"
+
+run notebook_dql_transfer -y "
+    plots_dir: $output_plot_dir
+"
+
+run notebook_randlookups -y "
+    plots_dir: $output_plot_dir
+"""
+
+run notebook_tabularq -y "
+    plots_dir: $output_plot_dir
+"
+
+run notebook_withdefender -y "
+    plots_dir: $output_plot_dir
+"
+
+run dql_active_directory -y "
+  iteration_count: 50
+"
 
 popd

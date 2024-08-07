@@ -1,6 +1,8 @@
 # Benchmark on baseline agent implementations
 
-Results obtained on envrionment `CyberBattleChain10` using several algorithms: purely random search, Q-learning with epsilon-greedy, exploiting learned matrix only.
+Results obtained on envrionment `CyberBattleChain10` using following algorithms: purely random search, Q-learning with epsilon-greedy, exploiting learned matrix only.
+
+Jupyter notebooks with the latest benchmark runs are available at [/notebooks/benchmarks (latest_benchmark)](https://github.com/microsoft/CyberBattleSim/tree/latest_benchmark/notebooks/benchmarks).
 
 ## Time to full ownership on `chain` network environment
 
