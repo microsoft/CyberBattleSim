@@ -355,7 +355,7 @@ class Identifiers(NamedTuple):
     # Array of all possible node property identifiers
     properties: List[PropertyName] = []
     # Array of all possible port names
-    ports: List[PortName] = []
+    ports: List[PortName] = ["Null"]
     # Array of all possible local vulnerabilities names
     local_vulnerabilities: List[VulnerabilityID] = []
     # Array of all possible remote vulnerabilities names

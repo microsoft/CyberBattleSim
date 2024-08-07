@@ -76,9 +76,9 @@ run notebook_randlookups -y "
 """
 
 run notebook_tabularq -y "
-iteration_count: 200
-training_episode_count: 5
-eval_episode_count: 2
+    iteration_count: 200
+    training_episode_count: 5
+    eval_episode_count: 2
 "
 
 run notebook_withdefender -y "
@@ -88,8 +88,8 @@ run notebook_withdefender -y "
 "
 
 run dql_active_directory -y "
-  ngyms: 3
-  iteration_count: 50
+    ngyms: 3
+    iteration_count: 50
 "
 
 popd
