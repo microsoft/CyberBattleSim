@@ -44,16 +44,8 @@ run chainnetwork-random '' -y "
 "
 run randomnetwork ''
 
-run notebook_benchmark '-toyctf' -y "
-    iteration_count: 100
-    training_episode_count: 3
-    eval_episode_count: 5
-    maximum_node_count: 12
-    maximum_total_credentials: 10
-    plots_dir: $output_plot_dir
-"
-
 run notebook_benchmark '-chain' -y "
+    gymid: 'CyberBattleChain-v0'
     iteration_count: 100
     training_episode_count: 5
     eval_episode_count: 3
@@ -62,13 +54,26 @@ run notebook_benchmark '-chain' -y "
     plots_dir: $output_plot_dir
 "
 
+run notebook_benchmark '-toyctf' -y "
+    gymid: 'CyberBattleToyCtf-v0'
+    env_size: null
+    iteration_count: 100
+    training_episode_count: 3
+    eval_episode_count: 5
+    maximum_node_count: 12
+    maximum_total_credentials: 10
+    plots_dir: $output_plot_dir
+"
+
 run notebook_benchmark '-tiny' -y "
-  iteration_count: 100
-  training_episode_count: 4
-  eval_episode_count: 2
-  maximum_node_count: 5
-  maximum_total_credentials: 3
-  plots_dir: $output_plot_dir
+    gymid: 'CyberBattleTiny-v0'
+    env_size: null
+    iteration_count: 100
+    training_episode_count: 4
+    eval_episode_count: 2
+    maximum_node_count: 5
+    maximum_total_credentials: 3
+    plots_dir: $output_plot_dir
 "
 
 run notebook_dql_transfer '' -y "
