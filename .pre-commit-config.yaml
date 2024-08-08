@@ -24,7 +24,5 @@ repos:
       rev: v2.4.0
       hooks:
           - id: trailing-whitespace
-          - id: end-of-file-fixer
-            exclude: '.*\.ipynb$'
           - id: check-yaml
           - id: check-added-large-files

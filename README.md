@@ -206,44 +206,41 @@ Cumulative rewards -- DQN=Red, Random=Green
 
 ## Jupyter notebooks
 
-To quickly get familiar with the project, you can open one of the provided Jupyter notebooks to play interactively with
-the gym environments. At the root of the repository run the following command and then open the notebook in the `notebooks` folder
-from the Jupyter interface:
+To quickly get familiar with the project, you can open one of the provided Jupyter notebooks to play interactively with the gymnasium environments.
 
-```python
-export PYTHONPATH=$(pwd)
-jupyter lab
-```
+> Notes on the `.py` notebooks:
+> - Our notebooks are checked-in in Git as `.py` files. Those can be opened and run directly  in VSCode or in Jupyter using the [Jupytext extension](https://jupytext.readthedocs.io/en/latest/install.html).
+> - The output `.ipynb` files can also be automatically regenerated using [papermill](https://pypi.org/project/papermill/) by running the bash script [run_benchmark.sh](/notebooks/run_benchmark.sh).
+> - We also publish a snapshot of the corresponding `.ipynb`-notebooks with the entire output and plots in a separate git tag.
+The latest snapshot of the Jupyter notebooks output, including the benchmarks, are
+accessible from the following git tag: [/notebooks/benchmarks (latest_benchmark)](https://github.com/microsoft/CyberBattleSim/tree/latest_benchmark/notebooks/benchmarks).
+
 
 Some notebooks to get started:
 
 - 'Capture The Flag' toy environment notebooks:
-  - [Random agent](notebooks/toyctf-random.ipynb)
-  - [Interactive session for a human player](notebooks/toyctf-blank.ipynb)
-  - [Interactive session - fully solved](notebooks/toyctf-solved.ipynb)
+  - [Random agent](notebooks/toyctf-random.py)
+  - [Interactive session for a human player](notebooks/toyctf-blank.py)
+  - [Interactive session - fully solved](notebooks/toyctf-solved.py)
 
 - Chain environment notebooks:
-  - [Random agent](notebooks/chainnetwork-random.ipynb)
+  - [Random agent](notebooks/chainnetwork-random.py)
 
 - Other environments:
-  - [Interactive session with a randomly generated environment](notebooks/randomnetwork.ipynb)
-  - [Random agent playing on randomly generated networks](notebooks/c2_interactive_interface.ipynb)
+  - [Interactive session with a randomly generated environment](notebooks/randomnetwork.py)
+  - [Random agent playing on randomly generated networks](notebooks/c2_interactive_interface.py)
 
-- Benchmarks:
+- Benchmarks:   The following notebooks show benchmark evaluation of the baseline agents on various environments.
 
-  The following notebooks show benchmark evaluation of the baseline agents on various environments.
+    - [Benchmarking on a given environment](notebooks/notebook_benchmark.py)
+    - [Benchmark on chain environments with a basic defender](notebooks/notebook_withdefender.py)
+    - [DQL transfer learning evaluation](notebooks/notebook_dql_transfer.py)
+    - [Epsilon greedy with credential lookups](notebooks/notebook_randlookups.py)
+    - [Tabular Q Learning](notebooks/notebook_tabularq.py)
 
-  > The source `.py`-versions of the notebooks are best viewed in VSCode or in Jupyter with the [Jupytext extension](https://jupytext.readthedocs.io/en/latest/install.html).
-  The `notebooks` folder contains the corresponding `.ipynb`-notebooks
-  with the entire output and plots. These can be regenerated via [papermill](https://pypi.org/project/papermill/) using this [bash script](cyberbattle/agents/baseline/notebooks/runall.sh)
-  .
+The latest snapshot of the Jupyter notebooks output, including the benchmarks, are
+accessible from the following git tag: [/notebooks/benchmarks (latest_benchmark)](https://github.com/microsoft/CyberBattleSim/tree/latest_benchmark/notebooks/benchmarks).
 
-    - Benchmarking on a given environment: [source](cyberbattle/agents/baseline/notebooks/notebook_benchmark.py): [output (Chain)](notebooks/notebook_benchmark-chain.ipynb), [output (Capture the flag)](notebooks/notebook_benchmark-toyctf.ipynb)
-    - Benchmark on chain environments with a basic defender: [source](cyberbattle/agents/baseline/notebooks/notebook_withdefender.py),
-    [output](notebooks/notebook_withdefender.ipynb);
-    - DQL transfer learning evaluation: [source](cyberbattle/agents/baseline/notebooks/notebook_dql_transfer.py), [output](notebooks/notebook_dql_transfer.ipynb);
-    - Epsilon greedy with credential lookups: [source](cyberbattle/agents/baseline/notebooks/notebook_randlookups.py), [output](notebooks/notebook_randlookups.ipynb);
-    - Tabular Q Learning: [source](cyberbattle/agents/baseline/notebooks/notebook_tabularq.py); [output](notebooks/notebook_tabularq.ipynb)
 
 ## How to instantiate the Gym environments?
 

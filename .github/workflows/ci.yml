@@ -73,13 +73,13 @@ jobs:
           pip install pytest-azurepipelines
           python -m pytest -v cyberbattle
 
-      - name: Papermill notebooks
+      - name: Papermill all notebooks in quick mode
         shell: bash -el {0}
         run: |
           conda activate cybersim
           jupyter kernelspec list
           cd notebooks
-          bash run_all.sh python3
+          bash run_quick.sh python3
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')
 
       - name: Archive milled notebooks

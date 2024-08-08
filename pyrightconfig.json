@@ -1,7 +1,8 @@
 {
     "exclude": [
-        "**/.ipynb_checpoints",
+        "**/.ipynb_checkpoints",
         "**/__pycache__",
+        "**/outputs/**",
         "typings",
         "venv"
     ],

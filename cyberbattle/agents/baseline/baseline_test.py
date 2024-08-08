@@ -24,6 +24,7 @@ cyberbattlechain = cast(cyberbattle_env.CyberBattleEnv, gym.make("CyberBattleCha
 
 ep = w.EnvironmentBounds.of_identifiers(maximum_total_credentials=10, maximum_node_count=10, identifiers=cyberbattlechain.identifiers)
 
+# %% {"tags": ["parameters"]}
 training_episode_count = 2
 iteration_count = 5
 
