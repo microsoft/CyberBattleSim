@@ -366,7 +366,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
     or if one of the defender's constraints is not met (e.g. SLA).
     """
 
-    metadata = {"render.modes": ["human"]}
+    metadata = {"render_modes": ["human"]}
 
     @property
     def environment(self) -> model.Environment:
@@ -1189,7 +1189,7 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         *,
         seed: Optional[int] = None,
         options: Optional[dict] = None,
-    ) -> Tuple[Observation, dict]:
+    ) -> Tuple[Observation, StepInfo]:
         LOGGER.info("Resetting the CyberBattle environment")
         self.__reset_environment()
         self.np_random, seed = seeding.np_random(seed)
@@ -1199,7 +1199,13 @@ class CyberBattleEnv(CyberBattleSpaceKind):
         observation["discovered_nodes_properties"] = self.__get_property_matrix()
         observation["nodes_privilegelevel"] = self.__get_privilegelevel_array()
         self.__owned_nodes_indices_cache = None
-        info = {}
+        info = StepInfo(
+            description="CyberBattle simulation",
+            duration_in_ms=0,
+            step_count=self.__stepcount,
+            network_availability=self._defender_actuator.network_availability,
+            credential_cache=self.__credential_cache,
+        )
         return observation, info
 
     def render_as_fig(self):
