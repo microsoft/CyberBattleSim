@@ -22,24 +22,24 @@ Requirements:
 # # Chain network CyberBattle Gym played by a Deeo Q-learning agent
 
 # %%
-from numpy import ndarray
-from cyberbattle._env import cyberbattle_env
-import numpy as np
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Tuple, Union
 import random
+import numpy as np
+from numpy import ndarray
 
 # deep learning packages
+import torch
 from torch import Tensor
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.nn as nn
-import torch
-import torch.cuda
+# import torch.cuda
 from torch.nn.utils.clip_grad import clip_grad_norm_
 
+from cyberbattle._env import cyberbattle_env
+import cyberbattle.agents.baseline.agent_wrapper as w
 from .learner import Learner
 from .agent_wrapper import EnvironmentBounds
-import cyberbattle.agents.baseline.agent_wrapper as w
 from .agent_randomcredlookup import CredentialCacheExploiter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -135,10 +135,10 @@ class CyberBattleStateActionModel:
 class Transition(NamedTuple):
     """One taken transition and its outcome"""
 
-    state: Union[Tuple[Tensor], List[Tensor]]
-    action: Union[Tuple[Tensor], List[Tensor]]
-    next_state: Union[Tuple[Tensor], List[Tensor]]
-    reward: Union[Tuple[Tensor], List[Tensor]]
+    state: Union[Tuple[Tensor], list[Tensor]]
+    action: Union[Tuple[Tensor], list[Tensor]]
+    next_state: Union[Tuple[Tensor], list[Tensor]]
+    reward: Union[Tuple[Tensor], list[Tensor]]
 
 
 class ReplayMemory(object):
@@ -395,7 +395,7 @@ class DeepQLearnerPolicy(Learner):
         if i_episode % self.target_update == 0:
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
-    def lookup_dqn(self, states_to_consider: List[ndarray]) -> Tuple[List[np.int32], List[np.int32]]:
+    def lookup_dqn(self, states_to_consider: list[ndarray]) -> Tuple[list[np.int32], list[np.int32]]:
         """Given a set of possible current states return:
         - index, in the provided list, of the state that would yield the best possible outcome
         - the best action to take in such a state"""
@@ -472,12 +472,12 @@ class DeepQLearnerPolicy(Learner):
         current_global_state = self.stateaction_model.global_features.get(wrapped_env.state, node=None)
 
         # Gather the features of all the current active actors (i.e. owned nodes)
-        active_actors_features: List[ndarray] = [self.stateaction_model.node_specific_features.get(wrapped_env.state, from_node) for from_node in w.owned_nodes(observation)]
+        active_actors_features: list[ndarray] = [self.stateaction_model.node_specific_features.get(wrapped_env.state, from_node) for from_node in w.owned_nodes(observation)]
 
-        unique_active_actors_features: List[ndarray] = list(np.unique(active_actors_features, axis=0))
+        unique_active_actors_features: list[ndarray] = list(np.unique(active_actors_features, axis=0))
 
         # array of actor state vector for every possible set of node features
-        candidate_actor_state_vector: List[ndarray] = [self.get_actor_state_vector(current_global_state, node_features) for node_features in unique_active_actors_features]
+        candidate_actor_state_vector: list[ndarray] = [self.get_actor_state_vector(current_global_state, node_features) for node_features in unique_active_actors_features]
 
         remaining_action_lookups, remaining_expectedq_lookups = self.lookup_dqn(candidate_actor_state_vector)
         remaining_candidate_indices = list(range(len(candidate_actor_state_vector)))

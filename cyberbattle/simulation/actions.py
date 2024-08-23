@@ -10,22 +10,18 @@ which both the user and RL agents should manipulate the environment.
 
 from dataclasses import dataclass
 import dataclasses
-import datetime
-from boolean import boolean
+from datetime import datetime
 from collections import OrderedDict
 import logging
 from enum import Enum
 from typing import (
     Iterator,
-    List,
     NamedTuple,
     Optional,
-    Set,
-    Tuple,
-    Dict,
     TypedDict,
     cast,
 )
+import boolean
 from IPython.display import display
 import pandas as pd
 
@@ -40,8 +36,7 @@ from cyberbattle.simulation.model import (
 from . import model
 
 
-logger = logging.getLogger(__name__)
-Reward = float
+log = logging.getLogger(__name__)
 
 DiscoveredNodeInfo = TypedDict("DiscoveredNodeInfo", {"id": model.NodeID, "status": str})
 
@@ -81,16 +76,18 @@ class Penalty:
 # Reward for the first time a local or remote attack
 # gets successfully executed since the last time the target node was imaged.
 # NOTE: the attack cost gets substracted from this reward.
-NEW_SUCCESSFULL_ATTACK_REWARD = 7
+class Reward:
+    """Rewards returned from successful actions"""
+    NEW_SUCCESSFULL_ATTACK_REWARD = 7
 
-# Fixed reward for discovering a new node
-NODE_DISCOVERED_REWARD = 5
+    # Fixed reward for discovering a new node
+    NODE_DISCOVERED_REWARD = 5
 
-# Fixed reward for discovering a new credential
-CREDENTIAL_DISCOVERED_REWARD = 3
+    # Fixed reward for discovering a new credential
+    CREDENTIAL_DISCOVERED_REWARD = 3
 
-# Fixed reward for discovering a new node property
-PROPERTY_DISCOVERED_REWARD = 2
+    # Fixed reward for discovering a new node property
+    PROPERTY_DISCOVERED_REWARD = 2
 
 
 class EdgeAnnotation(Enum):
@@ -104,7 +101,7 @@ class EdgeAnnotation(Enum):
 class ActionResult(NamedTuple):
     """Result from executing an action"""
 
-    reward: Reward
+    reward: float
     outcome: Optional[model.VulnerabilityOutcome]
 
 
@@ -117,11 +114,11 @@ class NodeTrackingInformation:
 
     # Map (vulnid, local_or_remote) to time of last attack.
     # local_or_remote is true for local, false for remote
-    last_attack: Dict[Tuple[model.VulnerabilityID, bool], datetime.datetime] = dataclasses.field(default_factory=dict)
+    last_attack: dict[tuple[model.VulnerabilityID, bool], datetime] = dataclasses.field(default_factory=dict)
     # Last time the node got owned by the attacker agent
-    last_owned_at: Optional[datetime.datetime] = None
+    last_owned_at: Optional[datetime] = None
     # All node properties discovered so far
-    discovered_properties: Set[int] = dataclasses.field(default_factory=set)
+    discovered_properties: set[int] = dataclasses.field(default_factory=set)
 
 
 class AgentActions:
@@ -139,7 +136,7 @@ class AgentActions:
 
         """
         self._environment = environment
-        self._gathered_credentials: Set[model.CredentialID] = set()
+        self._gathered_credentials: set[model.CredentialID] = set()
         self._discovered_nodes: "OrderedDict[model.NodeID, NodeTrackingInformation]" = OrderedDict()
         self._throws_on_invalid_actions = throws_on_invalid_actions
 
@@ -151,22 +148,25 @@ class AgentActions:
             if node.agent_installed:
                 self.__mark_node_as_owned(i, PrivilegeLevel.LocalUser)
 
-    def discovered_nodes(self) -> Iterator[Tuple[model.NodeID, model.NodeInfo]]:
+    def discovered_nodes(self) -> Iterator[tuple[model.NodeID, model.NodeInfo]]:
         for node_id in self._discovered_nodes:
             yield (node_id, self._environment.get_node(node_id))
 
-    def _check_prerequisites(self, target: model.NodeID, vulnerability: model.VulnerabilityInfo) -> bool:
+    def _check_prerequisites(self, target:model.NodeID, vulnerability:model.VulnerabilityInfo) -> bool:
         """
         This is a quick helper function to check the prerequisites to see if
         they match the ones supplied.
         """
-        node: model.NodeInfo = self._environment.network.nodes[target]["data"]
-        node_flags = node.properties
+        tgt_node: model.NodeInfo = self._environment.network.nodes[target]["data"]
+        check_flags = tgt_node.properties + [s.name for s in tgt_node.services]
+
         expr = vulnerability.precondition.expression
+        ports = '&(' + '|'.join(vulnerability.port) + ')'
+        expr = expr + ports
 
         true_value = ALGEBRA.parse("true")
         false_value = ALGEBRA.parse("false")
-        mapping = {i: true_value if str(i) in node_flags else false_value for i in expr.get_symbols()}
+        mapping = {i: true_value if str(i) in check_flags else false_value for i in expr.get_symbols()}
         is_true: bool = cast(boolean.Expression, expr.subs(mapping)).simplify() == true_value
         return is_true
 
@@ -174,7 +174,7 @@ class AgentActions:
         self,
         target: model.NodeID,
         type_filter: Optional[model.VulnerabilityType] = None,
-    ) -> List[model.VulnerabilityID]:
+    ) -> list[model.VulnerabilityID]:
         """
         This function takes a model.NodeID for the target to be scanned
         and returns a list of vulnerability IDs.
@@ -186,13 +186,13 @@ class AgentActions:
 
         target_node_data: model.NodeInfo = self._environment.get_node(target)
 
-        global_vuln: Set[model.VulnerabilityID] = {
+        global_vuln: set[model.VulnerabilityID] = {
             vuln_id
             for vuln_id, vulnerability in self._environment.vulnerability_library.items()
             if (type_filter is None or vulnerability.type == type_filter) and self._check_prerequisites(target, vulnerability)
         }
 
-        local_vuln: Set[model.VulnerabilityID] = {
+        local_vuln: set[model.VulnerabilityID] = {
             vuln_id
             for vuln_id, vulnerability in target_node_data.vulnerabilities.items()
             if (type_filter is None or vulnerability.type == type_filter) and self._check_prerequisites(target, vulnerability)
@@ -221,17 +221,17 @@ class AgentActions:
             kind_as_float=float(new_annotation.value),
         )
 
-    def get_discovered_properties(self, node_id: model.NodeID) -> Set[int]:
+    def get_discovered_properties(self, node_id: model.NodeID) -> set[int]:
         return self._discovered_nodes[node_id].discovered_properties
 
     def __mark_node_as_discovered(self, node_id: model.NodeID) -> bool:
-        logger.info("discovered node: " + node_id)
+        log.info("discovered node: " + node_id)
         newly_discovered = node_id not in self._discovered_nodes
         if newly_discovered:
             self._discovered_nodes[node_id] = NodeTrackingInformation()
         return newly_discovered
 
-    def __mark_nodeproperties_as_discovered(self, node_id: model.NodeID, properties: List[PropertyName]):
+    def __mark_nodeproperties_as_discovered(self, node_id: model.NodeID, properties: list[PropertyName]):
         properties_indices = [self._environment.identifiers.properties.index(p) for p in properties if p not in self.privilege_tags]
 
         if node_id in self._discovered_nodes:
@@ -252,7 +252,7 @@ class AgentActions:
         self,
         node_id: model.NodeID,
         privilege: PrivilegeLevel = model.PrivilegeLevel.LocalUser,
-    ) -> Tuple[Optional[datetime.datetime], bool]:
+    ) -> tuple[Optional[datetime], bool]:
         """Mark a node as owned.
         Return the time it was previously own (or None) and whether it was already owned.
         """
@@ -270,11 +270,11 @@ class AgentActions:
             self.__mark_allnodeproperties_as_discovered(node_id)
 
             # Record that the node just got owned at the current time
-            self._discovered_nodes[node_id].last_owned_at = datetime.datetime.now()
+            self._discovered_nodes[node_id].last_owned_at = datetime.now()
 
         return last_owned_at, is_currently_owned
 
-    def __mark_discovered_entities(self, reference_node: model.NodeID, outcome: model.VulnerabilityOutcome) -> Tuple[int, float, int]:
+    def __mark_discovered_entities(self, reference_node: model.NodeID, outcome: model.VulnerabilityOutcome) -> tuple[int, float, int]:
         """Mark discovered entities as such and return
         the number of newly discovered nodes, their total value and the number of newly discovered credentials
         """
@@ -292,7 +292,7 @@ class AgentActions:
                     newly_discovered_credentials += 1
                     self._gathered_credentials.add(credential.credential)
 
-                logger.info("discovered credential: " + str(credential))
+                log.info("discovered credential: " + str(credential))
                 self.__annotate_edge(reference_node, credential.node, EdgeAnnotation.KNOWS)
 
         elif isinstance(outcome, model.LeakedNodesId):
@@ -314,7 +314,7 @@ class AgentActions:
         node_info = self._environment.get_node(node_id)
         return node_info.privilege_level
 
-    def get_nodes_with_atleast_privilegelevel(self, level: PrivilegeLevel) -> List[model.NodeID]:
+    def get_nodes_with_atleast_privilegelevel(self, level: PrivilegeLevel) -> list[model.NodeID]:
         """Return all nodes with at least the specified privilege level"""
         return [n for n, info in self._environment.nodes() if info.privilege_level >= level]
 
@@ -330,10 +330,10 @@ class AgentActions:
         node_info: model.NodeInfo,
         local_or_remote: bool,
         failed_penalty: float,
-        throw_if_vulnerability_not_present: bool,
-    ) -> Tuple[bool, ActionResult]:
+        throw_if_vulnerability_not_present: bool
+    ) -> tuple[bool, ActionResult]:
         if node_info.status != model.MachineStatus.Running:
-            logger.info("target machine not in running state")
+            log.info("target machine not in running state")
             return False, ActionResult(reward=Penalty.MACHINE_NOT_RUNNING, outcome=None)
 
         is_global_vulnerability = vulnerability_id in self._environment.vulnerability_library
@@ -347,7 +347,7 @@ class AgentActions:
             if throw_if_vulnerability_not_present:
                 raise ValueError(f"Vulnerability '{vulnerability_id}' not supported by node='{node_id}'")
             else:
-                logger.info(f"Vulnerability '{vulnerability_id}' not supported by node '{node_id}'")
+                log.info(f"Vulnerability '{vulnerability_id}' not supported by node '{node_id}'")
                 return False, ActionResult(reward=Penalty.SUPSPICIOUSNESS, outcome=None)
 
         vulnerability = vulnerabilities[vulnerability_id]
@@ -404,7 +404,7 @@ class AgentActions:
         else:
             reward += NEW_SUCCESSFULL_ATTACK_REWARD
 
-        self._discovered_nodes[node_id].last_attack[lookup_key] = datetime.datetime.now()
+        self._discovered_nodes[node_id].last_attack[lookup_key] = datetime.now()
 
         (
             newly_discovered_nodes,
@@ -419,7 +419,7 @@ class AgentActions:
 
         reward -= vulnerability.cost
 
-        logger.info("GOT REWARD: " + vulnerability.reward_string)
+        log.info("GOT REWARD: " + vulnerability.reward_string)
         return True, ActionResult(reward=reward, outcome=outcome)
 
     def exploit_remote_vulnerability(
@@ -462,7 +462,7 @@ class AgentActions:
             failed_penalty=Penalty.FAILED_REMOTE_EXPLOIT,
             # We do not throw if the vulnerability is missing in order to
             # allow agent attempts to explore potential remote vulnerabilities
-            throw_if_vulnerability_not_present=False,
+            throw_if_vulnerability_not_present=False
         )
 
         if succeeded:
@@ -501,14 +501,14 @@ class AgentActions:
 
         return result
 
-    def __is_passing_firewall_rules(self, rules: List[model.FirewallRule], port_name: model.PortName) -> bool:
+    def __is_passing_firewall_rules(self, rules: list[model.FirewallRule], port_name: model.PortName) -> bool:
         """Determine if traffic on the specified port is permitted by the specified sets of firewall rules"""
         for rule in rules:
             if rule.port == port_name:
                 if rule.permission == model.RulePermission.ALLOW:
                     return True
                 else:
-                    logger.debug(f"BLOCKED TRAFFIC - PORT '{port_name}' Reason: " + rule.reason)
+                    log.debug(f"BLOCKED TRAFFIC - PORT '{port_name}' Reason: " + rule.reason)
                     return False
 
         logger.debug(f"BLOCKED TRAFFIC - PORT '{port_name}' - Reason: no rule defined for this port.")
@@ -563,27 +563,27 @@ class AgentActions:
                 return ActionResult(reward=Penalty.INVALID_ACTION, outcome=None)
 
         if not self.__is_passing_firewall_rules(source_node.firewall.outgoing, port_name):
-            logger.info(f"BLOCKED TRAFFIC: source node '{source_node_id}'" + f" is blocking outgoing traffic on port '{port_name}'")
+            log.info(f"BLOCKED TRAFFIC: source node '{source_node_id}'" + f" is blocking outgoing traffic on port '{port_name}'")
             return ActionResult(reward=Penalty.BLOCKED_BY_LOCAL_FIREWALL, outcome=None)
 
         if not self.__is_passing_firewall_rules(target_node.firewall.incoming, port_name):
-            logger.info(f"BLOCKED TRAFFIC: target node '{target_node_id}'" + f" is blocking outgoing traffic on port '{port_name}'")
+            log.info(f"BLOCKED TRAFFIC: target node '{target_node_id}'" + f" is blocking outgoing traffic on port '{port_name}'")
             return ActionResult(reward=Penalty.BLOCKED_BY_REMOTE_FIREWALL, outcome=None)
 
         target_node_is_listening = port_name in [i.name for i in target_node.services]
         if not target_node_is_listening:
-            logger.info(f"target node '{target_node_id}' not listening on port '{port_name}'")
+            log.info(f"target node '{target_node_id}' not listening on port '{port_name}'")
             return ActionResult(reward=Penalty.SCANNING_UNOPEN_PORT, outcome=None)
         else:
             target_node_data: model.NodeInfo = self._environment.get_node(target_node_id)
 
             if target_node_data.status != model.MachineStatus.Running:
-                logger.info("target machine not in running state")
+                log.info("target machine not in running state")
                 return ActionResult(reward=Penalty.MACHINE_NOT_RUNNING, outcome=None)
 
             # check the credentials before connecting
             if not self._check_service_running_and_authorized(target_node_data, port_name, credential):
-                logger.info("invalid credentials supplied")
+                log.info("invalid credentials supplied")
                 return ActionResult(reward=Penalty.WRONG_PASSWORD, outcome=None)
 
             last_owned_at, is_already_owned = self.__mark_node_as_owned(target_node_id)
@@ -596,9 +596,9 @@ class AgentActions:
 
             self.__annotate_edge(source_node_id, target_node_id, EdgeAnnotation.LATERAL_MOVE)
 
-            logger.info(f"Infected node '{target_node_id}' from '{source_node_id}'" + f" via {port_name} with credential '{credential}'")
+            log.info(f"Infected node '{target_node_id}' from '{source_node_id}'" + f" via {port_name} with credential '{credential}'")
             if target_node.owned_string:
-                logger.info("Owned message: " + target_node.owned_string)
+                log.info("Owned message: %s"%target_node.owned_string)
 
             return ActionResult(
                 reward=float(target_node_data.value) if last_owned_at is None else 0.0,
@@ -620,7 +620,7 @@ class AgentActions:
                 return True
         return False
 
-    def list_nodes(self) -> List[DiscoveredNodeInfo]:
+    def list_nodes(self) -> list[DiscoveredNodeInfo]:
         """Returns the list of nodes ID that were discovered or owned by the attacker."""
         return [
             cast(
@@ -633,24 +633,24 @@ class AgentActions:
             for node_id, node_info in self.discovered_nodes()
         ]
 
-    def list_remote_attacks(self, node_id: model.NodeID) -> List[model.VulnerabilityID]:
+    def list_remote_attacks(self, node_id: model.NodeID) -> list[model.VulnerabilityID]:
         """Return list of all remote attacks that may be executed onto the specified node."""
-        attacks: List[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id, model.VulnerabilityType.REMOTE)
+        attacks: list[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id, model.VulnerabilityType.REMOTE)
         return attacks
 
-    def list_local_attacks(self, node_id: model.NodeID) -> List[model.VulnerabilityID]:
+    def list_local_attacks(self, node_id: model.NodeID) -> list[model.VulnerabilityID]:
         """Return list of all local attacks that may be executed onto the specified node."""
-        attacks: List[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id, model.VulnerabilityType.LOCAL)
+        attacks: list[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id, model.VulnerabilityType.LOCAL)
         return attacks
 
-    def list_attacks(self, node_id: model.NodeID) -> List[model.VulnerabilityID]:
+    def list_attacks(self, node_id: model.NodeID) -> list[model.VulnerabilityID]:
         """Return list of all attacks that may be executed on the specified node."""
-        attacks: List[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id)
+        attacks: list[model.VulnerabilityID] = self.list_vulnerabilities_in_target(node_id)
         return attacks
 
-    def list_all_attacks(self) -> List[Dict[str, object]]:
+    def list_all_attacks(self) -> list[dict[str, object]]:
         """List all possible attacks from all the nodes currently owned by the attacker"""
-        on_owned_nodes: List[Dict[str, object]] = [
+        on_owned_nodes: list[dict[str, object]] = [
             {
                 "id": n["id"],
                 "status": n["status"],
@@ -661,7 +661,7 @@ class AgentActions:
             for n in self.list_nodes()
             if n["status"] == "owned"
         ]
-        on_discovered_nodes: List[Dict[str, object]] = [
+        on_discovered_nodes: list[dict[str, object]] = [
             {
                 "id": n["id"],
                 "status": n["status"],
@@ -686,7 +686,7 @@ class DefenderAgentActions:
 
     def __init__(self, environment: model.Environment):
         # map nodes being reimaged to the remaining number of steps to completion
-        self.node_reimaging_progress: Dict[model.NodeID, int] = dict()
+        self.node_reimaging_progress: dict[model.NodeID, int] = dict()
 
         # Last calculated availability of the network
         self.__network_availability: float = 1.0
@@ -708,7 +708,7 @@ class DefenderAgentActions:
         node_info.agent_installed = False
         node_info.privilege_level = model.PrivilegeLevel.NoAccess
         node_info.status = model.MachineStatus.Imaging
-        node_info.last_reimaging = datetime.datetime.now()
+        node_info.last_reimaging = datetime.now()
         self._environment.network.nodes[node_id].update({"data": node_info})
 
     def on_attacker_step_taken(self):
@@ -754,7 +754,7 @@ class DefenderAgentActions:
     ):
         node_data = self._environment.get_node(node_id)
 
-        def add_or_patch_rule(rules) -> List[FirewallRule]:
+        def add_or_patch_rule(rules) -> list[FirewallRule]:
             new_rules = []
             has_matching_rule = False
             for r in rules:

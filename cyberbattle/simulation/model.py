@@ -23,19 +23,21 @@ formally defined by:
       incoming : FirwallRule [] }
   - FirewallRule: PortName x { ALLOW, BLOCK }
 """
+# pylint: disable=C0103
 
 from datetime import datetime
-from typing import NamedTuple, List, Dict, Optional, Union, Tuple, Iterator
+from typing import NamedTuple, Optional, Union, Tuple, Iterator
+from itertools import permutations
 import dataclasses
 from dataclasses import dataclass, field
-import matplotlib.pyplot as plt  # type:ignore
 from enum import Enum, IntEnum
-from boolean import boolean
-import networkx as nx
-import yaml
 import random
 
-import matplotlib  # type: ignore
+import matplotlib
+import matplotlib.pyplot as plt
+import boolean #type: ignore
+import networkx as nx
+import yaml
 
 matplotlib.use("Agg")
 
@@ -56,7 +58,6 @@ CredentialID = str
 # Intrinsic value of a reaching a given node in [0,100]
 NodeValue = int
 
-
 PortName = str
 
 
@@ -68,7 +69,7 @@ class ListeningService:
     # Name of the port the service is listening to
     name: PortName
     # credential allowed to authenticate with the service
-    allowedCredentials: List[CredentialID] = dataclasses.field(default_factory=list)
+    allowedCredentials: list[CredentialID] = dataclasses.field(default_factory=list)
     # whether the service is running or stopped
     running: bool = True
     # Weight used to evaluate the cost of not running the service
@@ -159,7 +160,7 @@ class AdminEscalation(PrivilegeEscalation):
 class ProbeSucceeded(VulnerabilityOutcome):
     """Probing succeeded"""
 
-    def __init__(self, discovered_properties: List[PropertyName]):
+    def __init__(self, discovered_properties: list[PropertyName]):
         self.discovered_properties = discovered_properties
 
 
@@ -182,16 +183,16 @@ class CachedCredential(NamedTuple):
 class LeakedCredentials(VulnerabilityOutcome):
     """A set of credentials obtained by exploiting a vulnerability"""
 
-    credentials: List[CachedCredential]
+    credentials: list[CachedCredential]
 
-    def __init__(self, credentials: List[CachedCredential]):
+    def __init__(self, credentials: list[CachedCredential]):
         self.credentials = credentials
 
 
 class LeakedNodesId(VulnerabilityOutcome):
     """A set of node IDs obtained by exploiting a vulnerability"""
 
-    def __init__(self, nodes: List[NodeID]):
+    def __init__(self, nodes: list[NodeID]):
         self.nodes = nodes
 
 
@@ -244,13 +245,15 @@ class VulnerabilityInfo(NamedTuple):
     cost: float = 1.0
     # a string displayed when the vulnerability is successfully exploited
     reward_string: str = ""
+    # specific port that the vulnerability depends on
+    port: list[str] = []
 
 
 # A dictionary storing information about all supported vulnerabilities
 # or features supported by the simulation.
 # This is to be used as a global dictionary pre-populated before
 # starting the simulation and estimated from real-world data.
-VulnerabilityLibrary = Dict[VulnerabilityID, VulnerabilityInfo]
+VulnerabilityLibrary = dict[VulnerabilityID, VulnerabilityInfo]
 
 
 class RulePermission(Enum):
@@ -285,7 +288,7 @@ class FirewallConfiguration:
     can still be useful to give a reason for the block.)
     """
 
-    outgoing: List[FirewallRule] = field(
+    outgoing: list[FirewallRule] = field(
         repr=True,
         default_factory=lambda: [
             FirewallRule("RDP", RulePermission.ALLOW),
@@ -294,7 +297,7 @@ class FirewallConfiguration:
             FirewallRule("HTTP", RulePermission.ALLOW),
         ],
     )
-    incoming: List[FirewallRule] = field(
+    incoming: list[FirewallRule] = field(
         repr=True,
         default_factory=lambda: [
             FirewallRule("RDP", RulePermission.ALLOW),
@@ -318,13 +321,18 @@ class NodeInfo:
     """A computer node in the enterprise network"""
 
     # List of port/protocol the node is listening to
-    services: List[ListeningService]
+    services: list[ListeningService]
+
+    #HACK: for fsec
+    # Subnet name where the node belongs to
+    subnet: str
+
     # List of known vulnerabilities for the node
     vulnerabilities: VulnerabilityLibrary = dataclasses.field(default_factory=dict)
     # Intrinsic value of the node (translates into a reward if the node gets owned)
     value: NodeValue = 0
     # Properties of the nodes, some of which can imply further vulnerabilities
-    properties: List[PropertyName] = dataclasses.field(default_factory=list)
+    properties: list[PropertyName] = dataclasses.field(default_factory=list)
     # Fireall configuration of the node
     firewall: FirewallConfiguration = FirewallConfiguration()
     # Attacker agent installed on the node? (aka the node is 'pwned')
@@ -343,7 +351,6 @@ class NodeInfo:
     # or its services
     sla_weight: float = 1.0
 
-
 class Identifiers(NamedTuple):
     """Define the global set of identifiers used
     in the definition of a given environment.
@@ -353,13 +360,13 @@ class Identifiers(NamedTuple):
     that a machine learniong model can learn from."""
 
     # Array of all possible node property identifiers
-    properties: List[PropertyName] = []
+    properties: list[PropertyName] = []
     # Array of all possible port names
-    ports: List[PortName] = ["Null"]
+    ports: list[PortName] = ["Null"]
     # Array of all possible local vulnerabilities names
-    local_vulnerabilities: List[VulnerabilityID] = []
+    local_vulnerabilities: list[VulnerabilityID] = []
     # Array of all possible remote vulnerabilities names
-    remote_vulnerabilities: List[VulnerabilityID] = []
+    remote_vulnerabilities: list[VulnerabilityID] = []
 
 
 def iterate_network_nodes(network: nx.graph.Graph) -> Iterator[Tuple[NodeID, NodeInfo]]:
@@ -368,6 +375,41 @@ def iterate_network_nodes(network: nx.graph.Graph) -> Iterator[Tuple[NodeID, Nod
         node_data: NodeInfo = nodevalue["data"]
         yield nodeid, node_data
 
+#HACK: define subnet firewall (for fsec)
+class SubnetConnectivity(NamedTuple):
+    """A representation of connectivity between two subnets"""
+    conn: bool = False
+    firewall: list[FirewallRule] = []
+
+#HACK: define subnet manager (for fsec)
+class Subnets:
+    """List of subnets and their connectivity"""
+
+    # Subnet list
+    subnets:list[str]
+    # Connectivities and firewall configuration between subnets
+    connectivity:dict[tuple[str, str], SubnetConnectivity]
+
+    def __init__(self, subnets:list[str]):
+        self.subnets = subnets
+        self.init_rules()
+
+    def connected(self, src:str, dst:str):
+        """Return connectivity between source and destination"""
+        return self.connectivity[(src, dst)].conn
+
+    def rules(self, src:str, dst:str):
+        """Return firewall rules for traffic from source to destination"""
+        return self.connectivity[(src, dst)].firewall
+
+    def init_rules(self):
+        """Initialize subnet connectivity and firewall rules"""
+        self.connectivity = { key: SubnetConnectivity()
+                             for key in permutations(self.subnets, 2) }
+
+    def set_conn(self, src:str, dst:str, conn:SubnetConnectivity):
+        """Set connectivity configuration between source and destination"""
+        self.connectivity[(src, dst)] = conn
 
 # NOTE: Using `NameTuple` instead of `dataclass` breaks deserialization
 # with PyYaml 2.8.1 due to a new recrusive references to the networkx graph in the field
@@ -381,6 +423,10 @@ class Environment:
     network: nx.DiGraph
     vulnerability_library: VulnerabilityLibrary
     identifiers: Identifiers
+
+    #HACK: define subnets
+    subnets: Subnets
+
     creationTime: datetime = datetime.utcnow()
     lastModified: datetime = datetime.utcnow()
     # a version tag indicating the environment schema version
@@ -400,7 +446,7 @@ class Environment:
         nx.draw(self.network, with_labels=True, node_color=[n["data"].value for i, n in self.network.nodes.items()], cmap=plt.cm.Oranges)  # type:ignore
 
 
-def create_network(nodes: Dict[NodeID, NodeInfo]) -> nx.DiGraph:
+def create_network(nodes: dict[NodeID, NodeInfo]) -> nx.DiGraph:
     """Create a network with a set of nodes and no edges"""
     graph = nx.DiGraph()
     graph.add_nodes_from([(k, {"data": v}) for (k, v) in list(nodes.items())])
@@ -410,7 +456,7 @@ def create_network(nodes: Dict[NodeID, NodeInfo]) -> nx.DiGraph:
 # Helpers to infer constants from an environment
 
 
-def collect_ports_from_vuln(vuln: VulnerabilityInfo) -> List[PortName]:
+def collect_ports_from_vuln(vuln: VulnerabilityInfo) -> list[PortName]:
     """Returns all the port named referenced in a given vulnerability"""
     if isinstance(vuln.outcome, LeakedCredentials):
         return [c.port for c in vuln.outcome.credentials]
@@ -418,19 +464,19 @@ def collect_ports_from_vuln(vuln: VulnerabilityInfo) -> List[PortName]:
         return []
 
 
-def collect_vulnerability_ids_from_nodes_bytype(nodes: Iterator[Tuple[NodeID, NodeInfo]], global_vulnerabilities: VulnerabilityLibrary, type: VulnerabilityType) -> List[VulnerabilityID]:
+def collect_vulnerability_ids_from_nodes_bytype(nodes: Iterator[Tuple[NodeID, NodeInfo]], global_vulnerabilities: VulnerabilityLibrary, type: VulnerabilityType) -> list[VulnerabilityID]:
     """Collect and return all IDs of all vulnerability of the specified type
     that are referenced in a given set of nodes and vulnerability library
     """
     return sorted(list({id for _, node_info in nodes for id, v in node_info.vulnerabilities.items() if v.type == type}.union(id for id, v in global_vulnerabilities.items() if v.type == type)))
 
 
-def collect_properties_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]]) -> List[PropertyName]:
+def collect_properties_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]]) -> list[PropertyName]:
     """Collect and return sorted list of all property names used in a given set of nodes"""
     return sorted({p for _, node_info in nodes for p in node_info.properties})
 
 
-def collect_ports_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnerability_library: VulnerabilityLibrary) -> List[PortName]:
+def collect_ports_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnerability_library: VulnerabilityLibrary) -> list[PortName]:
     """Collect and return all port names used in a given set of nodes
     and global vulnerability library"""
     return sorted(
@@ -444,12 +490,12 @@ def collect_ports_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnerabi
     )
 
 
-def collect_ports_from_environment(environment: Environment) -> List[PortName]:
+def collect_ports_from_environment(environment: Environment) -> list[PortName]:
     """Collect and return all port names used in a given environment"""
     return collect_ports_from_nodes(environment.nodes(), environment.vulnerability_library)
 
 
-def infer_constants_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnerabilities: Dict[VulnerabilityID, VulnerabilityInfo]) -> Identifiers:
+def infer_constants_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnerabilities: dict[VulnerabilityID, VulnerabilityInfo]) -> Identifiers:
     """Infer global environment constants from a given network"""
     return Identifiers(
         properties=collect_properties_from_nodes(nodes),
@@ -459,7 +505,7 @@ def infer_constants_from_nodes(nodes: Iterator[Tuple[NodeID, NodeInfo]], vulnera
     )
 
 
-def infer_constants_from_network(network: nx.Graph, vulnerabilities: Dict[VulnerabilityID, VulnerabilityInfo]) -> Identifiers:
+def infer_constants_from_network(network: nx.Graph, vulnerabilities: dict[VulnerabilityID, VulnerabilityInfo]) -> Identifiers:
     """Infer global environment constants from a given network"""
     return infer_constants_from_nodes(iterate_network_nodes(network), vulnerabilities)
 
@@ -486,7 +532,7 @@ def assign_random_labels(graph: nx.DiGraph, vulnerabilities: VulnerabilityLibrar
             incoming=[FirewallRule(port=p, permission=RulePermission.ALLOW) for p in random.sample(identifiers.ports, k=random.randint(0, len(identifiers.ports)))],
         )
 
-    def create_random_properties() -> List[PropertyName]:
+    def create_random_properties() -> list[PropertyName]:
         return list(random.sample(identifiers.properties, k=random.randint(0, len(identifiers.properties))))
 
     def pick_random_global_vulnerabilities() -> VulnerabilityLibrary:
@@ -510,6 +556,7 @@ def assign_random_labels(graph: nx.DiGraph, vulnerabilities: VulnerabilityLibrar
     graph.nodes[entry_node_id].clear()
     node_data = NodeInfo(
         services=[],
+        subnet='', #HACK: for fsec
         value=0,
         properties=create_random_properties(),
         vulnerabilities=create_random_vulnerabilities(entry_node_id),
@@ -523,6 +570,7 @@ def assign_random_labels(graph: nx.DiGraph, vulnerabilities: VulnerabilityLibrar
     def create_random_node_data(node_id: NodeID) -> NodeInfo:
         return NodeInfo(
             services=[],
+            subnet='', #HACK: for fsec
             value=random.randint(0, 100),
             properties=create_random_properties(),
             vulnerabilities=create_random_vulnerabilities(node_id),
@@ -540,8 +588,6 @@ def assign_random_labels(graph: nx.DiGraph, vulnerabilities: VulnerabilityLibrar
 
 
 # Serialization
-
-
 def setup_yaml_serializer() -> None:
     """Setup a clean YAML formatter for object of type Environment."""
     yaml.add_representer(Precondition, lambda dumper, data: dumper.represent_scalar("!BooleanExpression", str(data.expression)))  # type: ignore
