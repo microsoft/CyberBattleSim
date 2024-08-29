@@ -71,11 +71,11 @@ jupyter-client==7.4.9
 jupyter-console==6.4.4
 jupyter-events==0.10.0
 jupyter-lsp==2.2.2
-jupyter-server==2.11.2
-jupyter-server-terminals==0.4.4
+jupyter-server==2.14.2
+jupyter-server-terminals==0.5.3
 jupyterlab==4.2.5
 jupyterlab-pygments==0.2.2
-jupyterlab-server==2.24.0
+jupyterlab-server==2.27.3
 jupyterlab-widgets==3.0.9
 kiwisolver==1.4.5
 markdown-it-py==2.2.0
