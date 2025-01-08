@@ -63,7 +63,7 @@ iniconfig==2.0.0
 ipython-genutils==0.2.0
 ipywidgets==8.1.1
 isoduration==20.11.0
-jinja2==3.1.4
+jinja2==3.1.5
 json5==0.9.14
 jsonpointer==2.4
 jsonschema==4.18.6
