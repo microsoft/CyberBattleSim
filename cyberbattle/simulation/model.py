@@ -326,7 +326,7 @@ class NodeInfo:
     # Properties of the nodes, some of which can imply further vulnerabilities
     properties: List[PropertyName] = dataclasses.field(default_factory=list)
     # Fireall configuration of the node
-    firewall: FirewallConfiguration = FirewallConfiguration()
+    firewall: FirewallConfiguration = dataclasses.field(default_factory=FirewallConfiguration)
     # Attacker agent installed on the node? (aka the node is 'pwned')
     agent_installed: bool = False
     # Esclation level
