@@ -83,7 +83,7 @@ jobs:
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')
 
       - name: Archive milled notebooks
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: papermilled-notebooks
           path: |
