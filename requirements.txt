@@ -5,7 +5,7 @@ numpy==1.26.4
 boolean.py==4.0
 networkx==3.2.1
 pyyaml~=6.0
-matplotlib>=3.10.1
+matplotlib>=3.9.4
 plotly~=5.15.0
 tabulate~=0.8.7
 progressbar2==4.4.2
