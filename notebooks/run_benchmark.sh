@@ -1,5 +1,5 @@
 
-#!/usr/bin/python3.9
+#!/usr/bin/python3.10
 
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
