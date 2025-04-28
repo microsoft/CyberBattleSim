@@ -134,7 +134,7 @@ To run your environment within a docker container, we recommend running `docker`
 
 This method is not maintained anymore, please prefer instead running under
 a WSL subsystem Linux environment.
-But if you insist you want to start by installing [Python 3.9](https://www.python.org/downloads/windows/) then in a Powershell prompt run the `./init.ps1` script.
+But if you insist you want to start by installing [Python 3.10](https://www.python.org/downloads/windows/) then in a Powershell prompt run the `./init.ps1` script.
 
 ## Getting started quickly using Docker
 

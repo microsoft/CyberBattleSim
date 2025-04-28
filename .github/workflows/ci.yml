@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9]
+        python-version: ['3.10']
     steps:
       - uses: actions/checkout@v3
         with:
@@ -33,7 +33,7 @@ jobs:
           key: pip-"${{ runner.os }}"-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('setup.py') }}
           restore-keys: pip-"${{ runner.os }}"
 
-          path: ${{ env.pythonver.pythonLocation }}/lib/python3.9/site-packages
+          path: ${{ env.pythonver.pythonLocation }}/lib/python3.10/site-packages
 
       - name: Pull typing stubs from cache
         uses: actions/cache@v3
@@ -46,7 +46,7 @@ jobs:
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: 3.9
+          python-version: '3.10'
           miniconda-version: "latest"
           activate-environment: cybersim
           auto-activate-base: false
