@@ -8,7 +8,7 @@ ipykernel==6.6.1
 papermill==2.3.3
 
 # training
-torch==2.7.0
+torch==2.7.1
 stable-baselines3==2.3.2
 
 # linter and formatter
