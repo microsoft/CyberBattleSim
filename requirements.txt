@@ -1,5 +1,5 @@
 setuptools~=70.0.0
-wheel===0.44.0
+wheel===0.46.2
 gymnasium==0.29.1
 numpy==1.26.4
 boolean.py==4.0
