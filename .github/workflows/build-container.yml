@@ -13,13 +13,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
 
       - run: |
           docker build . -t  ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
 
       - name: Login to ACR
-        uses: docker/login-action@v1
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # v1.14.1
         with:
           registry: ${{ env.containerRegistry }}
           username: ${{ secrets.ACR_TOKEN_NAME }}
