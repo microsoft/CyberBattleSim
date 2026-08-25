@@ -46,7 +46,7 @@ autopep8==2.0.4
 babel==2.13.0
 backcall==0.2.0
 beautifulsoup4==4.12.2
-bleach==6.1.0
+bleach==6.4.0
 cffi==1.16.0
 cfgv==3.4.0
 click==8.1.7
