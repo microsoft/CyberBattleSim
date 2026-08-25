@@ -1,4 +1,4 @@
-[branch "master"]
+[branch "main"]
     rebase = true
 [branch]
     autosetuprebase = always
