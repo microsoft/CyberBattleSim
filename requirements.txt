@@ -1,9 +1,9 @@
-setuptools~=70.0.0
+setuptools==84.0.0
 wheel===0.44.0
 gymnasium==0.29.1
 numpy==1.26.4
 boolean.py==4.0
-networkx==3.2.1
+networkx==3.4.2
 pyyaml~=6.0
 matplotlib>=3.9.4
 plotly~=5.15.0
