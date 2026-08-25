@@ -81,7 +81,7 @@ jupyter-server==2.14.2
 jupyter-server-terminals==0.5.3
 jupyterlab==4.5.10
 jupyterlab-pygments==0.2.2
-jupyterlab-server==2.27.3
+jupyterlab-server==2.28.0
 jupyterlab-widgets==3.0.9
 kiwisolver==1.4.5
 markdown-it-py==2.2.0
@@ -95,8 +95,8 @@ nbclient==0.8.0
 nbconvert==7.9.2
 nbformat==5.9.2
 nest-asyncio==1.5.8
-notebook==7.2.2
-notebook-shim==0.2.3
+notebook==7.5.7
+notebook-shim==0.2.4
 nvidia-cublas-cu11==11.10.3.66
 nvidia-cuda-nvrtc-cu11==11.7.99
 nvidia-cuda-runtime-cu11==11.7.99
