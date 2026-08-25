@@ -15,12 +15,12 @@ jobs:
       matrix:
         python-version: ['3.10']
     steps:
-      - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -39,7 +39,7 @@ jobs:
         run: python -c "import sys; print(sys.version)"
 
       - name: Pull typing stubs from cache
-        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
           restore-keys: typingstubs-${{ runner.os }}-${{ hashFiles('createstubs.sh') }}
@@ -70,7 +70,7 @@ jobs:
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')
 
       - name: Archive milled notebooks
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: papermilled-notebooks
           path: |
