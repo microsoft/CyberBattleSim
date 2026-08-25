@@ -18,7 +18,6 @@
 
 # %%
 # %%
-import plotly.io.orca
 import gymnasium as gym
 import numpy
 from typing import cast
@@ -26,7 +25,7 @@ from cyberbattle._env.cyberbattle_env import CyberBattleEnv
 
 # %%
 # %matplotlib inline
-plotly.io.orca.config.executable = "~/.npm-packages/bin/orca"  # type: ignore
+# Plotly static image export uses the `kaleido` engine (installed via pip).
 
 # %%
 from cyberbattle._env.cyberbattle_env import AttackerGoal

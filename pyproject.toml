@@ -2,7 +2,8 @@
 line-length = 200
 exclude = [
     "typings",
-    "venv"
+    "venv",
+    ".venv"
 ]
 extend-include = ["*.ipynb"]
 

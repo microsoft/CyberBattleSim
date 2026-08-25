@@ -19,21 +19,24 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Use Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: |
+            requirements.txt
+            requirements.dev.txt
+            setup.py
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          uv venv --python ${{ matrix.python-version }} .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          uv pip install -e ".[dev]"
 
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-
-      - name: Pull pip packages from cache
-        uses: actions/cache@v3
-        with:
-          key: pip-"${{ runner.os }}"-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('setup.py') }}
-          restore-keys: pip-"${{ runner.os }}"
-
-          path: ${{ env.pythonver.pythonLocation }}/lib/python3.10/site-packages
 
       - name: Pull typing stubs from cache
         uses: actions/cache@v3
@@ -43,43 +46,27 @@ jobs:
           path: typings/
 
       - uses: chartboost/ruff-action@v1
-
-      - uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: '3.10'
-          miniconda-version: "latest"
-          activate-environment: cybersim
-          auto-activate-base: false
-          environment-file: env.yml
-
-      - name: Conda info
-        shell: bash -el {0}
-        run: conda info
+          version: 0.5.6
 
       - name: Typecheck [pyright]
-        shell: bash -el {0}
         run: |
-          conda activate cybersim
           which python
           echo $PATH
           ./createstubs.sh
           pyright
 
       - name: Test [pytest]
-        shell: bash -el {0}
         run: |
-          conda activate cybersim
-          pip install six pexpect wcwidth
-          pip install pytest-azurepipelines
+          uv pip install six pexpect wcwidth pytest-azurepipelines
           python -m pytest -v cyberbattle
 
       - name: Papermill all notebooks in quick mode
-        shell: bash -el {0}
         run: |
-          conda activate cybersim
+          python -m ipykernel install --user --name cybersim --display-name cybersim
           jupyter kernelspec list
           cd notebooks
-          bash run_quick.sh python3
+          bash run_quick.sh cybersim
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/heads/wiblum')
 
       - name: Archive milled notebooks

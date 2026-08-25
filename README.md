@@ -75,13 +75,10 @@ Start by checking out the repository:
 
 ### OS components
 
-If you get the following error when running the papermill on the notebooks
-(or alternatively when running `orca --help`)
-```
-/home/wiblum/miniconda3/envs/cybersim/lib/orca_app/orca: error while loading shared libraries: libXss.so.1: cannot open shared object file: No such file or directory
-```
-or other share libraries like `libgdk_pixbuf-2.0.so.0`,
-Then run the following command:
+Plotly static image export is handled by the `kaleido` python package (installed
+via pip). If you get an error about missing shared libraries such as
+`libgdk_pixbuf-2.0.so.0` when exporting figures,
+then run the following command:
 ```
 sudo apt install libnss3-dev libgtk-3-0 libxss1 libasound2-dev libgtk2.0-0 libgconf-2-4
 ```
@@ -90,22 +87,24 @@ sudo apt install libnss3-dev libgtk-3-0 libxss1 libasound2-dev libgtk2.0-0 libgc
 
 The instructions were tested on a Linux Ubuntu distribution (both native and via WSL).
 
-If conda is not installed already, you need to install it by running the `install_conda.sh` script.
+If the [`uv`](https://docs.astral.sh/uv/) package manager is not installed already, you can install it by running the `install-uv.sh` script.
 
 ```bash
-bash install-conda.sh
+bash install-uv.sh
 ```
 
 Once this is done, open a new terminal and run the initialization script:
 ```bash
 bash init.sh
 ```
-This will create a conda environmen named `cybersim` with all the required OS and python dependencies.
+This will create a Python virtual environment under `.venv` with all the required
+python dependencies (including a uv-managed Python 3.10) and register a Jupyter
+kernel named `cybersim`.
 
 To activate the environment run:
 
 ```bash
-conda activate cybersim
+source .venv/bin/activate
 ```
 
 #### Windows Subsystem for Linux

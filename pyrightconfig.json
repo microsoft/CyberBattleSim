@@ -4,7 +4,8 @@
         "**/__pycache__",
         "**/outputs/**",
         "typings",
-        "venv"
+        "venv",
+        ".venv"
     ],
     "ignore": [],
     "typeshedPaths": [
