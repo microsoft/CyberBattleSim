@@ -96,7 +96,7 @@ nvidia-cuda-nvrtc-cu11==11.7.99
 nvidia-cuda-runtime-cu11==11.7.99
 nvidia-cudnn-cu11==8.5.0.96
 overrides==7.4.0
-packaging==23.2
+packaging==24.2
 pandocfilters==1.5.0
 parso==0.8.3
 pathspec==0.11.2
