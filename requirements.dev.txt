@@ -14,6 +14,12 @@ stable-baselines3==2.3.2
 # linter and formatter
 ruff==0.5.6
 
+# type checker (bundles its own Node.js runtime)
+pyright==1.1.374
+
+# plotly static image export (replaces the conda-only `plotly-orca` package)
+kaleido==0.2.1
+
 # testing
 pytest~=8.3.2
 
