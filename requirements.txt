@@ -1,4 +1,4 @@
-setuptools==84.0.0
+setuptools==84.1.0
 wheel===0.46.2
 gymnasium==0.29.1
 numpy==1.26.4
